@@ -1,7 +1,4 @@
-fittingloop = function(FeaturesMatrix,
-                       Xdata,
-                       Ydata,
-                       other_fit_parameters) {
+fittingloop = function(FeaturesMatrix, Xdata, Ydata, other_fit_parameters) {
   #Created by Daniel Cañueto 30/08/2016
   #Calculation through least squares algorithm of parameters that achieve the best fitting.
   
@@ -18,24 +15,22 @@ fittingloop = function(FeaturesMatrix,
   
   #Depending on the complexity of the ROI, more or less iterations are performed
   if (is.numeric(other_fit_parameters$fitting_maxiter)) {
-    fitting_maxiter = other_fit_parameters$fitting_maxiter
+    fitting_maxiter=other_fit_parameters$fitting_maxiter
   } else {
-    if (dim(FeaturesMatrix)[1] > 8 |
-        any(FeaturesMatrix[, 4] - FeaturesMatrix[, 3] > 0.01)) {
-      fitting_maxiter = 10
-    } else if ((dim(FeaturesMatrix)[1] > 5 &&
-                dim(FeaturesMatrix)[1] < 9)) {
-      fitting_maxiter = 7
-    } else {
-      fitting_maxiter = 4
-    }
+  if (dim(FeaturesMatrix)[1] > 8) {
+    fitting_maxiter = 10
+  } else if ((dim(FeaturesMatrix)[1] > 5 &&
+              dim(FeaturesMatrix)[1] < 9) |
+             any(FeaturesMatrix[, 4] - FeaturesMatrix[, 3] > 0.01)) {
+    fitting_maxiter = 7
+  } else {
+    fitting_maxiter = 4
+  }
   }
   
   #Necessary information to incorporate additional singals if necessary
   signals_to_quantify = which(FeaturesMatrix[, 11] != 0)
-  range_ind = round(
-    other_fit_parameters$additional_signal_ppm_distance / other_fit_parameters$buck_step
-  )
+  range_ind = round(other_fit_parameters$additional_signal_ppm_distance / other_fit_parameters$buck_step)
   signals_to_add = other_fit_parameters$signals_to_add
   
   #Variables to initialize the loop
@@ -43,7 +38,7 @@ fittingloop = function(FeaturesMatrix,
   error2 = 3000
   iterrep = 0
   fitting_maxiterrep = other_fit_parameters$fitting_maxiterrep
-  
+
   #Function where to find a minimum
   residFun <-
     function(p, observed, xx)
@@ -60,32 +55,42 @@ fittingloop = function(FeaturesMatrix,
     worsterror = 0
     
     
-    bounds = list(ub = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
-                                                            2) - 2), lb = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
-                                                                                                               2) - 2))
-    bounds$lb = t(FeaturesMatrix[, seq(1, 9, 2), drop = F])
-    bounds$ub = t(FeaturesMatrix[, seq(2, 10, 2), drop = F])
+    bounds=list(ub=matrix(0,dim(FeaturesMatrix)[1],(dim(FeaturesMatrix)[2]/2)-2),lb=matrix(0,dim(FeaturesMatrix)[1],(dim(FeaturesMatrix)[2]/2)-2))
+    bounds$lb=t(FeaturesMatrix[,seq(1,9,2),drop=F])
+    bounds$ub=t(FeaturesMatrix[,seq(2,10,2),drop=F])
     lb = rbind(bounds$lb, t(FeaturesMatrix[, 11:12, drop = F]))
     ub = rbind(bounds$ub, t(FeaturesMatrix[, 11:12, drop = F]))
-    s0 = lb + (ub - lb) * matrix(runif(dim(lb)[1] * dim(lb)[2]), dim(lb)[1], dim(lb)[2])
     
     #Several iterations of the algorith mare performed, to avoid the finding of local optimums that do not represent the best optimization of parameters
-    while (error1 > other_fit_parameters$errorprov &
-           error1 > (1 / 3 * worsterror) & iter < fitting_maxiter) {
+    while (error1 > other_fit_parameters$errorprov & error1 > (1/3*worsterror) & iter < fitting_maxiter) {
+
       #Algorithm options that can be changed
       #Preparation of lower and upper bounds
       # bounds=list(ub=matrix(0,dim(FeaturesMatrix)[1],dim(FeaturesMatrix)[2]/2),lb=matrix(0,dim(FeaturesMatrix)[1],dim(FeaturesMatrix)[2]/2))
       
       #Initialization of parameters to optimize. In every iteration the initialization will be different
       s0 = lb + (ub - lb) * matrix(runif(dim(lb)[1] * dim(lb)[2]), dim(lb)[1], dim(lb)[2])
-      #
-      # if (exists('nls.out')) {
-      #   s0=paramprov+ (ub-lb)*0.2*matrix(runif(dim(lb)[1] * dim(lb)[2],min=-1,max=1), dim(lb)[1], dim(lb)[2])
-      #   s0[(s0-lb)<0]=lb[(s0-lb)<0]
-      #   s0[(ub-s0)<0]=ub[(ub-s0)<0]
-      #
-      #   }
-      #
+
+      # tryCatch({
+      
+      #Optimization
+      # nls.out <-
+      #   nls.lm(
+      #     par = as.vector(s0),
+      #     fn = residFun,
+      #     observed = Ydata,
+      #     xx = Xdata,
+      #     lower = as.vector(lb),
+      #     upper = as.vector(ub),
+      #     control = control2
+      #   )
+      # sos=other_fit_parameters$ptol/as.vector(s0)
+      # sos=1e-5/as.vector((lb+ub)/2)
+      # 
+      # sos[sos==Inf]=0
+      # sos2=rep(1,length(as.vector(s0)))
+      # sos2[sos==Inf]=0
+      
       
       nls.out <-
         nls.lm(
@@ -95,23 +100,17 @@ fittingloop = function(FeaturesMatrix,
           xx = Xdata,
           lower = as.vector(lb),
           upper = as.vector(ub),
-          control = nls.lm.control(
-            factor = other_fit_parameters$factor,
-            maxiter = other_fit_parameters$nls_lm_maxiter,
-            ftol = other_fit_parameters$ftol,
-            ptol = other_fit_parameters$ptol
+          control = nls.lm.control(factor = other_fit_parameters$factor,  maxiter=other_fit_parameters$nls_lm_maxiter, ftol=other_fit_parameters$ftol, ptol=other_fit_parameters$ptol)
+
           )
-          
-        )
       
       iter = iter + 1
       
       # #Procedure to calculate the fititng error in all the ROI
       #An adapted MSE error is calculated, and the parameters of the optimization with less MSE are stored
       errorprov = (sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -
-                                                                      min(Ydata))
-      if (is.nan(errorprov) || is.na(errorprov))
-        errorprov = error1
+                                                                   min(Ydata))
+      if (is.nan(errorprov)||is.na(errorprov)) errorprov = error1
       print(errorprov)
       
       if (errorprov < error1) {
@@ -120,7 +119,7 @@ fittingloop = function(FeaturesMatrix,
         
       } else if (errorprov > worsterror) {
         worsterror = errorprov
-      }
+    }
       # if (dim(FeaturesMatrix)[1]>8) try_error=0
       
     }
@@ -149,8 +148,7 @@ fittingloop = function(FeaturesMatrix,
     }
     
     #If the fitting seems to be still clearly improvable through the addition of signals
-    if (error2 < (other_fit_parameters$additional_signal_improvement * dummy) &
-        (error1 > other_fit_parameters$additional_signal_percentage_limit)) {
+    if (error2 < (other_fit_parameters$additional_signal_improvement * dummy) & (error1 > other_fit_parameters$additional_signal_percentage_limit)) {
       #Finding of signals in the vector of the difference between the fitted and the original ROI
       lol = peakdet(nls.out$fvec, other_fit_parameters$peakdet_minimum)
       if (is.null(lol$maxtab) == F) {
@@ -194,7 +192,7 @@ fittingloop = function(FeaturesMatrix,
         lol3 = matrix(NA, 0, 2)
         for (i in 1:dim(lol2)[1]) {
           if (any(abs(points_to_avoid - lol2[i, 1]) < range_ind) == F)
-            lol3 = rbind(lol3, lol2[i, ])
+            lol3 = rbind(lol3, lol2[i,])
         }
         
         if (dim(lol3)[1] > signals_to_add) {
@@ -206,9 +204,9 @@ fittingloop = function(FeaturesMatrix,
         }
         #Creation of rows to incorporate to FeaturesMatrix
         dummy = matrix(
-          FeaturesMatrix[1, ],
+          FeaturesMatrix[1,],
           nrow = dim(lol3)[1],
-          ncol = length(FeaturesMatrix[1, ]),
+          ncol = length(FeaturesMatrix[1,]),
           byrow = TRUE
         )
         dummy[, 2] = lol3[, 2]

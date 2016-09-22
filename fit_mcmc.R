@@ -1,5 +1,5 @@
 #Aquesta és la funció adaptada i R.
-fitting_optimization = function(parS, xx) {
+fit_mcmc = function(parS, Xdata, Ydata) {
   i = as.numeric(parS[seq(1, length(parS) - 6, 7)])
   p = as.numeric(parS[seq(2, length(parS) - 5, 7)])
   w = as.numeric(parS[seq(3, length(parS) - 4, 7)])
@@ -8,7 +8,6 @@ fitting_optimization = function(parS, xx) {
   multiplicities = as.numeric(parS[seq(6, length(parS) - 1, 7)])
   roof_effect = as.numeric(parS[seq(7, length(parS) - 0, 7)])
   NumSignals = length(parS) / 7
-  Xdata = xx
   
   F = 0
   
@@ -71,7 +70,9 @@ fitting_optimization = function(parS, xx) {
       }
     }
   }
-  return(F)
+  remainer=Ydata-F
+  
+  return(remainer)
   
   
 }
