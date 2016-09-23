@@ -1,16 +1,16 @@
 autorun = function(autorun_data, finaloutput) {
-  #Created by Daniel Cañueto 30/08/2016
+  #Created by Daniel Ca?ueto 30/08/2016
   #Autorun of quantification for all experiments using the information located at the ROI files.
-  
+
   #TO DO: solving problem of intensity of signals of same metabolite through loading of all ROIs, calculation of maximum intensity for every signal in every spectrum and adaptation of maximum intensity to relative intensity (ROIs sholud have a new parameter)
-  
-  
+
+
   # Loading of ROIs parameters
   ROI_data = read.csv(autorun_data$profile_folder_path, sep = ";",stringsAsFactors = F)
   dummy = which(!is.na(ROI_data[, 1]))
   ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(ROI_data)[1]))
   for (ROI_index in seq_along(ROI_separator[, 1])) {
-   
+
 
   #Loading of every ROI parameters
   pre_import_excel_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
@@ -22,17 +22,17 @@ autorun = function(autorun_data, finaloutput) {
                         autorun_data$ppm >=
                         ROI_limits[2])
   preXdata = autorun_data$ppm[ROI_buckets]
-  
+
   #Preparation of necessary parameters
   other_fit_parameters = fitting_variables()
   other_fit_parameters$freq = autorun_data$freq
   other_fit_parameters$ROI_buckets = ROI_buckets
   other_fit_parameters$buck_step = autorun_data$buck_step
-  
-  
+
+
   fitting_type = as.character(pre_import_excel_profile[1, 3])
   signals_to_quantify = which(pre_import_excel_profile[, 7] == 1)
-  
+
   quartile_spectrum = as.numeric(apply(autorun_data$dataset[, other_fit_parameters$ROI_buckets,drop=F], 2, function(x)
     quantile(x, 0.75)))
   reference_spectrum_ind = which.min(apply(autorun_data$dataset[, other_fit_parameters$ROI_buckets,drop=F], 1, function(x)
@@ -82,14 +82,15 @@ autorun = function(autorun_data, finaloutput) {
                                      preXdata,
                                      scaledYdata,
                                      other_fit_parameters)
+    dim(signals_parameters) = c(5, dim(FeaturesMatrix)[1])
 
     pre_import_excel_profile[signals_to_quantify,6]=signals_parameters[3,signals_to_quantify]*autorun_data$freq
   }
-  
+
   dd=autorun_data$dataset[,ROI_buckets]/apply(autorun_data$dataset[,ROI_buckets],1,median)
-  
-  
-  bc=apcluster(negDistMat(r=2),dd,q=0.5)
+
+
+  bc=apcluster::apcluster(apcluster::negDistMat(r=2),dd,q=0.5)
   bd=list()
   be=c()
   j=1
@@ -102,22 +103,22 @@ autorun = function(autorun_data, finaloutput) {
     }
   }
   bd[[j]]=be
-  
+
   # rm(bd)
   # bd=list()
   # bd[[1]] =1:dim(autorun_data$dataset)[1]
-  # 
+  #
   tot_import_excel_profile=list()
   tot_Xdata=list()
-  
+
   if (other_fit_parameters$automatic_roi_edition=='Y') {
-  
+
     for (i in 1:length(bd)) {
     dummy = automatic_roi_edition(autorun_data$dataset[bd[[i]],,drop=F],
                                   pre_import_excel_profile,
                                   preXdata,
                                   other_fit_parameters,ROI_limits,autorun_data$ppm)
-    
+
     tot_import_excel_profile[[i]]=dummy$import_excel_profile
     # ROI_limits=dummy$ROI_limits
     # if (ROI_limits[1] < ROI_limits[2])
@@ -136,15 +137,15 @@ autorun = function(autorun_data, finaloutput) {
         tot2_import_excel_profile[(dim(pre_import_excel_profile)[1]*bd[[kkk]][kkl]-dim(pre_import_excel_profile)[1]+1):(dim(pre_import_excel_profile)[1]*bd[[kkk]][kkl]),]=tot_import_excel_profile[[kkk]]
         tot2_Xdata[bd[[kkk]][kkl],]=tot_Xdata[[kkk]]
       }}
-    
+
   } else {
     tot2_import_excel_profile=do.call(rbind, replicate(dim(autorun_data$dataset)[1], pre_import_excel_profile, simplify=FALSE))
     tot2_Xdata=matrix(rep(preXdata,each=dim(autorun_data$dataset)[1]),nrow=dim(autorun_data$dataset)[1])
-    
+
     }
-  
-  
-  
+
+
+
   # bf=apcluster(negDistMat(r=2),dd[be,])
   fitting_type = as.character(pre_import_excel_profile[1, 3])
   signals_to_quantify = which(pre_import_excel_profile[, 7] == 1)
@@ -158,19 +159,19 @@ autorun = function(autorun_data, finaloutput) {
     signals_names[j] = as.character(autorun_data$signals_names[k])
     j = j + 1
   }
-  
+
   #Quantification for every experiment
-  
+
   for (spectrum_index in 1:dim(autorun_data$dataset)[1]) {
-    
+
     print(spectrum_index)
-    
+
     Xdata=tot2_Xdata[spectrum_index,]
     import_excel_profile=tot2_import_excel_profile[(dim(pre_import_excel_profile)[1]*spectrum_index-dim(pre_import_excel_profile)[1]+1):(dim(pre_import_excel_profile)[1]*spectrum_index),]
-    
+
     #Preparation of necessary variables and folders to store figures and information of the fitting
     Ydata = as.numeric(autorun_data$dataset[spectrum_index, ROI_buckets])
-    
+
     experiment_name = autorun_data$Experiments[[spectrum_index]]
     plot_path = file.path(autorun_data$export_path,
                           experiment_name,
@@ -178,7 +179,7 @@ autorun = function(autorun_data, finaloutput) {
     for (i in seq_along(plot_path))
       if (!dir.exists(plot_path[i]))
         dir.create(plot_path[i])
-    
+
     #If the quantification is through integration with or without baseline
     if (fitting_type == "Clean Sum" ||
         fitting_type == "Baseline Sum") {
@@ -187,29 +188,29 @@ autorun = function(autorun_data, finaloutput) {
       integration_parameters = data.frame(plot_path, is_roi_testing,
                                           clean_fit)
       results_to_save = integration(integration_parameters, Xdata,
-                                    
+
                                     Ydata)
       #Generation of output variables specific of every quantification
-      
+
       write.csv(
         integration_parameters,
         file.path(plot_path[i],
                   "integration_parameters.csv"),
         row.names = F
       )
-      
+
       #If the quantification is through fitting with or without baseline
     } else if (fitting_type == "Clean Fitting" || fitting_type ==
                "Baseline Fitting") {
       is_roi_testing = "N"
-      
+
       clean_fit = ifelse(fitting_type == "Clean Fitting", "Y",
                          "N")
-      
+
       #Parameters of every signal necessary for the fitting
       initial_fit_parameters = import_excel_profile[, 5:11,drop=F]
       # initial_fit_parameters=as.data.frame(apply(initial_fit_parameters,2,as.numeric))
-      
+
       # initial_fit_parameters = initial_fit_parameters[complete.cases(initial_fit_parameters),]
       colnames(initial_fit_parameters) = c(
         "positions",
@@ -220,43 +221,54 @@ autorun = function(autorun_data, finaloutput) {
         "roof_effect",
         "shift_tolerance"
       )
-      
+
       #Ydata is scaled to improve the quality of the fitting
       scaledYdata = as.vector(Ydata / (max(Ydata)))
-      
+
       #Other parameters necessary for the fitting independent of the type of signal
-      
+
       other_fit_parameters$clean_fit = clean_fit
-      
+
       #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
       FeaturesMatrix = fitting_prep(Xdata,
                                     scaledYdata,
                                     initial_fit_parameters,
                                     other_fit_parameters)
-      
-      
+
+
       #Calculation of the parameters that will achieve the best fitting
       signals_parameters = fittingloop(FeaturesMatrix,
                                        Xdata,
                                        scaledYdata,
                                        other_fit_parameters)
-      
+
       #Fitting of the signals
-      fitted_signals = definitivefitting(signals_parameters,
-                                         Xdata)
-      
+      multiplicities=FeaturesMatrix[,11]
+      roof_effect=FeaturesMatrix[,12]
+      fitted_signals = fitting_optimization(signals_parameters,
+                                         Xdata,multiplicities,roof_effect)
+      # signals_parameters=as.matrix(signals_parameters)
+      dim(signals_parameters) = c(5, dim(FeaturesMatrix)[1])
+      rownames(signals_parameters) = c(
+        'intensity',
+        'shift',
+        'width',
+        'gaussian',
+        'J_coupling'
+         )
+
       #Generation of output data about the fitting and of the necessary variables for the generation ofa figure
       output_data = output_generator(
         signals_to_quantify,
         fitted_signals,
         scaledYdata,
         Xdata,
-        signals_parameters
+        signals_parameters,multiplicities
       )
-      
+
       output_data$intensity=signals_parameters[1, signals_to_quantify] * max(Ydata)
       output_data$width=signals_parameters[3, signals_to_quantify]
-      
+
       #Generation of the dataframe with the final output variables
       results_to_save = data.frame(
         shift = output_data$shift,
@@ -266,10 +278,10 @@ autorun = function(autorun_data, finaloutput) {
         intensity = output_data$intensity,
         width = output_data$width
       )
-      
+
       #Adaptation of the quantification to de-scaled Ydata
       # results_to_save$Area = results_to_save$Area * max(Ydata)
-      
+
       #Generation of the figure when the conditions specified in the Parameters file are accomplished
       plot_data = rbind(
         output_data$signals_sum,
@@ -281,9 +293,9 @@ autorun = function(autorun_data, finaloutput) {
                               "baseline_sum",
                               "fitted_sum",
                               as.character(import_excel_profile[,4]))
-      
+
       other_fit_parameters$signals_to_quantify=signals_to_quantify
-      
+
       plotgenerator(
         results_to_save,
         plot_data,
@@ -296,7 +308,7 @@ autorun = function(autorun_data, finaloutput) {
         is_roi_testing,
         plot_path
       )
-      
+
       #Generation of output variables specific of every quantification
       for (i in seq_along(plot_path)) {
         write.csv(
@@ -309,14 +321,14 @@ autorun = function(autorun_data, finaloutput) {
                     file.path(plot_path[i], "Ydata.csv"),
                     # row.names = F,
                     col.names = F)
-        
+
         other_fit_parameters$signals_to_quantify=NULL
-        
+
         write.csv(
           other_fit_parameters,
           file.path(plot_path[i],
                     "other_fit_parameters.csv"),
-          row.names = F
+          # row.names = F
         )
         write.table(fitted_signals,
                     file.path(plot_path[i], "fitted_signals.csv"))
@@ -341,13 +353,13 @@ autorun = function(autorun_data, finaloutput) {
         write.csv(results_to_save,
                   file.path(plot_path[i], "results_to_save.csv"),
                   row.names = F)
-        
+
       }
-      
+
     }
-    
+
     #Generation of output variables specific of every ROI
-    
+
     finaloutput = save_output(
       spectrum_index,
       signals_codes,
@@ -379,15 +391,15 @@ autorun = function(autorun_data, finaloutput) {
       file.path(autorun_data$export_path,
                 "intensity.csv")
     )
-    
+
     # row.names = F,
     # col.names = F))
-    
-    
+
+
   }
-  
+
   }
-  
+
   #Validation post-quantification system
   # alarmmatrix=validation(finaloutput, other_fit_parameters)
   # write.csv(alarmmatrix,

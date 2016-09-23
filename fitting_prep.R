@@ -2,14 +2,14 @@ fitting_prep = function(Xdata,
                         Ydata,
                         initial_fit_parameters,
                         other_fit_parameters) {
-  #Created by Daniel Cañueto 30/08/2016
+  #Created by Daniel Ca?ueto 30/08/2016
   #Preparation of parameters to optimize to achieve the best fitting
-  
+
   #TO DO: more intuitive way to change how the parameters are prepared previously to optimization
-  
+
   signals_to_fit = length(initial_fit_parameters$positions)
   ROIlength = length(Xdata)
-  
+
   #Change of j-coupling from Hz to ppm
   for (i in 1:signals_to_fit)
     initial_fit_parameters$Jcoupling[i] = ifelse((
@@ -21,11 +21,11 @@ fitting_prep = function(Xdata,
       initial_fit_parameters$Jcoupling[i] / other_fit_parameters$freq
     ) / 2
     )
-  
+
   #Calculation of number of background signals, if baseline fitting is performed
   BGSigNum = ifelse(other_fit_parameters$clean_fit == 'N', max(round(abs(Xdata[1] -
                                                                         Xdata[ROIlength]) * other_fit_parameters$BGdensity), 2), 0)
-  
+
   #Preallocation of parameters to optimize into a matrix of features
   FeaturesMatrix = matrix(NA, (signals_to_fit + BGSigNum), 12)
   colnames(FeaturesMatrix) = c(
@@ -42,7 +42,7 @@ fitting_prep = function(Xdata,
     'multiplicities',
     'roof_effect'
   )
-  
+
   #Parameters of signals to fit
   FeaturesMatrix[1:signals_to_fit, 1] = 0
   FeaturesMatrix[1:signals_to_fit, 2] = max(Ydata)
@@ -64,14 +64,14 @@ fitting_prep = function(Xdata,
     other_fit_parameters$j_coupling_variation
   FeaturesMatrix[1:signals_to_fit, 11] = initial_fit_parameters$multiplicities
   FeaturesMatrix[1:signals_to_fit, 12] = initial_fit_parameters$roof_effect
-  
-  
+
+
   #Finding of maximum intensity and shift tolerance of every background signal
   if (BGSigNum>0) {
     BGSigrightlimits = seq(Xdata[1], Xdata[ROIlength], length = BGSigNum) -
       0.005
     BGSigleftlimits = BGSigrightlimits + 0.01
-    
+
     peaks = peakdet(Ydata, 0.01)
     left = which(peaks$mintab$pos < ROIlength / 5)
     right = which(peaks$mintab$pos > 4 * ROIlength / 5)
@@ -81,8 +81,8 @@ fitting_prep = function(Xdata,
     BGSig_maximums = replicate(BGSigNum, NA)
     for (ss in 1:BGSigNum)
       BGSig_maximums[ss] = min(Ydata[BGleftlimits[ss]:BGrightlimits[ss]])
-    
-    
+
+
     #Parameters of background signals
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 1] = 0
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 2] = BGSig_maximums
@@ -94,29 +94,37 @@ fitting_prep = function(Xdata,
     #                                                                      other_fit_parameters$freq) * 15
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 5] = other_fit_parameters$BG_width-other_fit_parameters$BG_width*other_fit_parameters$BG_width_tolerance
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 6] = other_fit_parameters$BG_width+other_fit_parameters$BG_width*other_fit_parameters$BG_width_tolerance
-    
+
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 7] = 0
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 8] = other_fit_parameters$BG_gaussian_percentage
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 9] = 0
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 10] = 0 #j coupling makes no sense with backgorund signals
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 11] = 0 #arbitrary number used to signal later background signals
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 12] = 0
-    
-    
+
+
     ss=approx(round((BGSigleftlimits+BGSigrightlimits)/2,3),BGSig_maximums,xout=Xdata)$y/ (max(Ydata))
 
     BG_parameters = fittingloop_bg(FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1],],
                                 Xdata,
                                 ss,
                                 other_fit_parameters)
+    # dim(BG_parameters) = c(5, dim(FeaturesMatrix)[1])
+    # rownames(BG_parameters) = c(
+    #   'intensity',
+    #   'shift',
+    #   'width',
+    #   'gaussian',
+    #   'J_coupling'
+    # )
 
     #Fitting of the signals
     # BGGG_signals = definitivefitting(signals_parameters,
     #                                    Xdata)
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1],2]=BG_parameters[1,]
-    
+
   }
-    
-  
+
+
   return(FeaturesMatrix)
 }

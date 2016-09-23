@@ -1,15 +1,15 @@
 packages_sources = function() {
-  #Created by Daniel Cañueto 07/09/2016
+  #Created by Daniel Ca?ueto 07/09/2016
   #Loading of libraries and functions
-  
-  library(minpack.lm)
-  library(reshape)
-  library(ggplot2)
-  library(compiler)
-  library(robust)
-  library(apcluster)
-  
-  enableJIT(3)
+
+  # requireNamespace("minpack.lm", quietly = TRUE)
+  # requireNamespace("reshape", quietly = TRUE)
+  # requireNamespace("ggplot2", quietly = TRUE)
+  # requireNamespace("compiler", quietly = TRUE)
+  # requireNamespace("robust", quietly = TRUE)
+  # requireNamespace("apcluster", quietly = TRUE)
+  # requireNamespace("rio", quietly = TRUE)
+
   source("peakpvoigt.R")
   source("fitting_optimization.R")
   source("fittingloop.R")
@@ -29,6 +29,6 @@ packages_sources = function() {
   source("fitting_variables.R")
   source("automatic_roi_edition.R")
   source("validation.R")
-  
-  
+
+
 }
