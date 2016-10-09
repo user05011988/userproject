@@ -1,9 +1,9 @@
 #TO DO: save parameters of imported_data not exported to autorun_data in separate list
 
-# setwd("C:/Users/user/Documents/Dolphin/R")
-#
-# source('packages_sources.R')
-# packages_sources()
+setwd("C:/Users/user/Documents/Dolphin/R")
+
+source('packages_sources.R')
+packages_sources()
 compiler::enableJIT(3)
 
 #Reading of parameters file
@@ -15,6 +15,8 @@ parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_da
 parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_csv.csv"
 parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_20.csv"
 parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_dataset_new.txt"
+parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_20_2.csv"
+parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters.csv"
 
 #import of data (dataset in csv format or Bruker nmr folder)
 imported_data = import_data(parameters_path)
@@ -71,7 +73,7 @@ autorun_data = list(
   dataset = imported_data$dataset,
   ppm = imported_data$ppm,
   buck_step = imported_data$buck_step,
-  profile_folder_path = imported_data$params$profile_folder_path,
+  profile_folder_path = imported_data$profile_folder_path,
   signals_names = imported_data$signals_names,
   signals_codes = imported_data$signals_codes,
   Experiments = imported_data$Experiments,

@@ -48,8 +48,8 @@ fittingloop = function(FeaturesMatrix,
   
   #Function where to find a minimum
   residFun <-
-    function(par, observed, xx,multiplicities,roof_effect)
-      observed - colSums(fitting_optimization(par, xx,multiplicities,roof_effect))
+    function(par, observed, xx,multiplicities,roof_effect,ple)
+      observed - colSums(fitting_optimization(par, xx,multiplicities,roof_effect,ple))
   
   # Loop to control if additional signals are incorporated, until a maximum of iterations specified bt fitting_maxiterrep.
   # If at the last fitting the improvement was lesser than 25% respective to the previous fitting,
@@ -65,8 +65,8 @@ fittingloop = function(FeaturesMatrix,
     # bounds = list(ub = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
     #                                                         2) - 2), lb = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
     #                                                                                                            2) - 2))
-    lb = as.vector(t(FeaturesMatrix[, seq(1, 9, 2), drop = F]))
-    ub = as.vector(t(FeaturesMatrix[, seq(2, 10, 2), drop = F]))
+    lb = t(FeaturesMatrix[, seq(1, 9, 2), drop = F])
+    ub = t(FeaturesMatrix[, seq(2, 10, 2), drop = F])
     multiplicities=FeaturesMatrix[,11]
     roof_effect=FeaturesMatrix[,12]
     #Several iterations of the algorith mare performed, to avoid the finding of local optimums that do not represent the best optimization of parameters
@@ -78,7 +78,7 @@ fittingloop = function(FeaturesMatrix,
       # bounds=list(ub=matrix(0,dim(FeaturesMatrix)[1],dim(FeaturesMatrix)[2]/2),lb=matrix(0,dim(FeaturesMatrix)[1],dim(FeaturesMatrix)[2]/2))
       
       #Initialization of parameters to optimize. In every iteration the initialization will be different
-      s0 = lb + (ub - lb) * runif(length(ub))
+      s0 = lb + (ub - lb) * matrix(runif(length(ub)),dim(lb)[1],dim(lb)[2])
       if (iterrep %in% seq(1,16,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=0,max=1/3)
       if (iterrep %in% seq(2,17,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=1/3,max=2/3)
       if (iterrep %in% seq(3,18,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=2/3,max=1)
@@ -91,7 +91,9 @@ fittingloop = function(FeaturesMatrix,
       #
       #   }
       #
+      ple=scale(s0)
       # print(ple)
+      s0=scale(s0)
       nls.out <-
         nls.lm(
           par = s0,
@@ -100,6 +102,7 @@ fittingloop = function(FeaturesMatrix,
           xx = Xdata,
           multiplicities=multiplicities,
           roof_effect=roof_effect,
+          ple=ple,
           lower = lb,
           upper = ub,
           control = nls.lm.control(
@@ -122,8 +125,8 @@ fittingloop = function(FeaturesMatrix,
       
       if (errorprov < error1) {
         error1 = errorprov
-        paramprov=coef(nls.out)
-
+        paramprov = coef(nls.out)*attr(ple,"scaled:scale")+attr(ple,"scaled:center")
+        
       } else if (errorprov > worsterror) {
         worsterror = errorprov
       }

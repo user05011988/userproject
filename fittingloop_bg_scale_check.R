@@ -16,8 +16,8 @@ fittingloop_bg = function(FeaturesMatrix, Xdata, Ydata, other_fit_parameters) {
 
   #Function where to find a minimum
   residFun <-
-    function(par, observed, xx,multiplicities,roof_effect)
-      observed - colSums(fitting_optimization(par, xx,multiplicities,roof_effect))
+    function(par, observed, xx,multiplicities,roof_effect,ple)
+      observed - colSums(fitting_optimization(par, xx,multiplicities,roof_effect,ple))
 
 
   # Loop to control if additional signals are incorporated, until a maximum of iterations specified bt fitting_maxiterrep.
@@ -31,7 +31,8 @@ fittingloop_bg = function(FeaturesMatrix, Xdata, Ydata, other_fit_parameters) {
     #Several iterations of the algorith mare performed, to avoid the finding of local optimums that do not represent the best optimization of parameters
   s0 = lb + (ub - lb) * runif(length(ub))
   # tryCatch({
-
+s0=scale(s0)
+ple=scale(s0)
 # print(ple)
     nls.out <-
       nls.lm(
@@ -41,6 +42,7 @@ fittingloop_bg = function(FeaturesMatrix, Xdata, Ydata, other_fit_parameters) {
         xx = Xdata,
         multiplicities=multiplicities,
         roof_effect=roof_effect,
+        ple=ple,
         lower = lb,
         upper = ub,
         control = nls.lm.control(
@@ -54,7 +56,7 @@ fittingloop_bg = function(FeaturesMatrix, Xdata, Ydata, other_fit_parameters) {
 
 
 
-      signals_parameters = coef(nls.out)
+      signals_parameters = coef(nls.out)*attr(ple,"scaled:scale")+attr(ple,"scaled:center")
       dim(signals_parameters) = c(5, dim(FeaturesMatrix)[1])
       rownames(signals_parameters) = c(
         'intensity',

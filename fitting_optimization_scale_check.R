@@ -1,17 +1,17 @@
 #Aquesta ?s la funci? adaptada i R.
-fitting_optimization = function(parS, Xdata,multiplicities,roof_effect) {
+fitting_optimization = function(parS, Xdata,multiplicities,roof_effect,ple) {
   # print(ple)
   # if (exists('ple')) {
-    # parS=parS*attr(ple,"scaled:scale")+attr(ple,"scaled:center")
+    parT=parS*attr(ple,"scaled:scale")+attr(ple,"scaled:center")
   # } else {
-  #   parS=parS
+  #   parT=parS
     # }
   
-  i = as.numeric(parS[seq(1, length(parS) - 4, 5)])
-  p = as.numeric(parS[seq(2, length(parS) - 3, 5)])
-  w = as.numeric(parS[seq(3, length(parS) - 2, 5)])
-  g = as.numeric(parS[seq(4, length(parS) - 1, 5)])
-  j = as.numeric(parS[seq(5, length(parS) - 0, 5)])
+  i = as.numeric(parT[seq(1, length(parS) - 4, 5)])
+  p = as.numeric(parT[seq(2, length(parS) - 3, 5)])
+  w = as.numeric(parT[seq(3, length(parS) - 2, 5)])
+  g = as.numeric(parT[seq(4, length(parS) - 1, 5)])
+  j = as.numeric(parT[seq(5, length(parS) - 0, 5)])
   signals_parameters=rbind(i,p,w,g,j)
   fitted_signals = matrix(NaN, dim(signals_parameters)[2], length(Xdata))
   

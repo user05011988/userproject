@@ -260,7 +260,7 @@ autorun = function(autorun_data, finaloutput) {
         #Fitting of the signals
         multiplicities=FeaturesMatrix[,11]
         roof_effect=FeaturesMatrix[,12]
-        fitted_signals = fitting_optimization(signals_parameters,
+        fitted_signals = fitting_optimization_2(signals_parameters,
           Xdata,multiplicities,roof_effect)
         # signals_parameters=as.matrix(signals_parameters)
         dim(signals_parameters) = c(5, length(signals_parameters)/5)

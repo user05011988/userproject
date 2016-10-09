@@ -105,22 +105,12 @@ fitting_prep = function(Xdata,
 
     ss=approx(round((BGSigleftlimits+BGSigrightlimits)/2,3),BGSig_maximums,xout=Xdata)$y/ (max(Ydata))
 
+    # optimization of baseline parameters , to be sure that the algorithm doesn ot try ti fot spurious signals as basleine
     BG_parameters = fittingloop_bg(FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1],],
                                 Xdata,
                                 ss,
                                 other_fit_parameters)
-    # dim(BG_parameters) = c(5, dim(FeaturesMatrix)[1])
-    # rownames(BG_parameters) = c(
-    #   'intensity',
-    #   'shift',
-    #   'width',
-    #   'gaussian',
-    #   'J_coupling'
-    # )
-
-    #Fitting of the signals
-    # BGGG_signals = definitivefitting(signals_parameters,
-    #                                    Xdata)
+    
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1],2]=BG_parameters[1,]
 
   }
