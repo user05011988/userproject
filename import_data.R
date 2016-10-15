@@ -151,7 +151,7 @@ import_data = function(parameters_path) {
   }
   
   imported_data$dataset[is.na(imported_data$dataset)]=min(abs(imported_data$dataset)[abs(imported_data$dataset)>0])
-  if (pqn='Y') {
+  if (pqn=='Y') {
     tra=rep(NA,20)
     vardata3=apply(imported_data$dataset,2,function(x) sd(x,na.rm=T)/mean(x,na.rm=T))
     ss=boxplot.stats(vardata3)$out
