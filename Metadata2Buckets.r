@@ -15,11 +15,13 @@ Metadata2Buckets <- function(Experiments, params) {
                                  params$right_spectral_border,
                                  -1)
   
-  RAW$norm_PEAK_left_ppm = params$norm_PEAK_left_ppm
-  RAW$norm_PEAK_right_ppm = params$norm_PEAK_right_ppm
-  RAW$norm_AREA_left_ppm = ifelse(params$norm_AREA == "Y", params$norm_AREA_left_ppm,
+  RAW$norm_PEAK_left_ppm = ifelse(params$norm_PEAK == "Y", params$norm_left_ppm,
+    0)
+  RAW$norm_PEAK_right_ppm = ifelse(params$norm_PEAK == "Y", params$norm_left_ppm,
+    0)
+  RAW$norm_AREA_left_ppm = ifelse(params$norm_AREA == "Y", params$norm_left_ppm,
                                   0)
-  RAW$norm_AREA_right_ppm = ifelse(params$norm_AREA == "Y", params$norm_AREA_right_ppm,
+  RAW$norm_AREA_right_ppm = ifelse(params$norm_AREA == "Y", params$norm_right_ppm,
                                    0)
   
   tsp_alignment = params$tsp_alignment
@@ -192,7 +194,7 @@ Metadata2Buckets <- function(Experiments, params) {
       # zones a l'hora de calcular l'àrea si cal eliminem l'aigua if
       
       if (toupper(disol_suppression) == "Y") {
-        for (nunrows in 1:D_rows) {
+        for (nunrows in 1:dim(RAW$disol_suppression_bucks)[1]) {
           tmp_buck[RAW$disol_suppression_bucks[nunrows, 1]:RAW$disol_suppression_bucks[nunrows,
                                                                                        2]] = 0
         }

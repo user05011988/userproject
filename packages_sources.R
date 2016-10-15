@@ -16,7 +16,9 @@ packages_sources = function() {
   library("robust")
   library("apcluster")
   library("rio")
+  library("png")
   source("peakpvoigt.R")
+  source("my_gg_plot.R")
   source("fitting_optimization.R")
   source("fitting_optimization_2.R")
   
@@ -36,6 +38,7 @@ packages_sources = function() {
   source("fitting_variables.R")
   source("automatic_roi_edition.R")
   source("validation.R")
-
+  source("plele.R")
+  
 
 }

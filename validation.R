@@ -62,37 +62,37 @@ signal_area_ratio_alarmmatrix[finaloutput$signal_area_ratio>other_fit_parameters
 #Analysis of which metabolites have have relative intensity too far from expected according to robust linear model constructed
 
 #Find which metabolites have more than one signal and analyzing case by case
-ind=grep('_s1',colnames(finaloutput$intensity))[order(colnames(finaloutput$intensity)[grep('_s1',colnames(finaloutput$intensity))])]
-ind2=grep('_s2',colnames(finaloutput$intensity))[order(colnames(finaloutput$intensity)[grep('_s2',colnames(finaloutput$intensity))])]
-
-#I find how many samples will be used for the roubst linear model in the same way than with the shift
-intensity_alarmmatrix=matrix(0,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
-for (ii in 1:length(ind)) {
-  rlm_preinfo=matrix(NA,dim(finaloutput$shift)[1],2)
-  rlm_samples=cbind(finaloutput$intensity[,ind[ii]],finaloutput$intensity[,ind2[ii]])
-  rlm_signalsdifference=rlm_samples[,1]-rlm_samples[,2]
-  rlm_signalsdifference_ind=sort(rlm_signalsdifference,decreasing=T,index.return=T)$ix
-  rlm_preinfo[dim(rlm_samples)[1],]=c(dim(rlm_samples)[1],dim(rlm_samples)[1]*cor(rlm_samples,use='pairwise.complete.obs',method='spearman')[1,2])
-  for (i in 1:(length(rlm_signalsdifference_ind)/2)) {
-    rlm_samples_sub=rlm_samples[-rlm_signalsdifference_ind[1:i],]
-    rlm_preinfo[dim(rlm_samples_sub)[1],]=c(dim(rlm_samples_sub)[1],dim(rlm_samples_sub)[1]*cor(rlm_samples,use='pairwise.complete.obs',method='spearman')[1,2])
-  }
-  # I analyze with how many samples there has been the best correlation (penalization-adjusted) and save the samples that will be used for the robust linear model
-  if(length(rlm_signalsdifference_ind[dim(rlm_samples)[1]-which.max(rlm_preinfo[,2])])>0) {
-    rlm_samples_sub = rlm_samples[-rlm_signalsdifference_ind[dim(rlm_samples)[1]-which.max(rlm_preinfo[,2])],]
-  } else {
-    rlm_samples_sub=rlm_samples
-  }
-  #Robust linear model and prediction of expected shifts
-  rlm_model=lmrob(rlm_samples_sub[,1]~rlm_samples_sub[,2])
-  
-  intensity_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$intensity[,ind2[ii]]
-
-  intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[ii]]-intensity_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
-  intensity_alarmmatrix[intensity_suspicioussamples,c(ind[ii],ind2[ii])]=1
-
-  
-}
+# ind=grep('_s1',colnames(finaloutput$intensity))[order(colnames(finaloutput$intensity)[grep('_s1',colnames(finaloutput$intensity))])]
+# ind2=grep('_s2',colnames(finaloutput$intensity))[order(colnames(finaloutput$intensity)[grep('_s2',colnames(finaloutput$intensity))])]
+# 
+# #I find how many samples will be used for the roubst linear model in the same way than with the shift
+# intensity_alarmmatrix=matrix(0,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
+# for (ii in 1:length(ind)) {
+#   rlm_preinfo=matrix(NA,dim(finaloutput$shift)[1],2)
+#   rlm_samples=cbind(finaloutput$intensity[,ind[ii]],finaloutput$intensity[,ind2[ii]])
+#   rlm_signalsdifference=rlm_samples[,1]-rlm_samples[,2]
+#   rlm_signalsdifference_ind=sort(rlm_signalsdifference,decreasing=T,index.return=T)$ix
+#   rlm_preinfo[dim(rlm_samples)[1],]=c(dim(rlm_samples)[1],dim(rlm_samples)[1]*cor(rlm_samples,use='pairwise.complete.obs',method='spearman')[1,2])
+#   for (i in 1:(length(rlm_signalsdifference_ind)/2)) {
+#     rlm_samples_sub=rlm_samples[-rlm_signalsdifference_ind[1:i],]
+#     rlm_preinfo[dim(rlm_samples_sub)[1],]=c(dim(rlm_samples_sub)[1],dim(rlm_samples_sub)[1]*cor(rlm_samples,use='pairwise.complete.obs',method='spearman')[1,2])
+#   }
+#   # I analyze with how many samples there has been the best correlation (penalization-adjusted) and save the samples that will be used for the robust linear model
+#   if(length(rlm_signalsdifference_ind[dim(rlm_samples)[1]-which.max(rlm_preinfo[,2])])>0) {
+#     rlm_samples_sub = rlm_samples[-rlm_signalsdifference_ind[dim(rlm_samples)[1]-which.max(rlm_preinfo[,2])],]
+#   } else {
+#     rlm_samples_sub=rlm_samples
+#   }
+#   #Robust linear model and prediction of expected shifts
+#   rlm_model=lmrob(rlm_samples_sub[,1]~rlm_samples_sub[,2])
+#   
+#   intensity_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$intensity[,ind2[ii]]
+# 
+#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[ii]]-intensity_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
+#   intensity_alarmmatrix[intensity_suspicioussamples,c(ind[ii],ind2[ii])]=1
+# 
+#   
+# }
 
 
 #I sum all "points" gained by every quantification
