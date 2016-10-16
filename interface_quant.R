@@ -241,9 +241,11 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     blah$spectrum_index=spectrum_index
     blah$signals_codes=signals_codes
     blah$fitting_type=fitting_type
+    # blah$finaloutput=finaloutput
     
     if (is_autorun=='Y') {
-      save_roi_testing(blah,autorun_data, finaloutput)
+      finaloutput=save_roi_testing(blah,autorun_data, finaloutput)
+      blah$finaloutput=finaloutput
       print('New')
     }
   }

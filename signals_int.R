@@ -161,6 +161,8 @@ fitting_type=ROI_profile[1,3]
     blah$results_to_save=results_to_save
     blah$fitting_type=fitting_type
     blah$ROI_profile=ROI_profile
+    blah$finaloutput=finaloutput
+    
     
   return(blah)
 }
