@@ -86,14 +86,14 @@ rm(imported_data)
 finaloutput = autorun(autorun_data, finaloutput)
 
 
-setwd("C:/Users/user/Downloads/shinyinterface-5d5de725082eba23eea719ceb1066ae5bb836671")
+other_fit_parameters = fitting_variables()
 
 
-ROI_data = read.csv(autorun_data$profile_folder_path, sep = ";",stringsAsFactors = F)
+ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
 dummy = which(!is.na(ROI_data[, 1]))
 ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(ROI_data)[1]))
-mtcars2=ROI_data[1:2,4:11]
-mtcars=ROI_data[1:2,4:11]
+# mtcars2=ROI_data[1:2,4:11]
+# mtcars=ROI_data[1:2,4:11]
 
 ROI_names=paste(ROI_data[ROI_separator[, 1],1],ROI_data[ROI_separator[, 1],2])
 select_options=1:length(ROI_names)

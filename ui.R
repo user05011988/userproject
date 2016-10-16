@@ -1,14 +1,9 @@
-library(shiny)
-library(plotly)
-library(quantmod)
-library(DT)
-library(D3TableFilter)
-library(reshape)
+
 
 shinyUI(fluidPage(
   title = 'Interactive features',
   tabsetPanel(
-    tabPanel("Editing and filtering",
+    tabPanel("ROI Testing",
 
   sidebarLayout(
     sidebarPanel(
@@ -35,7 +30,7 @@ shinyUI(fluidPage(
 
     mainPanel(plotlyOutput("plot")))
     ),
-    tabPanel("Selection",
+    tabPanel("Fitting error values",
       fluidRow(column(width = 12, h4("Selection"))),
       fluidRow(
         column(width = 12,
@@ -45,7 +40,7 @@ shinyUI(fluidPage(
       )
       
     ),
-    tabPanel("Selection",
+    tabPanel("Outliers",
       fluidRow(column(width = 12, h4("Selection"))),
       fluidRow(
         column(width = 12,
@@ -67,7 +62,7 @@ shinyUI(fluidPage(
     # 
     # ),
     
-    tabPanel("p_value",
+    tabPanel("Univariate analyses",
   fluidRow(column(width = 12, h4("Row selection"))),
   fluidRow(
     column(width = 12,

@@ -6,7 +6,7 @@ autorun = function(autorun_data, finaloutput) {
   
   
   # Loading of ROIs parameters
-  ROI_data = read.csv(autorun_data$profile_folder_path, sep = ";",stringsAsFactors = F)
+  ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
   dummy = which(!is.na(ROI_data[, 1]))
   ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(ROI_data)[1]))
   for (ROI_index in seq_along(ROI_separator[, 1])) {
@@ -32,76 +32,76 @@ autorun = function(autorun_data, finaloutput) {
     
     fitting_type = as.character(pre_import_excel_profile[1, 3])
     signals_to_quantify = which(pre_import_excel_profile[, 7] == 1)
-    
-    quartile_spectrum = as.numeric(apply(autorun_data$dataset[, other_fit_parameters$ROI_buckets,drop=F], 2, function(x)
-      quantile(x, 0.75)))
-    reference_spectrum_ind = which.min(apply(autorun_data$dataset[, other_fit_parameters$ROI_buckets,drop=F], 1, function(x)
-      sqrt(mean((x - quartile_spectrum) ^ 2
-      ))))
-
-    Ydata = as.numeric(autorun_data$dataset[reference_spectrum_ind, ROI_buckets])
-    if (fitting_type == "Clean Fitting" || fitting_type ==
-        "Baseline Fitting") {
-      is_roi_testing = "N"
-
-      clean_fit = ifelse(fitting_type == "Clean Fitting", "Y",
-        "N")
-
-      #Parameters of every signal necessary for the fitting
-      initial_fit_parameters = pre_import_excel_profile[, 5:11,drop=F]
-      # initial_fit_parameters=as.data.frame(apply(initial_fit_parameters,2,as.numeric))
-
-      # initial_fit_parameters = initial_fit_parameters[complete.cases(initial_fit_parameters),]
-      colnames(initial_fit_parameters) = c(
-        "positions",
-        "widths",
-        "quantification_or_not",
-        "multiplicities",
-        "Jcoupling",
-        "roof_effect",
-        "shift_tolerance"
-      )
-
-      #Ydata is scaled to improve the quality of the fitting
-      scaledYdata = as.vector(Ydata / (max(Ydata)))
-
-      #Other parameters necessary for the fitting independent of the type of signal
-
-      other_fit_parameters$clean_fit = clean_fit
-
-      #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
-      FeaturesMatrix = fitting_prep(preXdata,
-        scaledYdata,
-        initial_fit_parameters,
-        other_fit_parameters)
-
-
-      #Calculation of the parameters that will achieve the best fitting
-      signals_parameters = fittingloop(FeaturesMatrix,
-        preXdata,
-        scaledYdata,
-        other_fit_parameters)
-      dim(signals_parameters) = c(5, length(signals_parameters)/5)
-  
-      # pre_import_excel_profile[signals_to_quantify,6]=signals_parameters[3,signals_to_quantify]*autorun_data$freq
-      cla=pre_import_excel_profile[signals_to_quantify,5]
-      pre_import_excel_profile[signals_to_quantify,5]=signals_parameters[2,signals_to_quantify]
-      ROI_limits = round(as.numeric(pre_import_excel_profile[1, 1:2])-cla-pre_import_excel_profile[signals_to_quantify,5],3)
-      ROI_limits = round(as.numeric(pre_import_excel_profile[1, 1:2]),3)
-      if (ROI_limits[1] < ROI_limits[2])
-        rev(ROI_limits)
-      print(paste(ROI_limits[1], ROI_limits[2], sep = '-'))
-      ROI_buckets = which(autorun_data$ppm <= ROI_limits[1] &
-          autorun_data$ppm >=
-          ROI_limits[2])
-    
-  }
-    
-    
-    
-    # clustering of samples
-    dd=autorun_data$dataset[,ROI_buckets]/apply(autorun_data$dataset[,ROI_buckets],1,median)
-    # 
+  #   
+  #   quartile_spectrum = as.numeric(apply(autorun_data$dataset[, other_fit_parameters$ROI_buckets,drop=F], 2, function(x)
+  #     quantile(x, 0.75)))
+  #   reference_spectrum_ind = which.min(apply(autorun_data$dataset[, other_fit_parameters$ROI_buckets,drop=F], 1, function(x)
+  #     sqrt(mean((x - quartile_spectrum) ^ 2
+  #     ))))
+  # 
+  #   Ydata = as.numeric(autorun_data$dataset[reference_spectrum_ind, ROI_buckets])
+  #   if (fitting_type == "Clean Fitting" || fitting_type ==
+  #       "Baseline Fitting") {
+  #     is_roi_testing = "N"
+  # 
+  #     clean_fit = ifelse(fitting_type == "Clean Fitting", "Y",
+  #       "N")
+  # 
+  #     #Parameters of every signal necessary for the fitting
+  #     initial_fit_parameters = pre_import_excel_profile[, 5:11,drop=F]
+  #     # initial_fit_parameters=as.data.frame(apply(initial_fit_parameters,2,as.numeric))
+  # 
+  #     # initial_fit_parameters = initial_fit_parameters[complete.cases(initial_fit_parameters),]
+  #     colnames(initial_fit_parameters) = c(
+  #       "positions",
+  #       "widths",
+  #       "quantification_or_not",
+  #       "multiplicities",
+  #       "Jcoupling",
+  #       "roof_effect",
+  #       "shift_tolerance"
+  #     )
+  # 
+  #     #Ydata is scaled to improve the quality of the fitting
+  #     scaledYdata = as.vector(Ydata / (max(Ydata)))
+  # 
+  #     #Other parameters necessary for the fitting independent of the type of signal
+  # 
+  #     other_fit_parameters$clean_fit = clean_fit
+  # 
+  #     #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
+  #     FeaturesMatrix = fitting_prep(preXdata,
+  #       scaledYdata,
+  #       initial_fit_parameters,
+  #       other_fit_parameters)
+  # 
+  # 
+  #     #Calculation of the parameters that will achieve the best fitting
+  #     signals_parameters = fittingloop(FeaturesMatrix,
+  #       preXdata,
+  #       scaledYdata,
+  #       other_fit_parameters)
+  #     dim(signals_parameters) = c(5, (length(signals_parameters)/5))
+  # 
+  #     # pre_import_excel_profile[signals_to_quantify,6]=signals_parameters[3,signals_to_quantify]*autorun_data$freq
+  #     cla=pre_import_excel_profile[signals_to_quantify,5]
+  #     pre_import_excel_profile[signals_to_quantify,5]=signals_parameters[2,signals_to_quantify]
+  #     ROI_limits = round(as.numeric(pre_import_excel_profile[1, 1:2])-cla-pre_import_excel_profile[signals_to_quantify,5],3)
+  #     ROI_limits = round(as.numeric(pre_import_excel_profile[1, 1:2]),3)
+  #     if (ROI_limits[1] < ROI_limits[2])
+  #       rev(ROI_limits)
+  #     print(paste(ROI_limits[1], ROI_limits[2], sep = '-'))
+  #     ROI_buckets = which(autorun_data$ppm <= ROI_limits[1] &
+  #         autorun_data$ppm >=
+  #         ROI_limits[2])
+  #   
+  # }
+  #   
+  #   
+  #   
+  #   # clustering of samples
+  #   dd=autorun_data$dataset[,ROI_buckets]/apply(autorun_data$dataset[,ROI_buckets],1,median)
+  #   # 
     
     # bc=apcluster::apcluster(apcluster::negDistMat(r=2),dd,q=0.5)
     # bd=list()
@@ -209,7 +209,7 @@ autorun = function(autorun_data, finaloutput) {
         
         write.csv(
           integration_parameters,
-          file.path(plot_path[i],
+          file.path(plot_path,
             "integration_parameters.csv"),
           row.names = F
         )

@@ -32,6 +32,8 @@ packages_sources = function() {
   source("outputgenerator.R")
   source("plotgenerator.R")
   source("interface_quant.R")
+  source("fitting_optimization.R")
+  source("peakpvoigt.R")
   
   source("peakdet.R")
   source("fitting_prep.R")

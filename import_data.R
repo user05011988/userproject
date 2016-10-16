@@ -9,7 +9,7 @@ import_data = function(parameters_path) {
   # TO DO: stringsasfactors=F
   import_profile = read.delim(
     parameters_path,
-    sep = ';',
+    sep = ',',
     header = T,
     stringsAsFactors = F
   )
@@ -21,7 +21,7 @@ import_data = function(parameters_path) {
 
   dummy = read.delim(
     metadata_path,
-    sep = ';',
+    sep = ',',
     header = T,
     stringsAsFactors = F
   )
@@ -34,7 +34,7 @@ import_data = function(parameters_path) {
   # signals_names = as.list(signals_names[signals_names != ''])
   profile_folder_path = as.character(import_profile[7, 2])
 
-  ROI_data=read.csv(profile_folder_path,sep=";")
+  ROI_data=read.csv(profile_folder_path)
   signals_names=ROI_data[,4]
   signals_codes = 1:length(signals_names)
 
@@ -107,7 +107,7 @@ import_data = function(parameters_path) {
     params$disol_suppression = 'N'
   } else {
     params$disol_suppression = 'Y'
-    params$disol_suppression_ppm = as.numeric(strsplit(suppression, '-|,')[[1]])
+    params$disol_suppression_ppm = as.numeric(strsplit(suppression, '-|;')[[1]])
     dim(params$disol_suppression_ppm) = c(length(params$disol_suppression_ppm) /
                                             2, 2)
     params$disol_suppression_ppm = t(params$disol_suppression_ppm)
