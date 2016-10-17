@@ -27,6 +27,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     
     fitting_type = as.character(ROI_profile[1, 3])
     signals_to_quantify = which(ROI_profile[, 7] == 1)
+    print(signals_to_quantify)
     signals_codes = replicate(length(signals_to_quantify), NA)
     signals_names = replicate(length(signals_to_quantify), NA)
     j = 1
@@ -37,6 +38,8 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       signals_names[j] = as.character(autorun_data$signals_names[k])
       j = j + 1
     }
+    print(signals_codes)
+    print(signals_names)
     
     experiment_name = autorun_data$Experiments[[spectrum_index]]
     plot_path = file.path(autorun_data$export_path,
@@ -69,9 +72,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
                "Baseline Fitting") {
       is_roi_testing = "N"
       clean_fit='N'
-      signals_names=autorun_data$signals_names[1:2]
-      signals_codes=autorun_data$signals_codes[1:2]
-      
+
       # clean_fit = ifelse(fitting_type == "Clean Fitting", "Y",
       #                    "N")
     # print(ROI_profile)
@@ -163,7 +164,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       rownames(plot_data) = c("signals_sum",
                               "baseline_sum",
                               "fitted_sum",
-                              as.character(ROI_profile[,1]))
+                              as.character(ROI_profile[,4]))
 
       # plotdata = data.frame(Xdata=autorun_data$ppm[ROI_buckets], t(dataset[input$x1_select,ROI_buckets,drop=F]))
      
@@ -240,6 +241,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     blah$results_to_save=results_to_save
     blah$spectrum_index=spectrum_index
     blah$signals_codes=signals_codes
+    print(blah$signals_codes)
     blah$fitting_type=fitting_type
     # blah$finaloutput=finaloutput
     

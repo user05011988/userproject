@@ -139,12 +139,11 @@ outlier_table=matrix(0,dim(ll)[1],dim(ll)[2])
 colnames(outlier_table)=colnames(t_test_data_2)
 rownames(outlier_table)=rownames(finaloutput$fitting_error)
 
-for (i in 1:dim(ll)[2]) {
-  for (j in length(ss)) {
-    outliers=boxplot.stats(ll[autorun_data$Metadata==ss[j],i])$out
-    outlier_table[ll[autorun_data$Metadata==ss[j],i] %in%  outliers]=1
-  }}
-
+for (j in 1:length(ss)) {
+  outlier_table[autorun_data$Metadata==ss[j],][sapply(ll[autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
+  # ind=which(autorun_data$Metadata==ss[j])
+  # sell$outlier_table[ind[sell$finaloutput$Area[autorun_data$Metadata==ss[j],i] %in%  outliers],i]=1
+}
 ss=unique(autorun_data$Metadata[,1])
 tt=matrix(NA,length(ss),dim(t_test_data_2)[2])
 for (ind in seq_along(ss)) {

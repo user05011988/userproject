@@ -96,18 +96,16 @@ for (i in seq_along(plot_path)) {
 }
 
 
-    # spectrum_index
-    # signals_codes
-    # autorun_data
-    # finaloutput
-  print(results_to_save$fitting_error)
-    finaloutput = save_output(
+
+  print(finaloutput$fitting_error[1,3])
+  finaloutput = save_output(
       spectrum_index,
       signals_codes,
       results_to_save,
       autorun_data$buck_step,
       finaloutput
     )
+
     write.csv(finaloutput$Area,
       file.path(autorun_data$export_path,
         "Area.csv"))
