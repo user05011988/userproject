@@ -24,7 +24,7 @@ ui <- fluidPage(
     $('#mynavlist a:contains(\"ROI Testing\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"Fitting error values\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"Outliers\")').parent().addClass('disabled')
-    $('#mynavlist a:contains(\"Univariate analyses\")').parent().addClass('disabled')
+    $('#mynavlist a:contains(\"Univariate analysis\")').parent().addClass('disabled')
     }
     
     Shiny.addCustomMessageHandler('activeNavs', function(nav_label) {
@@ -38,10 +38,11 @@ ui <- fluidPage(
         sidebarPanel(
           fileInput("file1", "Choose RData File",
             accept = c("text/RData")
-          ),
-          br(),
-          verbatimTextOutput("Save RData file (.RData extension) when you have ended playing with this demo, so there is some coherence in the data when you play with the demo in the future. I will blame any problem about the demo on you for not following this instruction."),
-          actionButton("download", label = "download")
+          )
+          # ,
+          # br(),
+          # verbatimTextOutput("Save RData file (.RData extension) when you have ended playing with this demo, so there is some coherence in the data when you play with the demo in the future. I will blame any problem about the demo on you for not following this instruction."),
+          # actionButton("download", label = "download")
           
         ),
         mainPanel(
@@ -54,13 +55,13 @@ ui <- fluidPage(
       sidebarLayout(
         sidebarPanel(
           
-          actionButton("save_results", label = "Save results"),
+          actionButton("save_results", label = "Save quantificaiton"),
           actionButton("save_profile", label = "Save profile"),
-          actionButton("autorun", label = "autorun"),
-          actionButton("remove_q", label = "Remove!"),
+          actionButton("autorun", label = "Autorun of the signal"),
+          actionButton("remove_q", label = "Remove quantification"),
           
-          actionButton("action", label = "Action"),
-          selectInput("select", label = h3("Select box"),choices=""),
+          actionButton("action", label = "Quantification (without saving!)"),
+          selectInput("select", label = h3("Select ROI"),choices=""),
           
           DT::dataTableOutput('x1'),
           br(),
@@ -77,7 +78,7 @@ ui <- fluidPage(
         mainPanel(plotlyOutput("plot")))
     ),
     tabPanel("Fitting error values",
-      fluidRow(column(width = 12, h4("Selection"))),
+      fluidRow(column(width = 12, h4("Here you have the fitting error for every quantification. Press one and go to ROI Testing to analyze the quantification"))),
       fluidRow(
         column(width = 12,
           DT::dataTableOutput("fit_selection")
@@ -87,7 +88,7 @@ ui <- fluidPage(
       
     ),
     tabPanel("Outliers",
-      fluidRow(column(width = 12, h4("Selection"))),
+      fluidRow(column(width = 12, h4("Here you have the outliers for every signal and kind of sample. Press one and go to ROI Testing to analyze the quantification"))),
       fluidRow(
         column(width = 12,
           DT::dataTableOutput("quant_selection")
@@ -98,17 +99,17 @@ ui <- fluidPage(
     ),
     
     
-    tabPanel("Univariate analyses",
-      fluidRow(column(width = 12, h4("Row selection"))),
+    tabPanel("Univariate analysis",
+      fluidRow(column(width = 12, h4("Here you have different kinds of univariate analysis. By now only can analyze between two groups of samples. It cannot analyze differences by treatment, or compare more than two groups of samples. There is an interactive plot of bucket analysis (without FDR at the moment), the p values of quantifications (tests adjusted to normality and variance) and boxplots for every signal for every kind of sample"))),
       fluidRow(
-        column(width = 12,
+        column(width = 12, h4("Bucket analysis"),
           mainPanel(plotlyOutput("plot_p_value")))    ),
       fluidRow(
-        column(width = 12,
+        column(width = 12, h4("p values"),
           mainPanel(DT::dataTableOutput("p_value_final")))    ),
       
       fluidRow(
-        column(width = 12,
+        column(width = 12, h4("Boxplots"),
           mainPanel(plotlyOutput("plot_p_value_2")))    )
       
     )
@@ -314,6 +315,8 @@ server = function(input, output,session) {
           v$meh=signals_int(sell$autorun_data, sell$finaloutput,sell$ind,revals2$mtcars,revals$mtcars) 
 
           revals3$mtcars=cbind(v$meh$results_to_save$Area,v$meh$results_to_save$fitting_error,v$meh$results_to_save$signal_area_ratio)
+          colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
+          
           v$blah$signals_parameters=v$meh$signals_parameters
           v$blah$results_to_save=v$meh$results_to_save
           v$blah$other_fit_parameters=v$meh$other_fit_parameters
@@ -357,6 +360,8 @@ server = function(input, output,session) {
     v$blah <- interface_quant(sell$autorun_data, sell$finaloutput, sell$ind,revals$mtcars,is_autorun) 
 
     revals3$mtcars=cbind(v$blah$results_to_save$Area,v$blah$results_to_save$fitting_error,v$blah$results_to_save$signal_area_ratio)
+    colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
+    
     
     if (!is.null(v$blah$signals_parameters)) {
       revals2$mtcars <- v$blah$signals_parameters
@@ -390,6 +395,7 @@ server = function(input, output,session) {
     plot_data=as.matrix(dummy[,-1])
     other_fit_parameters=as.list(import(file.path(path,'other_fit_parameters.csv'))[1,])
     ROI_profile=import(file.path(path,'import_excel_profile.csv'))[,-1,drop=F]
+    
     other_fit_parameters$signals_to_quantify=ROI_profile[,7]
     
     plotdata2 = data.frame(Xdata=Xdata,
@@ -426,7 +432,6 @@ server = function(input, output,session) {
       scale_x_reverse() + labs(x='ppm',y='Intensity') + expand_limits(y=0)
     
     r=which(ROI_profile[,4]==sell$autorun_data$signals_names[sell$info$col])
-    print(r)
     plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] * max(Ydata))
       v$blah$p=v$blah$p +
         geom_area(
@@ -440,9 +445,12 @@ server = function(input, output,session) {
         ) 
     # }
     revals$mtcars=ROI_profile
-    revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
-   
+    revals2$mtcars=import(file.path(path,'signals_parameters.csv'))[,-1]
+    colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
+   # print(revals2$mtcars)
     revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,sell$info$col],sell$finaloutput$fitting_error[sell$info$row,sell$info$col],sell$finaloutput$signal_area_ratio[sell$info$row,sell$info$col])
+    colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
+    
     
     
   })
@@ -517,8 +525,11 @@ server = function(input, output,session) {
         ) 
     # }
     revals$mtcars=ROI_profile
-    revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
+    revals2$mtcars=import(file.path(path,'signals_parameters.csv'))[,-1]
+    colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,sell$info$col],sell$finaloutput$fitting_error[sell$info$row,sell$info$col],sell$finaloutput$signal_area_ratio[sell$info$row,sell$info$col])
+    colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
+    
     
     
   })
@@ -740,15 +751,15 @@ server = function(input, output,session) {
       session$sendCustomMessage('activeNavs', 'ROI Testing')
       session$sendCustomMessage('activeNavs', 'Fitting error values')
       session$sendCustomMessage('activeNavs', 'Outliers')
-      session$sendCustomMessage('activeNavs', 'Univariate analyses')
+      session$sendCustomMessage('activeNavs', 'Univariate analysis')
       
   })
   
-  observeEvent(input$download, {
-  myfile=file.choose()
-  save.image(myfile)
-  myfile=NULL
-  })
+  # observeEvent(input$download, {
+  # myfile=file.choose()
+  # save.image(myfile)
+  # myfile=NULL
+  # })
   
 }
 
