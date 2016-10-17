@@ -31,12 +31,12 @@ ui <- fluidPage(
     $('#mynavlist a:contains(\"' + nav_label + '\")').parent().removeClass('disabled')
     })
     ")),
-  titlePanel("New Project"), 
+  titlePanel("Dolphin Demo"), 
   tabsetPanel(selected="Data Upload", id='mynavlist',
     tabPanel("Data Upload",           
       sidebarLayout(
         sidebarPanel(
-          fileInput("file1", "Choose RData File",
+          fileInput("file1", "Choose RData File (you will load the quantifications of some signals of the MTBLS1 study; the idea is that you play with the resulting univariate analyses and correcting bad quantifications)",
             accept = c("text/RData")
           )
           # ,
@@ -51,8 +51,9 @@ ui <- fluidPage(
       )
     ),   
     tabPanel("ROI Testing",
-      
+      fluidRow(column(width = 12, h4("Here you can change the quantifications and save them or remove them if they can't be well quantified. YOu can also save the edited profile of the ROI"))),
       sidebarLayout(
+        
         sidebarPanel(
           
           actionButton("save_results", label = "Save quantificaiton"),
@@ -61,21 +62,27 @@ ui <- fluidPage(
           actionButton("remove_q", label = "Remove quantification"),
           
           actionButton("action", label = "Quantification (without saving!)"),
-          selectInput("select", label = h3("Select ROI"),choices=""),
-          
-          DT::dataTableOutput('x1'),
-          br(),
-          D3TableFilter::d3tfOutput('mtcars'),
-          br(),
-          D3TableFilter::d3tfOutput('mtcars2'),
-          br(),
-          D3TableFilter::d3tfOutput('mtcars3')
-          
+          fluidRow(column(width = 12, h4("Select ROI"))),
+          selectInput("select",label=NULL,choices=""),
+          fluidRow(column(width = 12, h4("Select spectrum"))),
+          DT::dataTableOutput('x1')
           
         ),
         
         
-        mainPanel(plotlyOutput("plot")))
+        mainPanel(
+          plotlyOutput("plot"),
+          fluidRow(column(width = 12, h4("You can edit the ROI Profile and quantify"))),
+          
+          D3TableFilter::d3tfOutput('mtcars',width = "100%", height = "auto"),
+          fluidRow(column(width = 12, h4("You can directly edit the signals parameters if you are not satisfied with the calculated parameters. Right now the numbers are still not consistent with the numbers in ROI Profile"))),
+          D3TableFilter::d3tfOutput('mtcars2',width = "100%", height = "auto"),
+          fluidRow(column(width = 12, h4("You have here some indicators of quality of the quantification"))),
+          
+          D3TableFilter::d3tfOutput('mtcars3',width = "100%", height = "auto")
+          
+          )
+        )
     ),
     tabPanel("Fitting error values",
       fluidRow(column(width = 12, h4("Here you have the fitting error for every quantification. Press one and go to ROI Testing to analyze the quantification"))),
