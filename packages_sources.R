@@ -48,6 +48,8 @@ packages_sources = function() {
   source("automatic_roi_edition.R")
   source("validation.R")
   source("plele.R")
+  source("interface_integration.R")
+  
   
 
 }

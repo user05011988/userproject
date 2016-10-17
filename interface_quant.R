@@ -56,9 +56,11 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       clean_fit = ifelse(fitting_type == "Clean Sum", "Y", "N")
       integration_parameters = data.frame(plot_path, is_roi_testing,
                                           clean_fit)
-      fa = integration(integration_parameters, Xdata,
+      fa = interface_integration(integration_parameters, Xdata,
 
                                     Ydata)
+      
+      print(fa$p)
       results_to_save=fa$results_to_save
       p=fa$p
       
