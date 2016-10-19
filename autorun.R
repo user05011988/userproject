@@ -271,6 +271,7 @@ autorun = function(autorun_data, finaloutput) {
           'gaussian',
           'J_coupling'
         )
+        signals_parameters=rbind(signals_parameters,multiplicities,roof_effect)
         
         #Generation of output data about the fitting and of the necessary variables for the generation ofa figure
         output_data = output_generator(
@@ -283,11 +284,11 @@ autorun = function(autorun_data, finaloutput) {
         
         output_data$intensity=signals_parameters[1, signals_to_quantify] * max(Ydata)
         output_data$width=signals_parameters[3, signals_to_quantify]
-        
+        output_data$Area=output_data$Area * max(Ydata)
         #Generation of the dataframe with the final output variables
         results_to_save = data.frame(
           shift = output_data$shift,
-          Area = output_data$Area * max(Ydata),
+          Area = output_data$Area,
           signal_area_ratio = output_data$signal_area_ratio,
           fitting_error = output_data$fitting_error,
           intensity = output_data$intensity,

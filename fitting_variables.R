@@ -20,9 +20,9 @@ other_fit_parameters$errorprov=5
 other_fit_parameters$fitting_maxiter=NA
 
 #Parameters related to the lsq algorithm
-other_fit_parameters$nls_lm_maxiter=500
-other_fit_parameters$ftol=1e-5
-other_fit_parameters$ptol=1e-5
+other_fit_parameters$nls_lm_maxiter=1500
+other_fit_parameters$ftol=1e-16
+other_fit_parameters$ptol=1e-16
 other_fit_parameters$factor=0.01
 
 #Parameters related to the addition of other signals post fitting

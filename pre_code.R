@@ -17,6 +17,7 @@ parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_da
 parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_20_2.csv"
 
 parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters.csv"
+parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_reduced_20.csv"
 
 #import of data (dataset in csv format or Bruker nmr folder)
 imported_data = import_data(parameters_path)
@@ -167,3 +168,4 @@ p_value_final=t(as.matrix(p_value))
 colnames(p_value_final)=colnames(t_test_data_2)
 
 
+save(setdiff(ls(), lsf.str()),file='ff.RData')

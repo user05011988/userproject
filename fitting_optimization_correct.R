@@ -9,7 +9,7 @@ fitting_optimization = function(parS, Xdata,multiplicities,roof_effect) {
   
   i = as.numeric(parS[seq(1, length(parS) - 4, 5)])
   p = as.numeric(parS[seq(2, length(parS) - 3, 5)])
-  w = as.numeric(parS[seq(3, length(parS) - 2, 5)])/10
+  w = as.numeric(parS[seq(3, length(parS) - 2, 5)])
   g = as.numeric(parS[seq(4, length(parS) - 1, 5)])
   j = as.numeric(parS[seq(5, length(parS) - 0, 5)])
   signals_parameters=rbind(i,p,w,g,j)

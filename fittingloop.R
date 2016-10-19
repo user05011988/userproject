@@ -82,6 +82,7 @@ fittingloop = function(FeaturesMatrix,
       if (iterrep %in% seq(1,16,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=0,max=1/3)
       if (iterrep %in% seq(2,17,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=1/3,max=2/3)
       if (iterrep %in% seq(3,18,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=2/3,max=1)
+      s0[which(seq_along(s0)%%5==3)]=s0[which(seq_along(s0)%%5==3)]*10
       
       #
       # if (exists('nls.out')) {
@@ -145,11 +146,11 @@ fittingloop = function(FeaturesMatrix,
       # print(signals_parameters[4,])
       
     }
-    print(error2)
+    # print(error2)
     #If the fitting seems to be still clearly improvable through the addition of signals
     if (error2 < (other_fit_parameters$additional_signal_improvement * dummy) &
         (error1 > other_fit_parameters$additional_signal_percentage_limit)) {
-      print(iterrep)
+      # print(iterrep)
       #Finding of signals in the vector of the difference between the fitted and the original ROI
       lol = peakdet(nls.out$fvec, other_fit_parameters$peakdet_minimum)
       if (is.null(lol$maxtab) == F) {

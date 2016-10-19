@@ -13,9 +13,9 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
   } else {
     indexes=1:dim(autorun_data$dataset)[1]
   }
-  print(indexes)
   # print(ROI_profile)
   for (spectrum_index in indexes) {
+    print(spectrum_index)
   ROI_buckets=which(round(autorun_data$ppm,6)==round(ROI_profile[1,1],6)):which(round(autorun_data$ppm,6)==round(ROI_profile[1,2],6))
   # print(ROI_buckets)
   Xdata= as.numeric(autorun_data$ppm[ROI_buckets])
@@ -27,7 +27,6 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     
     fitting_type = as.character(ROI_profile[1, 3])
     signals_to_quantify = which(ROI_profile[, 7] == 1)
-    print(signals_to_quantify)
     signals_codes = replicate(length(signals_to_quantify), NA)
     signals_names = replicate(length(signals_to_quantify), NA)
     j = 1
@@ -38,8 +37,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       signals_names[j] = as.character(autorun_data$signals_names[k])
       j = j + 1
     }
-    print(signals_codes)
-    print(signals_names)
+    
     
     experiment_name = autorun_data$Experiments[[spectrum_index]]
     plot_path = file.path(autorun_data$export_path,
@@ -60,7 +58,6 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
 
                                     Ydata)
       
-      print(fa$p)
       results_to_save=fa$results_to_save
       p=fa$p
       
@@ -141,11 +138,13 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
 
       output_data$intensity=signals_parameters[1, signals_to_quantify] * max(Ydata)
       output_data$width=signals_parameters[3, signals_to_quantify]
+      output_data$Area = output_data$Area * max(Ydata)      
+      
 
       #Generation of the dataframe with the final output variables
       results_to_save = data.frame(
         shift = output_data$shift,
-        Area = output_data$Area * max(Ydata),
+        Area = output_data$Area,
         signal_area_ratio = output_data$signal_area_ratio,
         fitting_error = output_data$fitting_error,
         intensity = output_data$intensity,
@@ -153,7 +152,6 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       )
       
       #Adaptation of the quantification to de-scaled Ydata
-      results_to_save$Area = results_to_save$Area * max(Ydata)      
 
       #Generation of the figure when the conditions specified in the Parameters file are accomplished
       # r=1
@@ -226,7 +224,6 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
   
    
     signals_parameters=t(rbind(signals_parameters,multiplicities,roof_effect))
-    print(signals_parameters)
     blah$signals_parameters=signals_parameters
     blah$other_fit_parameters=other_fit_parameters
     blah$results_to_save=results_to_save
@@ -243,14 +240,12 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     blah$results_to_save=results_to_save
     blah$spectrum_index=spectrum_index
     blah$signals_codes=signals_codes
-    print(blah$signals_codes)
     blah$fitting_type=fitting_type
     # blah$finaloutput=finaloutput
     
     if (is_autorun=='Y') {
       finaloutput=save_roi_testing(blah,autorun_data, finaloutput)
       blah$finaloutput=finaloutput
-      print('New')
     }
   }
     

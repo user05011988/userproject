@@ -45,7 +45,17 @@ for (r in 1:length(results_to_save$signal_area_ratio)) {
   #There is only creation of plot if the conditions specified in the Parameters file are accomplished
   if (results_to_save$signal_area_ratio[other_fit_parameters$signals_to_quantify[r]] < other_fit_parameters$signal_area_ratio_plot ||
       results_to_save$fitting_error[other_fit_parameters$signals_to_quantify[r]] > other_fit_parameters$fitting_error_plot) {
-ggsave(paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit.jpeg",sep='/'),plot = p,width = 10, height = 5)
+# ggsave(paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit.jpeg",sep='/'),plot = p,width = 10, height = 5)
+    png(filename=paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit2.png",sep='/'), 
+      type="cairo",
+      units="in", 
+      width=8, 
+      height=4, 
+      pointsize=12, 
+      res=96)
+    print(p)
+    dev.off()
+    
   }
 }
 for (i in seq_along(plot_path)) {
@@ -78,7 +88,7 @@ for (i in seq_along(plot_path)) {
   write.csv(FeaturesMatrix,
     file.path(plot_path[i], "FeaturesMatrix.csv"))
   # row.names = F)
-  write.table(signals_parameters,
+  write.table(t(signals_parameters),
     file.path(plot_path[i],
       "signals_parameters.csv"))
   # col.names = F

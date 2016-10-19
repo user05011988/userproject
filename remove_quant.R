@@ -1,8 +1,7 @@
 remove_quant=function(info,autorun_data,finaloutput) {
   ind1=info$row
   ind2=info$col
-  print(ind1)
-  print(ind2)
+  
 
 finaloutput$Area[ind1,ind2]=finaloutput$shift[ind1,ind2]=finaloutput$Area[ind1,ind2]=finaloutput$width[ind1,ind2]=finaloutput$signal_area_ratio[ind1,ind2]=finaloutput$fitting_error[ind1,ind2]=finaloutput$intensity[ind1,ind2]=NA
 write.csv(finaloutput$Area,
