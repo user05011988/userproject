@@ -32,7 +32,7 @@ import_data = function(parameters_path) {
   #                            header = F,
   #                            stringsAsFactors = F)[, 1]
   # signals_names = as.list(signals_names[signals_names != ''])
-  profile_folder_path = as.character(import_profile[7, 2])
+  profile_folder_path = as.character(import_profile[6, 2])
 
   ROI_data=read.csv(profile_folder_path)
   signals_names=ROI_data[,4]
@@ -41,18 +41,13 @@ import_data = function(parameters_path) {
 
 
   #Preparing the structure of experiments and signals where to store the output
-  export_path = as.character(import_profile[8, 2])
-
-  #Criteria for saving or not plots of fit
-  E_max = as.numeric(as.character(import_profile[9, 2]))
-  P_max = as.numeric(as.character(import_profile[10, 2]))
-
-  #Other necessary variables
-  freq = as.numeric(as.character(import_profile[14, 2]))
+  export_path = as.character(import_profile[7, 2])
+#Other necessary variables
+  freq = as.numeric(as.character(import_profile[11, 2]))
 
   #Kind of normalization
   #TO DO: add PQN (but before standardize a way to find the regions to have into account)
-  normalization = import_profile[11, 2]
+  normalization = import_profile[8, 2]
   pqn='N'
   
   params$norm_AREA = 'N'
@@ -87,7 +82,7 @@ import_data = function(parameters_path) {
   }
 
   #Alignment
-  alignment = import_profile[12, 2]
+  alignment = import_profile[9, 2]
   params$glucose_alignment = 'N'
   params$tsp_alignment = 'N'
   params$peak_alignment = 'N'
@@ -104,7 +99,7 @@ import_data = function(parameters_path) {
   }
 
   #Suppresion regions
-  suppression = as.character(import_profile[13, 2])
+  suppression = as.character(import_profile[10, 2])
   if (suppression == '') {
     params$disol_suppression = 'N'
   } else {
@@ -137,10 +132,10 @@ import_data = function(parameters_path) {
       rownames(imported_data$dataset) = Experiments
 
       params$buck_step = ifelse(
-        as.character(import_profile[21, 2]) == '',
+        as.character(import_profile[13, 2]) == '',
         abs(imported_data$ppm[1] - imported_data$ppm[length(imported_data$ppm)]) /
           length(imported_data$ppm),
-        as.numeric(as.character(import_profile[21, 2]))
+        as.numeric(as.character(import_profile[13, 2]))
       )
     } else {
       print('Problem when creating the dataset. Please revise the parameters.')
@@ -151,7 +146,7 @@ import_data = function(parameters_path) {
     params$dir = bruker_path
     params$expno = expno
     params$processingno = processingno
-    params$buck_step = as.numeric(as.character(import_profile[21, 2]))
+    params$buck_step = as.numeric(as.character(import_profile[13, 2]))
     imported_data = Metadata2Buckets(Experiments, params)
 
   }
@@ -183,8 +178,6 @@ import_data = function(parameters_path) {
   imported_data$signals_names = signals_names
   imported_data$signals_codes = signals_codes
   imported_data$Experiments = setdiff(Experiments, imported_data$not_loaded_experiments)
-  imported_data$E_max = E_max
-  imported_data$P_max = P_max
   imported_data$export_path = export_path
   imported_data$freq = freq
   imported_data$Metadata=Metadata

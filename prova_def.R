@@ -1,7 +1,7 @@
 variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = elements = env =self = private = .values = ymax= ymin = label.row = x= y = NULL # Setting the variables to NULL 
 setwd("C:/Users/user/Documents/Dolphin/R")
 
-
+library("lazyeval")
 library("minpack.lm")
 library("reshape")
 library("ggplot2")
@@ -27,7 +27,9 @@ ui <- fluidPage(
     $('#mynavlist a:contains(\"Fitting error values\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"Outliers\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"Univariate analysis\")').parent().addClass('disabled')
-    }
+    $('#mynavlist a:contains(\"ROI Profiles\")').parent().addClass('disabled')
+    
+}
     
     Shiny.addCustomMessageHandler('activeNavs', function(nav_label) {
     $('#mynavlist a:contains(\"' + nav_label + '\")').parent().removeClass('disabled')
@@ -103,6 +105,34 @@ ui <- fluidPage(
       )
       
     ),
+    tabPanel("ROI Profiles",
+      fluidRow(column(width = 12, h4("Here you can add ROI profiles"))),
+      fluidRow(
+        column(width = 12,
+          D3TableFilter::d3tfOutput('new_roi_profile',width = "100%", height = "auto")
+        )
+        
+      ),
+      fluidRow(
+        column(width = 12,
+          selectInput("roirows",label=NULL,choices=1:10,selected=1)
+        )),
+      fluidRow(
+        column(width = 12,
+          actionButton("addroi", label = "Add ROI")
+        )),
+      fluidRow(
+        column(width = 12,
+          actionButton("saveroi", label = "Save ROI")
+        )), 
+          
+      fluidRow(column(width = 12, h4("Here you have the ROI profiles"))),
+      fluidRow(
+        column(width = 12,
+          DT::dataTableOutput("roi_profiles")
+        ))
+      
+    ),
     tabPanel("Outliers",
       fluidRow(column(width = 12, h4("Here you have the outliers for every signal and kind of sample. Press one and go to ROI Testing to analyze the quantification"))),
       fluidRow(
@@ -148,7 +178,41 @@ server = function(input, output,session) {
   
   v <- reactiveValues(meh=NULL, blah = NULL,stop3=0)
   
-  sell <- reactiveValues(mtcars=NULL,ind=NULL,beginning=F,dataset=NULL,inFile=NULL,finaloutput=NULL,brks=NULL,brks2=NULL,clrs=NULL,clrs2=NULL,autorun_data=NULL,outlier_table=NULL,ab=NULL,p_value_final=NULL,ROI_data=NULL,info=NULL,ROI_separator=NULL,bucketing=NULL,mediani=NULL)
+  sell <- reactiveValues(mtcars=NULL,ind=NULL,beginning=F,dataset=NULL,inFile=NULL,finaloutput=NULL,brks=NULL,brks2=NULL,clrs=NULL,clrs2=NULL,autorun_data=NULL,outlier_table=NULL,ab=NULL,p_value_final=NULL,ROI_data=NULL,info=NULL,ROI_separator=NULL,bucketing=NULL,mediani=NULL,select_options=NULL,new_roi_profile=NULL)
+  
+  observeEvent(input$roirows, {
+    sell$new_roi_profile= as.data.frame(matrix(NA,as.numeric(input$roirows),11))
+    # sell$new_roi_profile= matrix(NA,1,11)
+    colnames(sell$new_roi_profile)=colnames(sell$ROI_data)
+    
+  })
+  observeEvent(input$addroi, {
+    sell$ROI_data=rbind(sell$ROI_data,sell$new_roi_profile)
+    print(sell$ROI_data)
+    
+    
+    
+    dummy = which(!is.na(sell$ROI_data[, 1]))
+    sell$ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(sell$ROI_data)[1]))
+    ROI_names=paste(sell$ROI_data[sell$ROI_separator[, 1],1],sell$ROI_data[sell$ROI_separator[, 1],2])
+    sell$select_options=1:length(ROI_names)
+    names(sell$select_options)=ROI_names
+  })
+  
+  output$roi_profiles = DT::renderDataTable(
+    
+    sell$ROI_data , server = T)
+  proxy = dataTableProxy('roi_profiles')
+  observe({
+    replaceData(proxy, sell$ROI_data)
+  })
+  
+  observeEvent(input$saveroi, {
+   
+    write.csv(sell$ROI_data,sell$autorun_data$profile_folder_path,row.names=F)
+  })
+    
+    
   observeEvent(input$select, {
   
     if (sell$beginning ==T) {
@@ -707,6 +771,82 @@ server = function(input, output,session) {
     # })
   })
   
+  output$new_roi_profile <- renderD3tf({
+    tableProps <- list(
+      btn_reset = TRUE,
+      sort = TRUE,
+      sort_config = list(
+        sort_types = c("String", rep("Number", ncol(sell$new_roi_profile)))
+      )
+    )
+    
+    observe({
+      if(is.null(input$new_roi_profile_edit)|(sell$stop2==1)) {
+        sell$change2=0
+        return(NULL)
+      }       
+      
+      edit <- input$new_roi_profile_edit
+      isolate({
+        # need isolate, otherwise this observer would run twice
+        # for each edit
+        id <- edit$id
+        row <- as.integer(edit$row)
+        col <- as.integer(edit$col)
+        val <- edit$val
+        
+        # validate input 
+        # if(col == 0) {
+        #   # rownames
+        #   oldval <- rownames(sell$new_roi_profile)[row]
+        #   # rownames can not start with a digit
+        #   if(grepl('^\\d', val)) {
+        #     rejectEdit(session, tbl = "new_roi_profile", row = row, col = col,  id = id, value = oldval)
+        #     sell$roi=0
+        #     
+        #     return(NULL)
+        #   }
+        # } else if (col %in% c(1:7)){
+        #   # numeric columns
+        #   if(is.na(suppressWarnings(as.numeric(val)))) {
+        #     oldval <- sell$new_roi_profile[row, col]
+        #     
+        #     rejectEdit(session, tbl = "new_roi_profile", row = row, col = col, id = id, value = oldval)
+        #     
+        #     
+        #     sell$roi=0
+        #     return(NULL)
+        #   }
+        # } 
+        # # accept edits
+        if (sell$change2==1){
+          
+          sell$change2=0
+          sell$stop2=1
+          
+          
+        } else {
+          
+          sell$new_roi_profile[row, col] <- val
+          confirmEdit(session, tbl = "new_roi_profile", row = row, col = col, id = id, value = val)
+         
+        }
+        
+      })
+      
+      
+      
+    })
+    
+    d3tf(sell$new_roi_profile,
+      tableProps = tableProps,
+      enableTf = F,
+      edit=T,
+      
+      tableStyle = "table table-bordered")
+    
+    # })
+  })
   
   output$p_value_final = DT::renderDataTable(round(sell$p_value_final,3),selection = list(mode = 'multiple', selected = 1),server = T)
   
@@ -714,9 +854,7 @@ server = function(input, output,session) {
 
   
   output$plot <- renderPlotly({
-    print(v$stop3==0)
-    print(is.null(sell$info))
-    print(sell$info)
+   
     
     
     if ((v$stop3==0&(is.null(sell$info))|(v$stop3==0&length(input$x1_rows_selected)>1))) {
@@ -741,6 +879,8 @@ server = function(input, output,session) {
   return(dat)
   })
   output$plot_p_value <- renderPlotly({
+    print(max(sell$bucketing$intensity))
+    
     plot_ly(data=sell$bucketing,x=~Xdata,y=~intensity,color=~pvalue,type='scatter',mode='lines') %>% layout(xaxis = list(autorange = "reversed"),yaxis = list(range = c(0, max(sell$bucketing$intensity))))
     
   })
@@ -853,8 +993,8 @@ server = function(input, output,session) {
     # mtcars=ROI_data[1:2,4:11]
     
     ROI_names=paste(sell$ROI_data[sell$ROI_separator[, 1],1],sell$ROI_data[sell$ROI_separator[, 1],2])
-    select_options=1:length(ROI_names)
-    names(select_options)=ROI_names
+    sell$select_options=1:length(ROI_names)
+    names(sell$select_options)=ROI_names
     t_test_data=sell$autorun_data$dataset
     
     ss=unique(sell$autorun_data$Metadata[,1])
@@ -948,14 +1088,23 @@ server = function(input, output,session) {
         
         spectra , selection = list(mode = 'multiple', selected = 1),server = T)
       
+      output$roi_profiles = DT::renderDataTable(
+        
+        sell$ROI_data , server = T)
+      proxy = dataTableProxy('roi_profiles')
+      observe({
+        replaceData(proxy, sell$ROI_data)
+      })
+      
       sell$beginning =T
       updateSelectInput(session, "select",
-          choices = select_options,selected = 1
+          choices = sell$select_options,selected = 1
         )
       session$sendCustomMessage('activeNavs', 'ROI Testing')
       session$sendCustomMessage('activeNavs', 'Fitting error values')
       session$sendCustomMessage('activeNavs', 'Outliers')
       session$sendCustomMessage('activeNavs', 'Univariate analysis')
+      session$sendCustomMessage('activeNavs', 'ROI Profiles')
       
   })
   
@@ -993,12 +1142,13 @@ server = function(input, output,session) {
     
     sell$ROI_separator=elements$ROI_separator
     sell$bucketing=elements$bucketing
+    print(colnames(sell$bucketing))
     sell$mediani=elements$mediani
     rm(elements)
     is_autorun='Y'
     ROI_names=paste(sell$ROI_data[sell$ROI_separator[, 1],1],sell$ROI_data[sell$ROI_separator[, 1],2])
-    select_options=1:length(ROI_names)
-    names(select_options)=ROI_names
+    sell$select_options=1:length(ROI_names)
+    names(sell$select_options)=ROI_names
     sell$dataset=rbind(sell$autorun_data$dataset,colMeans(sell$autorun_data$dataset),apply(sell$autorun_data$dataset,2,median))
     mm=matrix(NA,2,dim(sell$autorun_data$Metadata)[2])
     colnames(mm)=colnames(sell$autorun_data$Metadata)
@@ -1012,12 +1162,14 @@ server = function(input, output,session) {
       spectra , selection = list(mode = 'multiple', selected = 1),server = T)
     sell$beginning =T
     updateSelectInput(session, "select",
-      choices = select_options,selected = 1
+      choices = sell$select_options,selected = 1
     )
     session$sendCustomMessage('activeNavs', 'ROI Testing')
     session$sendCustomMessage('activeNavs', 'Fitting error values')
     session$sendCustomMessage('activeNavs', 'Outliers')
     session$sendCustomMessage('activeNavs', 'Univariate analysis')
+    session$sendCustomMessage('activeNavs', 'ROI Profiles')
+    
 
   })
   
