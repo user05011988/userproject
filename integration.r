@@ -15,14 +15,12 @@ integration = function(integration_parameters, Xdata, Ydata) {
   #preparation of baseline, if specified by the user
   baseline = replicate(length(Xdata), 0)
   if (integration_parameters$clean_fit == 'N')
-    baseline = seq(mean(Ydata[1:3]), mean(Ydata[length(Xdata) - 2:length(Xdata)]), length =
+    baseline = seq(mean(Ydata[1:3]), mean(Ydata[(length(Xdata) - 2):length(Xdata)]), length =
                      length(Xdata))
 
   #integration ad chechk that there are no negative values
   integrated_signal = Ydata - baseline
-  if (min(integrated_signal) < 0)
-    integrated_signal = integrated_signal - min(integrated_signal)
-
+    integrated_signal[integrated_signal<0]=0
   #preparation of output
   output$Area = sum(integrated_signal)
   output$intensity = max(integrated_signal)
@@ -39,13 +37,20 @@ integration = function(integration_parameters, Xdata, Ydata) {
   output$shift = mean(Xdata[peaks$maxtab$pos])
 
   #plot
+  png(filename=paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit2.png",sep='/'), 
+    type="cairo",
+    units="in", 
+    width=8, 
+    height=4, 
+    pointsize=12, 
+    res=96)
   plotdata = data.frame(Xdata, senyal = integrated_signal)
   plotdata2 = data.frame(Xdata, Ydata)
   plotdata3 <- melt(plotdata2, id = "Xdata")
   plotdata3$variable = rep('Original Spectrum', length(Ydata))
     plotdata4 = data.frame(Xdata, integrated_signal)
   plotdata5 = melt(plotdata4, id = "Xdata")
-  ggplot() +
+  p=ggplot() +
     geom_line(data = plotdata3,
               aes(
                 x = Xdata,
@@ -68,11 +73,8 @@ integration = function(integration_parameters, Xdata, Ydata) {
                 fill = 'Quantified Signal'
               )) +
     scale_x_reverse()
-  ggsave(
-    file.path(integration_parameters$plot_path, 'Fit.jpeg'),
-    width = 10,
-    height = 5
-  )
+  print(p)
+  dev.off()
 
 
   return(output)

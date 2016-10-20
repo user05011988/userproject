@@ -5,7 +5,11 @@ peakpvoigt  = function(x,p) {
                 
    z   = p - x[2];
    zz  = z*z;
+   # x32 = x[3]*x[3];
+   # x32 = x[3]*x[3];
    x32 = x[3]*x[3];
+   
+   
    a   = 4*log(2);
    d   = zz+x32;
    f1  = exp(-a*zz/x32);  #f1

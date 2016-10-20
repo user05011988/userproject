@@ -16,7 +16,9 @@ parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_csv.csv"
 parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_dataset_new.txt"
 parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_20_2.csv"
 
-parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters.csv"
+parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer.csv"
+parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_from_dataset.csv"
+
 parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_reduced_20.csv"
 
 #import of data (dataset in csv format or Bruker nmr folder)
@@ -49,7 +51,7 @@ write.csv(
 colnames(imported_data$dataset) = imported_data$ppm
 rownames(imported_data$dataset) = imported_data$Experiments
 write.csv(imported_data$dataset,
-  file.path(imported_data$export_path, 'initialdataset.csv'))
+  file.path(imported_data$export_path, 'initialdataset.csv'),row.names=F)
 if ("not_loaded_experiments" %in% names(imported_data))
   write.table(
     imported_data$not_loaded_experiments,
@@ -82,7 +84,6 @@ autorun_data = list(
   freq = imported_data$freq,
   Metadata=imported_data$Metadata
 )
-rm(imported_data)
 
 finaloutput = autorun(autorun_data, finaloutput)
 

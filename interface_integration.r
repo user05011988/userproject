@@ -15,13 +15,12 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   #preparation of baseline, if specified by the user
   baseline = replicate(length(Xdata), 0)
   if (integration_parameters$clean_fit == 'N')
-    baseline = seq(mean(Ydata[1:3]), mean(Ydata[length(Xdata) - 2:length(Xdata)]), length =
-                     length(Xdata))
-
+    baseline = seq(mean(Ydata[1:3]), mean(Ydata[(length(Xdata) - 2):length(Xdata)]), length =
+        length(Xdata))
+  
   #integration ad chechk that there are no negative values
   integrated_signal = Ydata - baseline
-  if (min(integrated_signal) < 0)
-    integrated_signal = integrated_signal - min(integrated_signal)
+  integrated_signal[integrated_signal<0]=0
 
   #preparation of output
   output$Area = sum(integrated_signal)

@@ -66,6 +66,8 @@ fitting_prep = function(Xdata,
   FeaturesMatrix[1:signals_to_fit, 12] = initial_fit_parameters$roof_effect
 
 
+  FeaturesMatrix[initial_fit_parameters$multiplicities==1, 9:10] = 0
+  
   #Finding of maximum intensity and shift tolerance of every background signal
   if (BGSigNum>0) {
     BGSigrightlimits = seq(Xdata[1], Xdata[ROIlength], length = BGSigNum) -

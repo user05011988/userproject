@@ -53,6 +53,8 @@ import_data = function(parameters_path) {
   #Kind of normalization
   #TO DO: add PQN (but before standardize a way to find the regions to have into account)
   normalization = import_profile[11, 2]
+  pqn='N'
+  
   params$norm_AREA = 'N'
   params$norm_PEAK = 'N'
   params$norm_left_ppm = 12
@@ -125,9 +127,13 @@ import_data = function(parameters_path) {
     if (dataset_path != '') {
       #Reading of dataset file (ideally with fread of data.table package, bu seems that the package is not compatible with R 3.3.1)
       imported_data = list()
-      dummy = as.matrix(rio::import(dataset_path, sep = ','))
-      imported_data$dataset=dummy[-1,]
-      imported_data$ppm = colnames(imported_data$dataset) = dummy[1,]
+      dummy = rio::import(dataset_path, sep = ',',header=F,colClasses='numeric')
+      pa=dim(dummy[-1,])
+      
+      imported_data$dataset=as.numeric(as.matrix(dummy[-1,]))
+      dim(imported_data$dataset)=pa
+      colnames(imported_data$dataset) = dummy[1,]
+      imported_data$ppm = as.numeric(dummy[1,])
       rownames(imported_data$dataset) = Experiments
 
       params$buck_step = ifelse(

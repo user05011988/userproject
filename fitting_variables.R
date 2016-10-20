@@ -10,8 +10,8 @@ fitting_variables = function() {
   other_fit_parameters$BGdensity=50
 other_fit_parameters$widthtolerance=0.2
 other_fit_parameters$gaussian=0
-other_fit_parameters$j_coupling_variation=0.0003
-other_fit_parameters$BG_gaussian_percentage=1
+other_fit_parameters$j_coupling_variation=0.0001
+other_fit_parameters$BG_gaussian_percentage=0
 other_fit_parameters$BG_width=0.02
 other_fit_parameters$BG_width_tolerance=0.25
 
@@ -20,9 +20,9 @@ other_fit_parameters$errorprov=5
 other_fit_parameters$fitting_maxiter=NA
 
 #Parameters related to the lsq algorithm
-other_fit_parameters$nls_lm_maxiter=1500
-other_fit_parameters$ftol=1e-16
-other_fit_parameters$ptol=1e-16
+other_fit_parameters$nls_lm_maxiter=200
+other_fit_parameters$ftol=1e-6
+other_fit_parameters$ptol=1e-6
 other_fit_parameters$factor=0.01
 
 #Parameters related to the addition of other signals post fitting

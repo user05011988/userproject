@@ -1,4 +1,4 @@
-variable = value = signals = . = DT = D3TableFilter = shiny =  bd = NULL # Setting the variables to NULL 
+variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = elements = env =self = private = .values = ymax= ymin = label.row = x= y = NULL # Setting the variables to NULL 
 setwd("C:/Users/user/Documents/Dolphin/R")
 
 
@@ -14,7 +14,6 @@ library(plotly)
 library(DT)
 library(D3TableFilter)
 library(shiny)
-
 
 source('packages_sources.R')
 packages_sources()
@@ -41,10 +40,13 @@ ui <- fluidPage(
         sidebarPanel(
           fileInput("file1", "Load the parameters file. It will automatically do an autorun of some signals of some spectra of the MTBLS1 dataset, so the process will take some time. I have prepared it this way so you can already look how univariate analysis works. The definitive version would let the user check the parameters, the ROI profiles and metadata before letting him make an autorun or a ROI testing",
             accept = c("text/csv")
-          )
+          ),
+          
           # ,
-          # fileInput("file2", "Load RData if you have already previously performed quantifications and want to recover them",
-          #   accept = c("text/RData")
+          fileInput("file2", "Load RData if you have already previously performed quantifications and want to recover them",
+            accept = c("text/RData")),
+            actionButton("save_objs", "Save session")
+            
           # ),
           # ,
           # br(),
@@ -712,9 +714,11 @@ server = function(input, output,session) {
 
   
   output$plot <- renderPlotly({
-    # 
-    # print(sell$info)
-    # print(v$stop3)
+    print(v$stop3==0)
+    print(is.null(sell$info))
+    print(sell$info)
+    
+    
     if ((v$stop3==0&(is.null(sell$info))|(v$stop3==0&length(input$x1_rows_selected)>1))) {
       lol=which(round(sell$autorun_data$ppm,6)==round(sell$mtcars[1,1],6))
       lol2=which(round(sell$autorun_data$ppm,6)==round(sell$mtcars[1,2],6))
@@ -782,8 +786,7 @@ server = function(input, output,session) {
     if (is.null(sell$inFile))
       return(NULL)
     
-    
-    
+
     imported_data = import_data(sell$inFile$datapath)
     
     
@@ -956,22 +959,67 @@ server = function(input, output,session) {
       
   })
   
-  # observeEvent(input$file2, {
-  #   sell$inFile <- input$file2
-  #   
-  #   if (is.null(sell$inFile))
-  #     return(NULL)
-  #   
-  #   load(sell$inFile$datapath)
-  #   sell<-trek
-  #   rm(trek)
-  #   
-  #   session$sendCustomMessage('activeNavs', 'ROI Testing')
-  #   session$sendCustomMessage('activeNavs', 'Fitting error values')
-  #   session$sendCustomMessage('activeNavs', 'Outliers')
-  #   session$sendCustomMessage('activeNavs', 'Univariate analysis')
-  #   
-  # })
+  observeEvent(input$file2, {
+    sell$inFile <- input$file2
+
+    if (is.null(sell$inFile))
+      return(NULL)
+
+    load(sell$inFile$datapath)
+    plo=names(sapply(elements, names))
+    for (i in 1:length(plo)) {
+      sell[[plo[i]]]=elements[plo[i]]
+      
+    }
+    
+   
+    # sell$info=elements$info
+    # sell$mtcars=elements$mtcars
+    # 
+    # sell$ind=elements$ind
+    sell$finaloutput=elements$finaloutput
+    # sell$beginning=elements$beginning
+    sell$brks=elements$brks
+    sell$brks2=elements$brks2
+    sell$clrs=elements$clrs
+    sell$clrs2=elements$clrs2
+    sell$autorun_data=elements$autorun_data
+    
+    sell$outlier_table=elements$outlier_table
+    sell$ab=elements$ab
+    sell$p_value_final=elements$p_value_final
+    sell$ROI_data=elements$ROI_data
+   
+    
+    sell$ROI_separator=elements$ROI_separator
+    sell$bucketing=elements$bucketing
+    sell$mediani=elements$mediani
+    rm(elements)
+    is_autorun='Y'
+    ROI_names=paste(sell$ROI_data[sell$ROI_separator[, 1],1],sell$ROI_data[sell$ROI_separator[, 1],2])
+    select_options=1:length(ROI_names)
+    names(select_options)=ROI_names
+    sell$dataset=rbind(sell$autorun_data$dataset,colMeans(sell$autorun_data$dataset),apply(sell$autorun_data$dataset,2,median))
+    mm=matrix(NA,2,dim(sell$autorun_data$Metadata)[2])
+    colnames(mm)=colnames(sell$autorun_data$Metadata)
+    spectra=cbind(as.matrix(rownames(sell$dataset)),rbind(sell$autorun_data$Metadata,mm))
+    # rownames(spectra)=ll
+    colnames(spectra)=c('spectrum','Metadata')    # sell<-trek
+    # rm(trek)
+    # sell$info=NULL
+    output$x1 = DT::renderDataTable(
+      
+      spectra , selection = list(mode = 'multiple', selected = 1),server = T)
+    sell$beginning =T
+    updateSelectInput(session, "select",
+      choices = select_options,selected = 1
+    )
+    session$sendCustomMessage('activeNavs', 'ROI Testing')
+    session$sendCustomMessage('activeNavs', 'Fitting error values')
+    session$sendCustomMessage('activeNavs', 'Outliers')
+    session$sendCustomMessage('activeNavs', 'Univariate analysis')
+
+  })
   
   # observeEvent(input$download, {
   #   
@@ -981,6 +1029,41 @@ server = function(input, output,session) {
   # rm(trek)
   # myfile=NULL
   # })
+  
+  observeEvent(input$save_objs, {
+  # Run whenever save_objs button is pressed
+  
+  print("** saving objects! **")
+  
+    
+  ## Print the objects being saved
+  # print(rls())
+  # # ## Put  objects into current environment
+  # for(obj in unlist(rls())) {
+  #   if(class(get(obj, pos =  -1))[1] == "reactive"){
+  #     print(obj)## execute the reactive objects and put them in to this 
+  #     ## environment i.e. into the environment of this function
+  #     assign(obj, value = eval(call(obj)))
+  #   } else {
+  #     ## grab the global variables and put them into this 
+  #     ## environment
+  #     assign(obj, value = get(obj, pos =  -1))
+  #   }
+  # }
+  
+  # input_copy <- list()
+  # for(nm in names(input)){
+  #   # assign(paste0("input_copy$", nm), value <- input[[nm]])
+  #   input_copy[[nm]] <- input[[nm]]
+  # }
+    elements=isolate(reactiveValuesToList(sell))
+  ## save objects in current environment
+  save(elements, file = paste(sell$autorun_data$export_path,"savedenvironment.Rdata",sep='/'), envir = environment())
+  
+  print("** done saving     **")
+})
+  
+  
   
 }
 

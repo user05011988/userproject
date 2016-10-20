@@ -256,12 +256,20 @@ autorun = function(autorun_data, finaloutput) {
           Xdata,
           scaledYdata,
           other_fit_parameters)
+
         
         #Fitting of the signals
         multiplicities=FeaturesMatrix[,11]
         roof_effect=FeaturesMatrix[,12]
+        # signals_parameters[which(seq_along(signals_parameters)%%5==3)]=signals_parameters[which(seq_along(signals_parameters)%%5==3)]/1.5
+        # signals_parameters[which(seq_along(signals_parameters)%%5==5)]=signals_parameters[which(seq_along(signals_parameters)%%5==5)]/2
+        
         fitted_signals = fitting_optimization(signals_parameters,
           Xdata,multiplicities,roof_effect)
+
+        # signals_parameters[which(seq_along(signals_parameters)%%5==3)]=signals_parameters[which(seq_along(signals_parameters)%%5==3)]*1.5
+        # signals_parameters[which(seq_along(signals_parameters)%%5==5)]=signals_parameters[which(seq_along(signals_parameters)%%5==5)]*2
+
         # signals_parameters=as.matrix(signals_parameters)
         dim(signals_parameters) = c(5, length(signals_parameters)/5)
         rownames(signals_parameters) = c(
