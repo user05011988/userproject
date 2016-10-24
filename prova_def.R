@@ -1,4 +1,4 @@
-variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = elements = env =self = private = .values = ymax= ymin = label.row = x= y = NULL # Setting the variables to NULL 
+variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = elements = env =self = private = .values = ymax= ymin = label.row = x= y=c = NULL # Setting the variables to NULL 
 setwd("C:/Users/user/Documents/Dolphin/R")
 
 library("lazyeval")
@@ -6,8 +6,8 @@ library("minpack.lm")
 library("reshape")
 library("ggplot2")
 library("compiler")
-library("robust")
-library("apcluster")
+library("robustbase")
+library("missForest")
 library("rio")
 library("png")
 library(plotly)
@@ -26,7 +26,7 @@ ui <- fluidPage(
     $('#mynavlist a:contains(\"ROI Testing\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"Fitting error values\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"Outliers\")').parent().addClass('disabled')
-    $('#mynavlist a:contains(\"Univariate analysis\")').parent().addClass('disabled')
+    $('#mynavlist a:contains(\"Uni and multivariate analysis\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"ROI Profiles\")').parent().addClass('disabled')
     
 }
@@ -40,7 +40,7 @@ ui <- fluidPage(
     tabPanel("Data Upload",           
       sidebarLayout(
         sidebarPanel(
-          fileInput("file1", "Load the parameters file. It will automatically do an autorun of some signals of some spectra of the MTBLS1 dataset, so the process will take some time. I have prepared it this way so you can already look how univariate analysis works. The definitive version would let the user check the parameters, the ROI profiles and metadata before letting him make an autorun or a ROI testing",
+          fileInput("file1", "Load the parameters file. It will automatically do an autorun of some signals of some spectra of the MTBLS1 dataset, so the process will take some time. I have prepared it this way so you can already look how Uni and multivariate analysis works. The definitive version would let the user check the parameters, the ROI profiles and metadata before letting him make an autorun or a ROI testing",
             accept = c("text/csv")
           ),
           
@@ -90,7 +90,12 @@ ui <- fluidPage(
           D3TableFilter::d3tfOutput('mtcars2',width = "100%", height = "auto"),
           fluidRow(column(width = 12, h4("You have here some indicators of quality of the quantification"))),
           
-          D3TableFilter::d3tfOutput('mtcars3',width = "100%", height = "auto")
+          D3TableFilter::d3tfOutput('mtcars3',width = "100%", height = "auto"),
+          D3TableFilter::d3tfOutput('mtcars4',width = "100%", height = "auto"),
+          fluidRow(
+            column(width = 12,
+              DT::dataTableOutput("repository")
+            ))
           
           )
         )
@@ -145,8 +150,8 @@ ui <- fluidPage(
     ),
     
     
-    tabPanel("Univariate analysis",
-      fluidRow(column(width = 12, h4("Here you have different kinds of univariate analysis. By now only can analyze between two groups of samples. It cannot analyze differences by treatment, or compare more than two groups of samples. There is an interactive plot of bucket analysis (without FDR at the moment), the p values of quantifications (tests adjusted to normality and variance) and boxplots for every signal for every kind of sample"))),
+    tabPanel("Uni and multivariate analysis",
+      fluidRow(column(width = 12, h4("Here you have different kinds of Uni and multivariate analysis. By now only can analyze between two groups of samples. It cannot analyze differences by treatment, or compare more than two groups of samples. There is an interactive plot of bucket analysis (without FDR at the moment), the p values of quantifications (tests adjusted to normality and variance) and boxplots for every signal for every kind of sample"))),
       fluidRow(
         column(width = 12, h4("Bucket analysis"),
           mainPanel(plotlyOutput("plot_p_value")))    ),
@@ -156,8 +161,28 @@ ui <- fluidPage(
       
       fluidRow(
         column(width = 12, h4("Boxplots"),
-          mainPanel(plotlyOutput("plot_p_value_2")))    )
-      
+          mainPanel(plotlyOutput("plot_p_value_2")))    ),
+      # fluidRow(
+      #   column(width = 12,
+      #     DT::dataTableOutput("corr_area_matrix")
+      #   )
+      #   
+      # )
+      fluidRow(
+        column(width = 12, h4("Correrlation between spectra by quantification"),
+          mainPanel(plotlyOutput("corr_area_spectrum")))    ),
+      fluidRow(
+            column(width = 12, h4("Correrlation between signals by quantification"),
+              mainPanel(plotlyOutput("corr_area_signal")))    ),
+      fluidRow(
+                column(width = 12, h4("Correrlation between signals by chemical shift"),
+                  mainPanel(plotlyOutput("corr_shift_signal")))    ),
+      fluidRow(
+        column(width = 12, h4("PCA Scores"),
+          mainPanel(plotlyOutput("pcascores")))    ),
+      fluidRow(
+        column(width = 12, h4("PCA Loadings"),
+          mainPanel(plotlyOutput("pcaloadings")))    )
     )
     
     
@@ -173,12 +198,13 @@ server = function(input, output,session) {
   revals <- reactiveValues()
   revals2 <- reactiveValues()
   revals3 <- reactiveValues()
+  revals4 <- reactiveValues()
   
   
   
   v <- reactiveValues(meh=NULL, blah = NULL,stop3=0)
   
-  sell <- reactiveValues(mtcars=NULL,ind=NULL,beginning=F,dataset=NULL,inFile=NULL,finaloutput=NULL,brks=NULL,brks2=NULL,clrs=NULL,clrs2=NULL,autorun_data=NULL,outlier_table=NULL,ab=NULL,p_value_final=NULL,ROI_data=NULL,info=NULL,ROI_separator=NULL,bucketing=NULL,mediani=NULL,select_options=NULL,new_roi_profile=NULL)
+  sell <- reactiveValues(mtcars=NULL,ind=NULL,beginning=F,dataset=NULL,inFile=NULL,finaloutput=NULL,brks=NULL,brks2=NULL,brks3=NULL,clrs=NULL,clrs2=NULL,clrs3=NULL,autorun_data=NULL,outlier_table=NULL,ab=NULL,p_value_final=NULL,ROI_data=NULL,info=NULL,ROI_separator=NULL,bucketing=NULL,mediani=NULL,select_options=NULL,new_roi_profile=NULL,corr_area_matrix=NULL)
   
   observeEvent(input$roirows, {
     sell$new_roi_profile= as.data.frame(matrix(NA,as.numeric(input$roirows),11))
@@ -206,6 +232,13 @@ server = function(input, output,session) {
   observe({
     replaceData(proxy, sell$ROI_data)
   })
+  output$repository = DT::renderDataTable(
+    
+    sell$repository[which(sell$repository[,5]>revals$mtcars[1,2]&sell$repository[,5]<revals$mtcars[1,1]),] , server = T)
+  proxy2 = dataTableProxy('repository')
+  observe({
+    replaceData(proxy2,  sell$repository[which(sell$repository[,5]>revals$mtcars[1,2]&sell$repository[,5]<revals$mtcars[1,1]),] )
+  })
   
   observeEvent(input$saveroi, {
    
@@ -218,6 +251,7 @@ server = function(input, output,session) {
     if (sell$beginning ==T) {
     sell$mtcars=sell$ROI_data[sell$ROI_separator[as.numeric(input$select), 1]:sell$ROI_separator[as.numeric(input$select), 2],]
     }
+    
     
     
     # selectCells(dataTableProxy('fit_selection'), NULL)
@@ -239,6 +273,8 @@ server = function(input, output,session) {
     revals2$mtcars <- rbind(rep(NA,7),rep(NA,7))
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     revals3$mtcars <- rbind(rep(NA,3),rep(NA,3))
+    revals4$mtcars <- sell$mtcars
+    
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
     
     output$mtcars <- renderD3tf({
@@ -495,8 +531,8 @@ server = function(input, output,session) {
     
     plotdata2 = data.frame(Xdata=Xdata,
       Ydata=Ydata,
-      plot_data[3, ] * max(Ydata),
-      plot_data[2, ] * max(Ydata))
+      plot_data[3, ] ,
+      plot_data[2, ])
     colnames(plotdata2)=c('Xdata','Ydata',"fitted_sum","baseline_sum")
     plotdata3 <- melt(plotdata2, id = "Xdata")
     plotdata3$variable = c(
@@ -504,8 +540,8 @@ server = function(input, output,session) {
       rep('Generated Spectrum', length(Ydata)),
       rep('Generated Background', length(Ydata))
     )
-    plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F]) *
-        max(Ydata)))
+    plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F])
+        ))
     colnames(plotdata4)=c('Xdata',dummy[-c(1, 2, 3),1])
     
     plotdata5 = melt(plotdata4, id = "Xdata")
@@ -527,7 +563,7 @@ server = function(input, output,session) {
       scale_x_reverse() + labs(x='ppm',y='Intensity') + expand_limits(y=0)
     
     r=which(ROI_profile[,4]==sell$autorun_data$signals_names[sell$info$col])
-    plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] * max(Ydata))
+    plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
       v$blah$p=v$blah$p +
         geom_area(
           data = plotdata,
@@ -543,9 +579,17 @@ server = function(input, output,session) {
     revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
    # print(revals2$mtcars)
-    revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,sell$info$col],sell$finaloutput$fitting_error[sell$info$row,sell$info$col],sell$finaloutput$signal_area_ratio[sell$info$row,sell$info$col])
+    revals4$mtcars=ROI_profile
+    ind=which(sell$ROI_separator[,1]-sell$info$col>=0)[1]
+    ind=sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2]
+    revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
+    revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
+    
+    revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
+    revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$fitting_error[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
     
+    updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
     
     
   })
@@ -581,8 +625,8 @@ server = function(input, output,session) {
     
     plotdata2 = data.frame(Xdata=Xdata,
       Ydata=Ydata,
-      plot_data[3, ] * max(Ydata),
-      plot_data[2, ] * max(Ydata))
+      plot_data[3, ],
+      plot_data[2, ])
     colnames(plotdata2)=c('Xdata','Ydata',"fitted_sum","baseline_sum")
     plotdata3 <- melt(plotdata2, id = "Xdata")
     plotdata3$variable = c(
@@ -590,8 +634,7 @@ server = function(input, output,session) {
       rep('Generated Spectrum', length(Ydata)),
       rep('Generated Background', length(Ydata))
     )
-    plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F]) *
-        max(Ydata)))
+    plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
     colnames(plotdata4)=c('Xdata',dummy[-c(1, 2, 3),1])
     
     plotdata5 = melt(plotdata4, id = "Xdata")
@@ -614,7 +657,7 @@ server = function(input, output,session) {
       scale_x_reverse() + labs(x='ppm',y='Intensity') + expand_limits(y=0)
     
     r=which(ROI_profile[,4]==sell$autorun_data$signals_names[sell$info$col])
-      plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] * max(Ydata))
+      plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
       
       v$blah$p=v$blah$p +
         geom_area(
@@ -630,10 +673,17 @@ server = function(input, output,session) {
     revals$mtcars=ROI_profile
     revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
-    revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,sell$info$col],sell$finaloutput$fitting_error[sell$info$row,sell$info$col],sell$finaloutput$signal_area_ratio[sell$info$row,sell$info$col])
+    
+    revals4$mtcars=ROI_profile
+    ind=which(sell$ROI_separator[,1]-sell$info$col>=0)[1]
+    ind=sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2]
+    revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
+    revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
+    
+    revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
+    revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$fitting_error[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
-    
-    
+    updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
     
   })
   
@@ -685,7 +735,7 @@ server = function(input, output,session) {
       
      
     }
-    sell$p_value_final=t(as.matrix(p_value))
+    sell$p_value_final=t(as.matrix(p.adjust(p_value,method="BH")))
     colnames(sell$p_value_final)=colnames(t_test_data_2)
     
     
@@ -762,6 +812,24 @@ server = function(input, output,session) {
     )
 
     d3tf(revals3$mtcars,
+      tableProps = tableProps,
+      enableTf = F,
+      edit=F,
+      
+      tableStyle = "table table-bordered")
+    
+    # })
+  })
+  output$mtcars4 <- renderD3tf({
+    tableProps <- list(
+      btn_reset = TRUE,
+      sort = TRUE,
+      sort_config = list(
+        sort_types = c("String", rep("Number", ncol(revals4$mtcars)))
+      )
+    )
+    
+    d3tf(revals4$mtcars,
       tableProps = tableProps,
       enableTf = F,
       edit=F,
@@ -848,7 +916,7 @@ server = function(input, output,session) {
     # })
   })
   
-  output$p_value_final = DT::renderDataTable(round(sell$p_value_final,3),selection = list(mode = 'multiple', selected = 1),server = T)
+  output$p_value_final = DT::renderDataTable(round(sell$p_value_final,3))
   
   
 
@@ -878,9 +946,13 @@ server = function(input, output,session) {
   output$fit_selection = DT::renderDataTable({ dat <- datatable(round(sell$finaloutput$fitting_error,2),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(sell$finaloutput$fitting_error), backgroundColor = styleInterval(sell$brks, sell$clrs))
   return(dat)
   })
+  
+  output$corr_area_matrix = DT::renderDataTable({ dat <- datatable(round(sell$corr_area_matrix,3)) %>% formatStyle(colnames(sell$finaloutput$fitting_error), backgroundColor = styleInterval(sell$brks3, sell$clrs3))
+  return(dat)
+  })
+  
   output$plot_p_value <- renderPlotly({
-    print(max(sell$bucketing$intensity))
-    
+
     plot_ly(data=sell$bucketing,x=~Xdata,y=~intensity,color=~pvalue,type='scatter',mode='lines') %>% layout(xaxis = list(autorange = "reversed"),yaxis = list(range = c(0, max(sell$bucketing$intensity))))
     
   })
@@ -889,6 +961,55 @@ server = function(input, output,session) {
   output$plot_p_value_2 <- renderPlotly({
     plot_ly(sell$ab, x = ~Signal, y = ~Value, color = ~Metadata, type = "box") %>%
       layout(boxmode = "group")
+  })
+  output$corr_area_spectrum <- renderPlotly({
+    cr=cor(t(sell$finaloutput$Area),use='pairwise.complete.obs',method='spearman')
+    bb=hclust(dist(cr))$order
+    dr=cr[bb,bb]
+    p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
+    p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"))
+  })
+  output$corr_area_signal <- renderPlotly({
+    cr=cor(sell$finaloutput$Area,use='pairwise.complete.obs',method='spearman')
+    bb=hclust(dist(cr))$order
+    dr=cr[bb,bb]
+    p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
+    p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"))
+  })
+  output$corr_shift_signal <- renderPlotly({
+    cr=cor(sell$finaloutput$shift,use='pairwise.complete.obs',method='spearman')
+    bb=hclust(dist(cr))$order
+    dr=cr[bb,bb]
+    p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
+    p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"))
+  })
+  output$pcascores <- renderPlotly({
+    a=cbind(scale(sell$finaloutput$Area),sell$autorun_data$Metadata)
+    a=missForest(a)$ximp
+    b=prcomp(a)
+    carsDf <- data.frame(b$x,metadata=sell$autorun_data$Metadata)
+    colnames(carsDf)[length(colnames(carsDf))]='metadata'
+    p <- plot_ly(carsDf,x=~ PC1,y=~ PC2,
+      mode=~"markers",text = rownames(carsDf),color =~ metadata,marker=list(size=11))
+    p <- layout(p,title="PCA scores",
+      xaxis=list(title="PC1"),
+      yaxis=list(title="PC2"))
+    
+  })
+  output$pcaloadings <- renderPlotly({
+    a=cbind(scale(sell$finaloutput$Area),sell$autorun_data$Metadata)
+    a=missForest(a)$ximp
+    b=prcomp(a)
+    
+    carsDf <- data.frame(b$rotation)
+    
+    
+    p <- plot_ly(carsDf,x=~ PC1,y=~ PC2,
+      mode=~"markers",text = rownames(carsDf),marker=list(size=11))
+    p <- layout(p,title="PCA loadings",
+      xaxis=list(title="PC1"),
+      yaxis=list(title="PC2"))
+    
   })
   observeEvent(input$x1_rows_selected, {
     if (sell$beginning ==T) {
@@ -950,13 +1071,13 @@ server = function(input, output,session) {
     #creation of several outputs with data of interest before beginnig the quantification
     write.csv(
       as.data.frame(imported_data$params),
-      file.path(imported_data$export_path, 'initialparams.csv'),
+      file.path(imported_data$export_path, 'initial_params.csv'),
       row.names = F
     )
     colnames(imported_data$dataset) = imported_data$ppm
     rownames(imported_data$dataset) = imported_data$Experiments
     write.csv(imported_data$dataset,
-      file.path(imported_data$export_path, 'initialdataset.csv'))
+      file.path(imported_data$export_path, 'initial_dataset.csv'))
     if ("not_loaded_experiments" %in% names(imported_data))
       write.table(
         imported_data$not_loaded_experiments,
@@ -965,6 +1086,8 @@ server = function(input, output,session) {
         col.names = F
       )
     #creation of list of necessary parameters for automatic quantification
+    sell$repository=imported_data$repository
+    
     sell$autorun_data = list(
       dataset = imported_data$dataset,
       ppm = imported_data$ppm,
@@ -1016,7 +1139,8 @@ server = function(input, output,session) {
       
       # }
     }
-    p_value_bucketing[is.na(p_value_bucketing)]=0
+    p_value_bucketing=p.adjust(p_value_bucketing,method="BH")
+    p_value_bucketing[is.na(p_value_bucketing)]=1
     plotdata = data.frame(Xdata=sell$autorun_data$ppm, p_value_bucketing)
     sell$mediani=apply(sell$autorun_data$dataset,2,function(x) median(x,na.rm=T))
     # plot_ly(data=plotdata,x=~Xdata,y=~Ydata)
@@ -1031,6 +1155,7 @@ server = function(input, output,session) {
     Xwit=cbind(ll,factor(sell$autorun_data$Metadata[,1]))
     # rownames(Xwit)=NULL
     sell$ab=melt(Xwit)
+    
     colnames(sell$ab)=c('Metadata','Signal','Value')
     sell$outlier_table=matrix(0,dim(ll)[1],dim(ll)[2])
     sell$outlier_table=as.data.frame(sell$outlier_table)
@@ -1064,7 +1189,7 @@ server = function(input, output,session) {
       
       # }
     }
-    sell$p_value_final=t(as.matrix(p_value))
+    sell$p_value_final=t(as.matrix(p.adjust(p_value,method="BH")))
     colnames(sell$p_value_final)=colnames(t_test_data_2)
     
     
@@ -1080,9 +1205,44 @@ server = function(input, output,session) {
       sell$brks <- quantile(sell$finaloutput$fitting_error, probs = seq(.05, .95, .05), na.rm = TRUE)
       sell$clrs <- round(seq(255, 40, length.out = length(sell$brks) + 1), 0) %>%
       {paste0("rgb(255,", ., ",", ., ")")}
+      sell$brks3 <- quantile(sell$corr_area_matrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+      sell$clrs3 <- round(seq(255, 40, length.out = length(sell$brks3) + 1), 0) %>%
+      {paste0("rgb(255,", ., ",", ., ")")}
       sell$brks2 <- 0.5
       sell$clrs2 <- round(seq(255, 40, length.out = length(sell$brks2) + 1), 0) %>%
       {paste0("rgb(255,", ., ",", ., ")")}
+      sell$corr_area_matrix=cor(sell$finaloutput$Area,use='pairwise.complete.obs',method='spearman')
+      shift_corrmatrix=cor(sell$finaloutput$shift,use='pairwise.complete.obs',method='spearman')
+      sell$fo=matrix(0,dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2])
+      sell$flo=array(0,dim=c(dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2],3))
+      sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
+      sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
+      for (ii in 1:dim(shift_corrmatrix)[1]) {
+        ll=sell$finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
+        nanana=lmrob(ll[,1] ~ ll[,2] ,control = lmrob.control(maxit.scale=1000))  
+        tro1=predict(nanana, interval='prediction')
+        sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
+        nanana=lmrob(ll[,1] ~ ll[,3] ,control = lmrob.control(maxit.scale=1000))  
+        tro2=predict(nanana, interval='prediction')
+        sg=which(sell$finaloutput$shift[,ii]<tro2[,2]|sell$finaloutput$shift[,ii]>tro2[,3])
+        sell$flo[,ii,]=(tro1+tro2)/2
+        sell$fo[Reduce(intersect, list(sf,sg)),ii]=1
+        
+      }
+      colnames(sell$fo)=colnames(sell$finaloutput$shift)
+      rownames(sell$fo)=rownames(sell$finaloutput$shift)
+      
+      sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
+      sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
+      
+      medianwidth=apply(sell$finaloutput$width,2,median)
+      for (ii in 1:dim(sell$finaloutput$width)[1]) {
+        nanana=tryCatch({lmrob(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth)}) 
+        tro=predict(nanana, interval='prediction')
+        sell$flo2[ii,,]=tro
+        sell$fo2[ii,which(sell$finaloutput$width[ii,]<tro[,2]|sell$finaloutput$width[ii,]>tro[,3])]=1
+      }
+      
       
       output$x1 = DT::renderDataTable(
         
@@ -1103,8 +1263,9 @@ server = function(input, output,session) {
       session$sendCustomMessage('activeNavs', 'ROI Testing')
       session$sendCustomMessage('activeNavs', 'Fitting error values')
       session$sendCustomMessage('activeNavs', 'Outliers')
-      session$sendCustomMessage('activeNavs', 'Univariate analysis')
+      session$sendCustomMessage('activeNavs', 'Uni and multivariate analysis')
       session$sendCustomMessage('activeNavs', 'ROI Profiles')
+      updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
       
   })
   
@@ -1130,8 +1291,12 @@ server = function(input, output,session) {
     # sell$beginning=elements$beginning
     sell$brks=elements$brks
     sell$brks2=elements$brks2
+    sell$brks3=elements$brks3
     sell$clrs=elements$clrs
     sell$clrs2=elements$clrs2
+    sell$clrs3=elements$clrs3
+    sell$repository=elements$repository
+    
     sell$autorun_data=elements$autorun_data
     
     sell$outlier_table=elements$outlier_table
@@ -1157,6 +1322,47 @@ server = function(input, output,session) {
     colnames(spectra)=c('spectrum','Metadata')    # sell<-trek
     # rm(trek)
     # sell$info=NULL
+    sell$corr_area_matrix=cor(sell$finaloutput$Area,use='pairwise.complete.obs',method='spearman')
+    
+    sell$brks3 <- quantile(sell$corr_area_matrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+    sell$clrs3 <- round(seq(255, 40, length.out = length(sell$brks3) + 1), 0) %>%
+    {paste0("rgb(255,", ., ",", ., ")")}
+    shift_corrmatrix=cor(sell$finaloutput$shift,use='pairwise.complete.obs',method='spearman')
+    sell$fo=matrix(0,dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2])
+    sell$flo=array(0,dim=c(dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2],3))
+    for (ii in 1:dim(shift_corrmatrix)[1]) {
+      ll=sell$finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
+      nanana=lmrob(ll[,1] ~ ll[,2] ,control = lmrob.control(maxit.scale=1000))  
+      tro1=predict(nanana, interval='prediction')
+      sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
+      nanana=lmrob(ll[,1] ~ ll[,3] ,control = lmrob.control(maxit.scale=1000))  
+      tro2=predict(nanana, interval='prediction')
+      sg=which(sell$finaloutput$shift[,ii]<tro2[,2]|sell$finaloutput$shift[,ii]>tro2[,3])
+      sell$flo[,ii,]=(tro1+tro2)/2
+      sell$fo[Reduce(intersect, list(sf,sg)),ii]=1
+      
+    }
+    colnames(sell$fo)=colnames(sell$finaloutput$shift)
+    rownames(sell$fo)=rownames(sell$finaloutput$shift)
+    
+    sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
+    sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
+    
+    medianwidth=apply(sell$finaloutput$width,2,median)
+    for (ii in 1:dim(sell$finaloutput$width)[1]) {
+      nanana=tryCatch({lmrob(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth)})  
+      tro=predict(nanana, interval='prediction')
+      sell$flo2[ii,,]=tro
+      sell$fo2[ii,which(sell$finaloutput$width[ii,]<tro[,2]|sell$finaloutput$width[ii,]>tro[,3])]=1
+    }
+    
+    # output$repository = DT::renderDataTable(
+    #   
+    #   sell$repository[which(sell$repository[,5]>revals$mtcars[1,2]&sell$repository[,5]<revals$mtcars[1,1]),] , server = T)
+    # proxy2 = dataTableProxy('repository')
+    # observe({
+    #   replaceData(proxy2,  sell$repository[which(sell$repository[,5]>revals$mtcars[1,2]&sell$repository[,5]<revals$mtcars[1,1]),] )
+    # })
     output$x1 = DT::renderDataTable(
       
       spectra , selection = list(mode = 'multiple', selected = 1),server = T)
@@ -1167,8 +1373,9 @@ server = function(input, output,session) {
     session$sendCustomMessage('activeNavs', 'ROI Testing')
     session$sendCustomMessage('activeNavs', 'Fitting error values')
     session$sendCustomMessage('activeNavs', 'Outliers')
-    session$sendCustomMessage('activeNavs', 'Univariate analysis')
+    session$sendCustomMessage('activeNavs', 'Uni and multivariate analysis')
     session$sendCustomMessage('activeNavs', 'ROI Profiles')
+    updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
     
 
   })

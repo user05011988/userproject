@@ -45,8 +45,9 @@ fitting_type=ROI_profile[1,3]
       
       # print(signals_parameters)
       # print(Xdata)
+      other_fit_parameters$freq=autorun_data$freq
       fitted_signals = fitting_optimization(signals_parameters,
-                                         Xdata,multiplicities,roof_effect)
+                                         Xdata,multiplicities,roof_effect,Ydata,other_fit_parameters$freq)
       # print(fitted_signals)
       # signals_parameters=as.matrix(signals_parameters)
       dim(signals_parameters) = c(5, dim(signals_introduce)[1])
