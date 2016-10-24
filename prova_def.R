@@ -511,7 +511,7 @@ server = function(input, output,session) {
     updateSelectInput(session, "select",selected = NULL
     )
     
-    
+    print(sell$autorun_data$signals_names[sell$info$col])
     
     is_autorun='N'
     if (length(sell$info$row)!=1) {
@@ -545,51 +545,36 @@ server = function(input, output,session) {
     colnames(plotdata4)=c('Xdata',dummy[-c(1, 2, 3),1])
     
     plotdata5 = melt(plotdata4, id = "Xdata")
-    v$blah$p=ggplot() +
-      geom_line(data = plotdata3,
-        aes(
-          x = Xdata,
-          y = value,
-          colour = variable,
-          group = variable
-        )) +
-      geom_line(data = plotdata5,
-        aes(
-          x = Xdata,
-          y = value,
-          colour = 'Surrounding signals',
-          group = variable
-        )) +
-      scale_x_reverse() + labs(x='ppm',y='Intensity') + expand_limits(y=0)
     
     r=which(ROI_profile[,4]==sell$autorun_data$signals_names[sell$info$col])
     plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
-      v$blah$p=v$blah$p +
-        geom_area(
-          data = plotdata,
-          aes(
-            x = Xdata,
-            y = signals,
-            position = 'fill',
-            fill = 'Quantified Signal'
-          )
-        ) 
+    
+   print('Non')
+    v$blah$p=plot_ly(plotdata,x = ~Xdata, y = ~signals, type = 'scatter', name= sell$autorun_data$signals_names[sell$info$col],mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>% add_trace(data=plotdata5,x=~Xdata,y=~value,color=~'Surrounding signals',type='scatter',mode='lines',fill=NULL)  %>%
+      layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
+        yaxis = list(title = 'Intensity'))
+    print(v$blah$p)
+    
+    
     # }
     revals$mtcars=ROI_profile
     revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
    # print(revals2$mtcars)
+    print('sol')
     revals4$mtcars=ROI_profile
     ind=which(sell$ROI_separator[,1]-sell$info$col>=0)[1]
     ind=sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2]
     revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
     revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
-    
+    print('rer')
     revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
     revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$fitting_error[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
+    print('far')
     
     updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
+    print('Nan')
     
     
   })
@@ -639,36 +624,14 @@ server = function(input, output,session) {
     
     plotdata5 = melt(plotdata4, id = "Xdata")
     
-    v$blah$p=ggplot() +
-      geom_line(data = plotdata3,
-        aes(
-          x = Xdata,
-          y = value,
-          colour = variable,
-          group = variable
-        )) +
-      geom_line(data = plotdata5,
-        aes(
-          x = Xdata,
-          y = value,
-          colour = 'Surrounding signals',
-          group = variable
-        )) +
-      scale_x_reverse() + labs(x='ppm',y='Intensity') + expand_limits(y=0)
-    
     r=which(ROI_profile[,4]==sell$autorun_data$signals_names[sell$info$col])
-      plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
-      
-      v$blah$p=v$blah$p +
-        geom_area(
-          data = plotdata,
-          aes(
-            x = Xdata,
-            y = signals,
-            position = 'fill',
-            fill = 'Quantified Signal'
-          )
-        ) 
+    plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
+    
+    
+    v$blah$p=plot_ly(plotdata,x = ~Xdata, y = ~signals, type = 'scatter', name= sell$autorun_data$signals_names[sell$info$col],mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>% add_trace(data=plotdata5,x=~Xdata,y=~value,color=~'Surrounding signals',type='scatter',mode='lines',fill=NULL)  %>%
+      layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
+        yaxis = list(title = 'Intensity'))
+    
     # }
     revals$mtcars=ROI_profile
     revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
@@ -922,7 +885,8 @@ server = function(input, output,session) {
 
   
   output$plot <- renderPlotly({
-   
+    print('Lal')
+    
     
     
     if ((v$stop3==0&(is.null(sell$info))|(v$stop3==0&length(input$x1_rows_selected)>1))) {
@@ -934,8 +898,8 @@ server = function(input, output,session) {
       plotdata3 <- melt(plotdata, id = "Xdata")
       plot_ly(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines') %>% layout(xaxis = list(range = c(round(sell$mtcars[1,1],6), round(sell$mtcars[1,2],6))),yaxis = list(range = c(0, max(sell$dataset[input$x1_rows_selected,lol:lol2]))))
     } else {
-      ggplotly(v$blah$p) 
-      
+      # ggplotly(v$blah$p) 
+     print(v$blah$p)
 
     }
   })
@@ -1327,34 +1291,34 @@ server = function(input, output,session) {
     sell$brks3 <- quantile(sell$corr_area_matrix, probs = seq(.05, .95, .05), na.rm = TRUE)
     sell$clrs3 <- round(seq(255, 40, length.out = length(sell$brks3) + 1), 0) %>%
     {paste0("rgb(255,", ., ",", ., ")")}
-    shift_corrmatrix=cor(sell$finaloutput$shift,use='pairwise.complete.obs',method='spearman')
-    sell$fo=matrix(0,dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2])
-    sell$flo=array(0,dim=c(dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2],3))
-    for (ii in 1:dim(shift_corrmatrix)[1]) {
-      ll=sell$finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
-      nanana=lmrob(ll[,1] ~ ll[,2] ,control = lmrob.control(maxit.scale=1000))  
-      tro1=predict(nanana, interval='prediction')
-      sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
-      nanana=lmrob(ll[,1] ~ ll[,3] ,control = lmrob.control(maxit.scale=1000))  
-      tro2=predict(nanana, interval='prediction')
-      sg=which(sell$finaloutput$shift[,ii]<tro2[,2]|sell$finaloutput$shift[,ii]>tro2[,3])
-      sell$flo[,ii,]=(tro1+tro2)/2
-      sell$fo[Reduce(intersect, list(sf,sg)),ii]=1
-      
-    }
-    colnames(sell$fo)=colnames(sell$finaloutput$shift)
-    rownames(sell$fo)=rownames(sell$finaloutput$shift)
-    
-    sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
-    sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
-    
-    medianwidth=apply(sell$finaloutput$width,2,median)
-    for (ii in 1:dim(sell$finaloutput$width)[1]) {
-      nanana=tryCatch({lmrob(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth)})  
-      tro=predict(nanana, interval='prediction')
-      sell$flo2[ii,,]=tro
-      sell$fo2[ii,which(sell$finaloutput$width[ii,]<tro[,2]|sell$finaloutput$width[ii,]>tro[,3])]=1
-    }
+    # shift_corrmatrix=cor(sell$finaloutput$shift,use='pairwise.complete.obs',method='spearman')
+    # sell$fo=matrix(0,dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2])
+    # sell$flo=array(0,dim=c(dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2],3))
+    # for (ii in 1:dim(shift_corrmatrix)[1]) {
+    #   ll=sell$finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
+    #   nanana=lmrob(ll[,1] ~ ll[,2] ,control = lmrob.control(maxit.scale=1000))  
+    #   tro1=predict(nanana, interval='prediction')
+    #   sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
+    #   nanana=lmrob(ll[,1] ~ ll[,3] ,control = lmrob.control(maxit.scale=1000))  
+    #   tro2=predict(nanana, interval='prediction')
+    #   sg=which(sell$finaloutput$shift[,ii]<tro2[,2]|sell$finaloutput$shift[,ii]>tro2[,3])
+    #   sell$flo[,ii,]=(tro1+tro2)/2
+    #   sell$fo[Reduce(intersect, list(sf,sg)),ii]=1
+    #   
+    # }
+    # colnames(sell$fo)=colnames(sell$finaloutput$shift)
+    # rownames(sell$fo)=rownames(sell$finaloutput$shift)
+    # 
+    # sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
+    # sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
+    # 
+    # medianwidth=apply(sell$finaloutput$width,2,median)
+    # for (ii in 1:dim(sell$finaloutput$width)[1]) {
+    #   nanana=tryCatch({lmrob(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth)})  
+    #   tro=predict(nanana, interval='prediction')
+    #   sell$flo2[ii,,]=tro
+    #   sell$fo2[ii,which(sell$finaloutput$width[ii,]<tro[,2]|sell$finaloutput$width[ii,]>tro[,3])]=1
+    # }
     
     # output$repository = DT::renderDataTable(
     #   

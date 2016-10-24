@@ -11,16 +11,16 @@ fitting_prep = function(Xdata,
   ROIlength = length(Xdata)
 
   #Change of j-coupling from Hz to ppm
-  for (i in 1:signals_to_fit)
-    initial_fit_parameters$Jcoupling[i] = ifelse((
-      initial_fit_parameters$multiplicities[i] == 1 |
-        initial_fit_parameters$multiplicities[i] == 3
-    ),
-    initial_fit_parameters$Jcoupling[i] / other_fit_parameters$freq,
-    (
-      initial_fit_parameters$Jcoupling[i] / other_fit_parameters$freq
-    ) / 2
-    )
+  # for (i in 1:signals_to_fit)
+  #   initial_fit_parameters$Jcoupling[i] = ifelse((
+  #     initial_fit_parameters$multiplicities[i] == 1 |
+  #       initial_fit_parameters$multiplicities[i] == 3
+  #   ),
+  #   initial_fit_parameters$Jcoupling[i] / other_fit_parameters$freq,
+  #   (
+  #     initial_fit_parameters$Jcoupling[i] / other_fit_parameters$freq
+  #   ) / 2
+  #   )
 
   #Calculation of number of background signals, if baseline fitting is performed
   BGSigNum = ifelse(other_fit_parameters$clean_fit == 'N', max(round(abs(Xdata[1] -
@@ -50,12 +50,8 @@ fitting_prep = function(Xdata,
     initial_fit_parameters$shift_tolerance
   FeaturesMatrix[1:signals_to_fit, 4] = initial_fit_parameters$positions +
     initial_fit_parameters$shift_tolerance
-  FeaturesMatrix[1:signals_to_fit, 5] = initial_fit_parameters$widths /
-    other_fit_parameters$freq - ((initial_fit_parameters$widths / other_fit_parameters$freq) *
-                                   other_fit_parameters$widthtolerance)
-  FeaturesMatrix[1:signals_to_fit, 6] = initial_fit_parameters$widths /
-    other_fit_parameters$freq + ((initial_fit_parameters$widths / other_fit_parameters$freq) *
-                                   other_fit_parameters$widthtolerance)
+  FeaturesMatrix[1:signals_to_fit, 5] = initial_fit_parameters$widths- initial_fit_parameters$widths * other_fit_parameters$widthtolerance
+  FeaturesMatrix[1:signals_to_fit, 6] = initial_fit_parameters$widths + initial_fit_parameters$widths * other_fit_parameters$widthtolerance
   FeaturesMatrix[1:signals_to_fit, 7] = 0
   FeaturesMatrix[1:signals_to_fit, 8] = other_fit_parameters$gaussian
   FeaturesMatrix[1:signals_to_fit, 9] = initial_fit_parameters$Jcoupling -

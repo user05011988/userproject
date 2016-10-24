@@ -91,15 +91,15 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       )
 
       #Ydata is scaled to improve the quality of the fitting
-      scaledYdata = as.vector(Ydata / (max(Ydata)))
 
       #Other parameters necessary for the fitting independent of the type of signal
 
       other_fit_parameters$clean_fit = clean_fit
-
+      other_fit_parameters$freq=autorun_data$freq
+      
       #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
       FeaturesMatrix = fitting_prep(Xdata,
-                                    scaledYdata,
+                                    Ydata,
                                     initial_fit_parameters,
                                     other_fit_parameters)
 
@@ -107,14 +107,14 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       #Calculation of the parameters that will achieve the best fitting
       signals_parameters = fittingloop(FeaturesMatrix,
                                        Xdata,
-                                       scaledYdata,
+                                       Ydata,
                                        other_fit_parameters)
 
       #Fitting of the signals
       multiplicities=FeaturesMatrix[,11]
       roof_effect=FeaturesMatrix[,12]
       fitted_signals = fitting_optimization(signals_parameters,
-                                         Xdata,multiplicities,roof_effect)
+                                         Xdata,multiplicities,roof_effect,Ydata,other_fit_parameters$freq)
       # signals_parameters=as.matrix(signals_parameters)
       dim(signals_parameters) = c(5, dim(FeaturesMatrix)[1])
       rownames(signals_parameters) = c(
@@ -131,15 +131,14 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       output_data = output_generator(
         signals_to_quantify,
         fitted_signals,
-        scaledYdata,
+        Ydata,
         Xdata,
         signals_parameters,multiplicities
       )
 
-      output_data$intensity=signals_parameters[1, signals_to_quantify] * max(Ydata)
+      output_data$intensity=signals_parameters[1, signals_to_quantify]
       output_data$width=signals_parameters[3, signals_to_quantify]
-      output_data$Area = output_data$Area * max(Ydata)      
-      
+
 
       #Generation of the dataframe with the final output variables
       results_to_save = data.frame(
@@ -170,16 +169,15 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
      
       plotdata2 = data.frame(Xdata,
         Ydata,
-        plot_data[3, ] * max(Ydata),
-        plot_data[2, ] * max(Ydata))
+        plot_data[3, ],
+        plot_data[2, ] )
       plotdata3 <- melt(plotdata2, id = "Xdata")
       plotdata3$variable = c(
         rep('Original Spectrum', length(Ydata)),
         rep('Generated Spectrum', length(Ydata)),
         rep('Generated Background', length(Ydata))
       )
-      plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F]) *
-          max(Ydata)))
+      plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
       plotdata5 = melt(plotdata4, id = "Xdata")
       # p=plot_ly(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines') %>% layout(xaxis = list(autorange = "reversed"))
       # p <- add_trace(p,data=plotdata5,x = ~Xdata,
@@ -209,7 +207,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
         scale_x_reverse() + labs(x='ppm',y='Intensity') + expand_limits(y=0)
       
      for (r in 1:length(other_fit_parameters$signals_to_quantify)) {
-       plotdata = data.frame(Xdata, signals = plot_data[3 + other_fit_parameters$signals_to_quantify[r], ] * max(Ydata))
+       plotdata = data.frame(Xdata, signals = plot_data[3 + other_fit_parameters$signals_to_quantify[r], ] )
      p=p +
         geom_area(
           data = plotdata,

@@ -1,5 +1,5 @@
 #Aquesta ?s la funci? adaptada i R.
-fitting_optimization = function(parS, Xdata,multiplicities,roof_effect) {
+fitting_optimization = function(parS, Xdata,multiplicities,roof_effect,observed,freq) {
   # print(ple)
   # if (exists('ple')) {
     # parS=parS*attr(ple,"scaled:scale")+attr(ple,"scaled:center")
@@ -7,11 +7,11 @@ fitting_optimization = function(parS, Xdata,multiplicities,roof_effect) {
   #   parS=parS
     # }
   
-  i = as.numeric(parS[seq(1, length(parS) - 4, 5)])
+  i = as.numeric(parS[seq(1, length(parS) - 4, 5)])/max(Ydata)
   p = as.numeric(parS[seq(2, length(parS) - 3, 5)])
-  w = as.numeric(parS[seq(3, length(parS) - 2, 5)])
+  w = as.numeric(parS[seq(3, length(parS) - 2, 5)])/freq
   g = as.numeric(parS[seq(4, length(parS) - 1, 5)])
-  j = as.numeric(parS[seq(5, length(parS) - 0, 5)])
+  j = as.numeric(parS[seq(5, length(parS) - 0, 5)])/freq
   signals_parameters=rbind(i,p,w,g,j)
   fitted_signals = matrix(NaN, dim(signals_parameters)[2], length(Xdata))
   
@@ -35,14 +35,14 @@ fitting_optimization = function(parS, Xdata,multiplicities,roof_effect) {
       } else if (multiplicities[s] == 2) {
         fitted_signals[s, ] = peakpvoigt(c(
           signals_parameters[1, s]/(1 - roof_effect[s]),
-          (signals_parameters[2, s] - signals_parameters[5, s]),
+          (signals_parameters[2, s] - signals_parameters[5, s]/2),
           signals_parameters[3, s],
           signals_parameters[4, s]
         ),
           Xdata) + peakpvoigt(
             c(
               signals_parameters[1, s],
-              (signals_parameters[2, s] + signals_parameters[5, s]),
+              (signals_parameters[2, s] + signals_parameters[5, s]/2),
               signals_parameters[3, s],
               signals_parameters[4, s]
             ),
@@ -131,13 +131,13 @@ fitting_optimization = function(parS, Xdata,multiplicities,roof_effect) {
       } else if (multiplicities[s] == 2) {
         fitted_signals[s, ] = peakpvoigt(c(
           signals_parameters[1, s],
-          (signals_parameters[2, s] - signals_parameters[5, s]),
+          (signals_parameters[2, s] - signals_parameters[5, s]/2),
           signals_parameters[3, s],
           signals_parameters[4, s]
         ),
           Xdata) + peakpvoigt(c(
             signals_parameters[1, s],
-            (signals_parameters[2, s] + signals_parameters[5, s]),
+            (signals_parameters[2, s] + signals_parameters[5, s]/2),
             signals_parameters[3, s],
             signals_parameters[4, s]
           ),
@@ -214,7 +214,7 @@ fitting_optimization = function(parS, Xdata,multiplicities,roof_effect) {
         fitted_signals[s, ] = peakpvoigt(
           c(
             signals_parameters[1, s],
-            (signals_parameters[2, s] - signals_parameters[5, s]),
+            (signals_parameters[2, s] - signals_parameters[5, s]/2),
             signals_parameters[3, s],
             signals_parameters[4, s]
           ),
@@ -222,7 +222,7 @@ fitting_optimization = function(parS, Xdata,multiplicities,roof_effect) {
         ) + peakpvoigt(c(
           signals_parameters[1, s] *
             (1 - roof_effect[s]) ,
-          (signals_parameters[2, s] + signals_parameters[5, s]),
+          (signals_parameters[2, s] + signals_parameters[5, s]/2),
           signals_parameters[3, s],
           signals_parameters[4, s]
         ),

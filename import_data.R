@@ -44,6 +44,18 @@ import_data = function(parameters_path) {
   export_path = as.character(import_profile[7, 2])
 #Other necessary variables
   freq = as.numeric(as.character(import_profile[11, 2]))
+  
+  biofluid=import_profile[14, 2]
+  repository=rio::import(as.character(import_profile[12, 2]))
+  if (biofluid=='Urine') {
+    repository=repository[which(repository[,3]==1),]
+  } else if (biofluid=='Serum') {
+    repository=repository[which(repository[,2]==1),]
+  } else {
+    
+  }
+    
+
 
   #Kind of normalization
   #TO DO: add PQN (but before standardize a way to find the regions to have into account)
@@ -181,7 +193,8 @@ import_data = function(parameters_path) {
   imported_data$export_path = export_path
   imported_data$freq = freq
   imported_data$Metadata=Metadata
-
+  imported_data$repository=repository
+  
   return(imported_data)
 
 }

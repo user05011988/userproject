@@ -96,7 +96,8 @@ signal_area_ratio_alarmmatrix[finaloutput$signal_area_ratio>other_fit_parameters
 
 
 #I sum all "points" gained by every quantification
-alarmmatrix=shift_alarmmatrix+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix+intensity_alarmmatrix
+# alarmmatrix=shift_alarmmatrix+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix+intensity_alarmmatrix
+alarmmatrix=shift_alarmmatrix+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix
 colnames(alarmmatrix)=colnames(finaloutput$shift)
 rownames(alarmmatrix)=rownames(finaloutput$shift)
 

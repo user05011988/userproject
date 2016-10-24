@@ -63,7 +63,7 @@ autorun = function(autorun_data, finaloutput) {
   #     )
   # 
   #     #Ydata is scaled to improve the quality of the fitting
-  #     scaledYdata = as.vector(Ydata / (max(Ydata)))
+  #     Ydata = as.vector(Ydata / (max(Ydata)))
   # 
   #     #Other parameters necessary for the fitting independent of the type of signal
   # 
@@ -71,7 +71,7 @@ autorun = function(autorun_data, finaloutput) {
   # 
   #     #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
   #     FeaturesMatrix = fitting_prep(preXdata,
-  #       scaledYdata,
+  #       Ydata,
   #       initial_fit_parameters,
   #       other_fit_parameters)
   # 
@@ -79,7 +79,7 @@ autorun = function(autorun_data, finaloutput) {
   #     #Calculation of the parameters that will achieve the best fitting
   #     signals_parameters = fittingloop(FeaturesMatrix,
   #       preXdata,
-  #       scaledYdata,
+  #       Ydata,
   #       other_fit_parameters)
   #     dim(signals_parameters) = c(5, (length(signals_parameters)/5))
   # 
@@ -238,34 +238,35 @@ autorun = function(autorun_data, finaloutput) {
         )
         
         #Ydata is scaled to improve the quality of the fitting
-        scaledYdata = as.vector(Ydata / (max(Ydata)))
+        # Ydata = as.vector(Ydata / (max(Ydata)))
         
         #Other parameters necessary for the fitting independent of the type of signal
         
         other_fit_parameters$clean_fit = clean_fit
+        other_fit_parameters$freq=autorun_data$freq
+        
         
         #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
         FeaturesMatrix = fitting_prep(Xdata,
-          scaledYdata,
+          Ydata,
           initial_fit_parameters,
           other_fit_parameters)
-        
         
         #Calculation of the parameters that will achieve the best fitting
         signals_parameters = fittingloop(FeaturesMatrix,
           Xdata,
-          scaledYdata,
+          Ydata,
           other_fit_parameters)
 
         
         #Fitting of the signals
-        multiplicities=FeaturesMatrix[,11]
-        roof_effect=FeaturesMatrix[,12]
+        multiplicities=c(FeaturesMatrix[,11],rep(1,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
+        roof_effect=c(FeaturesMatrix[,12],rep(0,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
         # signals_parameters[which(seq_along(signals_parameters)%%5==3)]=signals_parameters[which(seq_along(signals_parameters)%%5==3)]/1.5
         # signals_parameters[which(seq_along(signals_parameters)%%5==5)]=signals_parameters[which(seq_along(signals_parameters)%%5==5)]/2
         
         fitted_signals = fitting_optimization(signals_parameters,
-          Xdata,multiplicities,roof_effect)
+          Xdata,multiplicities,roof_effect,Ydata,other_fit_parameters$freq)
 
         # signals_parameters[which(seq_along(signals_parameters)%%5==3)]=signals_parameters[which(seq_along(signals_parameters)%%5==3)]*1.5
         # signals_parameters[which(seq_along(signals_parameters)%%5==5)]=signals_parameters[which(seq_along(signals_parameters)%%5==5)]*2
@@ -285,14 +286,13 @@ autorun = function(autorun_data, finaloutput) {
         output_data = output_generator(
           signals_to_quantify,
           fitted_signals,
-          scaledYdata,
+          Ydata,
           Xdata,
           signals_parameters,multiplicities
         )
         
-        output_data$intensity=signals_parameters[1, signals_to_quantify] * max(Ydata)
+        output_data$intensity=signals_parameters[1, signals_to_quantify]
         output_data$width=signals_parameters[3, signals_to_quantify]
-        output_data$Area=output_data$Area * max(Ydata)
         #Generation of the dataframe with the final output variables
         results_to_save = data.frame(
           shift = output_data$shift,

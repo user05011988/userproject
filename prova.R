@@ -150,10 +150,14 @@ server = function(input, output,session) {
     sell$stop=0
     sell$change2=1
     sell$stop2=0
+    v$stop3=0
     sell$roi=NULL
+    sell$info=NULL
+    
 
     resetInput(session, "mtcars_edit")
-    print(input$mtcars_edit)
+    resetInput(session, "mtcars2_edit")
+    
     revals$mtcars <- sell$mtcars
     revals2$mtcars <- rbind(rep(NA,7),rep(NA,7))
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
@@ -365,7 +369,8 @@ server = function(input, output,session) {
     }
     
     v$blah <- interface_quant(sell$autorun_data, sell$finaloutput, sell$ind,revals$mtcars,is_autorun) 
-
+    v$stop3=1
+    
     revals3$mtcars=cbind(v$blah$results_to_save$Area,v$blah$results_to_save$fitting_error,v$blah$results_to_save$signal_area_ratio)
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
     
@@ -387,6 +392,9 @@ server = function(input, output,session) {
     sell$stop=0
     sell$change2=1
     sell$stop2=0
+    resetInput(session, "mtcars_edit")
+    resetInput(session, "mtcars2_edit")
+    
     
     
     is_autorun='N'
@@ -469,6 +477,9 @@ server = function(input, output,session) {
     sell$stop=0
     sell$change2=1
     sell$stop2=0
+    
+    resetInput(session, "mtcars_edit")
+    resetInput(session, "mtcars2_edit")
     is_autorun='N'
     if (length(sell$info$row)!=1) {
       return(NULL)
@@ -682,8 +693,9 @@ server = function(input, output,session) {
   
   output$plot <- renderPlotly({
     
-    if ((is.null(input$mtcars_edit)&is.null(sell$roi))|length(input$x1_rows_selected)>1) {
-      
+    print(is.null(sell$info))
+    print(v$stop3)
+    if ((v$stop3==0&(is.null(sell$info))|length(input$x1_rows_selected)>1)) {
       lol=which(round(sell$autorun_data$ppm,6)==round(sell$mtcars[1,1],6))
       lol2=which(round(sell$autorun_data$ppm,6)==round(sell$mtcars[1,2],6))
       

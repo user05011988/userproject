@@ -48,8 +48,8 @@ fittingloop = function(FeaturesMatrix,
   
   #Function where to find a minimum
   residFun <-
-    function(par, observed, xx,multiplicities,roof_effect)
-      observed - colSums(fitting_optimization(par, xx,multiplicities,roof_effect))
+    function(par, observed, xx,multiplicities,roof_effect,freq)
+      observed - colSums(fitting_optimization(par, xx,multiplicities,roof_effect,observed,freq))
   
   
   # Loop to control if additional signals are incorporated, until a maximum of iterations specified bt fitting_maxiterrep.
@@ -61,7 +61,8 @@ fittingloop = function(FeaturesMatrix,
     errorprov = 3000
     error1 = 3000
     worsterror = 0
-    
+    if (iterrep>0) print(FeaturesMatrix[,2])
+
     
     # bounds = list(ub = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
     #                                                         2) - 2), lb = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
@@ -103,6 +104,7 @@ fittingloop = function(FeaturesMatrix,
           xx = Xdata,
           multiplicities=multiplicities,
           roof_effect=roof_effect,
+        freq=other_fit_parameters$freq,
           lower = lb,
           upper = ub,
           control = nls.lm.control(
@@ -132,6 +134,10 @@ fittingloop = function(FeaturesMatrix,
       }
       # if (dim(FeaturesMatrix)[1]>8) try_error=0
     }
+    
+    if (iterrep>0) print(paramprov)
+    
+    
     iter = 0
     errorprov = 3000
     error1 = 3000
@@ -152,6 +158,7 @@ fittingloop = function(FeaturesMatrix,
           xx = Xdata,
           multiplicities=multiplicities,
           roof_effect=roof_effect,
+          freq=other_fit_parameters$freq,
           lower = lb,
           upper = ub,
           control = nls.lm.control(
@@ -264,14 +271,15 @@ fittingloop = function(FeaturesMatrix,
           ncol = length(FeaturesMatrix[1, ]),
           byrow = TRUE
         )
-        dummy[, 2] = lol3[, 2]
+        # dummy[, 2] = lol3[, 2]
         dummy[, 3] = Xdata[lol3[, 1]] - 0.001
         dummy[, 4] = Xdata[lol3[, 1]] + 0.001
         dummy[, 9] = rep(0, dim(lol3)[1])
         dummy[, 10] = rep(0, dim(lol3)[1])
-        dummy[, 11] = rep(1, dim(lol3)[1])
-        dummy[, 12] = rep(0, dim(lol3)[1])
+        
         FeaturesMatrix = rbind(FeaturesMatrix, dummy)
+        multiplicities=c(FeaturesMatrix[,11],rep(1,dim(lol3)[1]))
+        roof_effect=c(FeaturesMatrix[,12],rep(0,dim(lol3)[1]))
         iterrep = iterrep + 1
       }
     } else {

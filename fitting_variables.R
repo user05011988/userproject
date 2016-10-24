@@ -10,9 +10,9 @@ fitting_variables = function() {
   other_fit_parameters$BGdensity=50
 other_fit_parameters$widthtolerance=0.2
 other_fit_parameters$gaussian=0
-other_fit_parameters$j_coupling_variation=0.0001
+other_fit_parameters$j_coupling_variation=0.06
 other_fit_parameters$BG_gaussian_percentage=0
-other_fit_parameters$BG_width=0.02
+other_fit_parameters$BG_width=12
 other_fit_parameters$BG_width_tolerance=0.25
 
 #Parameters related to the fitting loop

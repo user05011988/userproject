@@ -107,7 +107,6 @@ for (i in seq_along(plot_path)) {
 
 
 
-  print(finaloutput$fitting_error[1,3])
   finaloutput = save_output(
       spectrum_index,
       signals_codes,
