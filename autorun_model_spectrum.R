@@ -18,7 +18,7 @@ autorun_model_spectrum = function(autorun_data) {
     
   for (ROI_index in seq_along(ROI_separator[, 1])) {
     
-    
+    print(ROI_index)
     #Loading of every ROI parameters
     ROI_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
     ROI_limits = round(as.numeric(ROI_profile[1, 1:2]),3)
@@ -27,8 +27,7 @@ autorun_model_spectrum = function(autorun_data) {
     ROI_buckets = which(autorun_data$ppm <= ROI_limits[1] &
         autorun_data$ppm >=
         ROI_limits[2])
-    preXdata = autorun_data$ppm[ROI_buckets]
-    
+
     #Preparation of necessary parameters
     other_fit_parameters = fitting_variables()
     other_fit_parameters$freq = autorun_data$freq
@@ -46,6 +45,7 @@ autorun_model_spectrum = function(autorun_data) {
     
     Xdata= as.numeric(autorun_data$ppm[ROI_buckets])
     Ydata = as.numeric(autorun_data$dataset[spectrum_index, ROI_buckets])
+   
     
     
     signals_codes = replicate(length(signals_to_quantify), NA)
@@ -120,7 +120,6 @@ autorun_model_spectrum = function(autorun_data) {
                                     initial_fit_parameters,
                                     other_fit_parameters)
 
-
       #Calculation of the parameters that will achieve the best fitting
       signals_parameters = fittingloop(FeaturesMatrix,
                                        Xdata,
@@ -160,12 +159,15 @@ autorun_model_spectrum = function(autorun_data) {
     
     }
 
-  p=plot_ly(plotdata2,x = ~Xdata, y = ~Ydata, type = 'scatter', name= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~Ydata,name='Fitted spectrum',fill=NULL)  %>% add_trace(data=plotdata,x=~Xdata,y=~Ydata,name='Original spectrum',fill=NULL)  %>%
+  # p=plot_ly(plotdata2,x = ~Xdata, y = ~Ydata, type = 'scatter', name= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~Ydata,name='Fitted spectrum',fill=NULL)  %>% add_trace(data=plotdata,x=~Xdata,y=~Ydata,name='Original spectrum',fill=NULL)  %>%
+  #   layout(xaxis = list(range=c(max(autorun_data$ppm,na.rm=T),min(autorun_data$ppm,na.rm=T)),title = 'ppm'),
+  #     yaxis = list(title = 'Intensity'))
+  p=plot_ly(plotdata2,x = ~Xdata, y = ~Ydata, type = 'scatter', name= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~Ydata,name='Fitted spectrum',fill=NULL)  %>%
     layout(xaxis = list(range=c(max(autorun_data$ppm,na.rm=T),min(autorun_data$ppm,na.rm=T)),title = 'ppm'),
       yaxis = list(title = 'Intensity'))
     
     # blah$finaloutput=finaloutput
-    
+    print(p)
     
     # blah$autorun_data=autorun_data
   return(p)

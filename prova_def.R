@@ -1,7 +1,6 @@
-variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = elements = env =self = private = .values = ymax= ymin = label.row = x= y=c = NULL # Setting the variables to NULL 
+variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = elements = env =self = private = .values = ymax= ymin = label.row = x= y=c=integration_parameters = NULL # Setting the variables to NULL 
 setwd("C:/Users/user/Documents/Dolphin/R")
 
-library("lazyeval")
 library("minpack.lm")
 library("reshape")
 library("ggplot2")
@@ -14,6 +13,7 @@ library(plotly)
 library(DT)
 library(D3TableFilter)
 library(shiny)
+
 
 source('packages_sources.R')
 packages_sources()
@@ -154,15 +154,15 @@ ui <- fluidPage(
     
     tabPanel("Uni and multivariate analysis",
       fluidRow(column(width = 12, h4("Here you have different kinds of Uni and multivariate analysis. By now only can analyze between two groups of samples. It cannot analyze differences by treatment, or compare more than two groups of samples. There is an interactive plot of bucket analysis (without FDR at the moment), the p values of quantifications (tests adjusted to normality and variance) and boxplots for every signal for every kind of sample"))),
-      fluidRow(
-        column(width = 12, h4("Bucket analysis"),
-          mainPanel(plotlyOutput("plot_p_value")))    ),
-      fluidRow(
-        column(width = 12, h4("p values"),
-          mainPanel(DT::dataTableOutput("p_value_final")))    ),
+      # fluidRow(
+      #   column(width = 12, h4("Bucket analysis"),
+      #     mainPanel(plotlyOutput("plot_p_value")))    ),
+      # fluidRow(
+      #   column(width = 12, h4("p values"),
+      #     mainPanel(DT::dataTableOutput("p_value_final")))    ),
       
       fluidRow(
-        column(width = 12, h4("Boxplots"),
+        column(width = 12, h4("Boxplots with p value in the x axis labels"),
           mainPanel(plotlyOutput("plot_p_value_2")))    ),
       # fluidRow(
       #   column(width = 12,
@@ -181,10 +181,10 @@ ui <- fluidPage(
                   mainPanel(plotlyOutput("corr_shift_signal")))    ),
       fluidRow(
         column(width = 12, h4("PCA Scores"),
-          mainPanel(plotlyOutput("pcascores")))    ),
-      fluidRow(
-        column(width = 12, h4("PCA Loadings"),
-          mainPanel(plotlyOutput("pcaloadings")))    )
+          mainPanel(plotlyOutput("pcascores")))    )
+      # fluidRow(
+      #   column(width = 12, h4("PCA Loadings"),
+      #     mainPanel(plotlyOutput("pcaloadings")))    )
     )
     
     
@@ -202,7 +202,13 @@ server = function(input, output,session) {
   revals3 <- reactiveValues()
   revals4 <- reactiveValues()
   
-  
+  m <- list(
+    l = 50,
+    r = 50,
+    b = 150,
+    t = 100,
+    pad = 4
+  )
   
   v <- reactiveValues(meh=NULL, blah = NULL,stop3=0)
   
@@ -665,70 +671,9 @@ observeEvent(input$autorun, {
   
   sell$finaloutput = autorun(sell$autorun_data, sell$finaloutput)
   
-  other_fit_parameters = fitting_variables()
-  
-  
-  sell$ROI_data = read.csv(sell$autorun_data$profile_folder_path, stringsAsFactors = F)
-  dummy = which(!is.na(sell$ROI_data[, 1]))
-  sell$ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(sell$ROI_data)[1]))
-  # mtcars2=ROI_data[1:2,4:11]
-  # mtcars=ROI_data[1:2,4:11]
-  
-  ROI_names=paste(sell$ROI_data[sell$ROI_separator[, 1],1],sell$ROI_data[sell$ROI_separator[, 1],2])
-  sell$select_options=1:length(ROI_names)
-  names(sell$select_options)=ROI_names
-  t_test_data=sell$autorun_data$dataset
-  
-  ss=unique(sell$autorun_data$Metadata[,1])
-  tt=matrix(NA,length(ss),dim(t_test_data)[2])
-  for (ind in seq_along(ss)) {
-    for (k in 1.:dim(t_test_data)[2]) {
-      tt[ind,k]=tryCatch(shapiro.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[ind],k])$p.value,error=function(e) NA)
-    }
-    
-  }
-  p_value_bucketing=rep(NA,dim(t_test_data)[2])
-  for (k in 1:dim(t_test_data)[2]) {
-    # if (!any(is.na(t_test_data[,k]))) {
-    if (!any(tt[,k]<0.05,na.rm=T)) {
-      p_value_bucketing[k]=tryCatch(suppressWarnings(wilcox.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,1]==ss[2],k]))$p.value,error=function(e) NA)
-    } else {
-      p_value_bucketing[k]=tryCatch(t.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,1]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
-    }
-    
-    # }
-  }
-  p_value_bucketing=p.adjust(p_value_bucketing,method="BH")
-  p_value_bucketing[is.na(p_value_bucketing)]=1
-  plotdata = data.frame(Xdata=sell$autorun_data$ppm, p_value_bucketing)
-  sell$mediani=apply(sell$autorun_data$dataset,2,function(x) median(x,na.rm=T))
-  # plot_ly(data=plotdata,x=~Xdata,y=~Ydata)
-  sell$bucketing <- cbind(melt(plotdata, id = "Xdata"),sell$mediani)
-  colnames(sell$bucketing)=c('Xdata','variable','pvalue','intensity')
-  
   t_test_data_2=sell$finaloutput$Area
   # t_test_data_2[sell$finaloutput$fitting_error>other_fit_parameters$fitting_error_limit]=NA
   # t_test_data_2[sell$finaloutput$signal_area_ratio<other_fit_parameters$signal_area_ratio_limit]=NA
-  
-  ll=as.data.frame(t_test_data_2)
-  Xwit=cbind(ll,factor(sell$autorun_data$Metadata[,1]))
-  # rownames(Xwit)=NULL
-  sell$ab=melt(Xwit)
-  
-  colnames(sell$ab)=c('Metadata','Signal','Value')
-  sell$outlier_table=matrix(0,dim(ll)[1],dim(ll)[2])
-  sell$outlier_table=as.data.frame(sell$outlier_table)
-  
-  colnames(sell$outlier_table)=colnames(t_test_data_2)
-  rownames(sell$outlier_table)=rownames(sell$finaloutput$fitting_error)
-  
-  
-  for (j in 1:length(ss)) {
-    sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
-    
-    # ind=which(autorun_data$Metadata==ss[j])
-    # sell$outlier_table[ind[sell$finaloutput$Area[autorun_data$Metadata==ss[j],i] %in%  outliers],i]=1
-  }
   ss=unique(sell$autorun_data$Metadata[,1])
   tt=matrix(NA,length(ss),dim(t_test_data_2)[2])
   for (ind in seq_along(ss)) {
@@ -748,9 +693,38 @@ observeEvent(input$autorun, {
     
     # }
   }
-  sell$p_value_final=t(as.matrix(p.adjust(p_value,method="BH")))
+  sell$p_value_final=round(t(as.matrix(p.adjust(p_value,method="BH"))),3)
   colnames(sell$p_value_final)=colnames(t_test_data_2)
+  ll=as.data.frame(t_test_data_2)
+  colnames(ll)=paste(colnames(ll),'(p= ',sell$p_value_final,')',sep='')
   
+  sell$outlier_table=matrix(0,dim(ll)[1],dim(ll)[2])
+  sell$outlier_table=as.data.frame(sell$outlier_table)
+  
+  colnames(sell$outlier_table)=colnames(t_test_data_2)
+  rownames(sell$outlier_table)=rownames(sell$finaloutput$fitting_error)
+  
+  
+  for (j in 1:length(ss)) {
+    sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
+    
+    # ind=which(autorun_data$Metadata==ss[j])
+    # sell$outlier_table[ind[sell$finaloutput$Area[autorun_data$Metadata==ss[j],i] %in%  outliers],i]=1
+  }
+ 
+  
+  t_test_data_2=sell$finaloutput$Area
+  # t_test_data_2[sell$finaloutput$fitting_error>other_fit_parameters$fitting_error_limit]=NA
+  # t_test_data_2[sell$finaloutput$signal_area_ratio<other_fit_parameters$signal_area_ratio_limit]=NA
+  
+  ll=as.data.frame(t_test_data_2)
+  colnames(ll)=paste(colnames(ll),'(p= ',sell$p_value_final,')',sep='')
+  
+  Xwit=cbind(ll,factor(sell$autorun_data$Metadata[,1]))
+  # rownames(Xwit)=NULL
+  sell$ab=melt(Xwit)
+  
+  colnames(sell$ab)=c('Metadata','Signal','Value')
   
   
   is_autorun='Y'
@@ -778,10 +752,10 @@ observeEvent(input$autorun, {
   sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
   for (ii in 1:dim(shift_corrmatrix)[1]) {
     ll=sell$finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
-    nanana=lmrob(ll[,1] ~ ll[,2] ,control = lmrob.control(maxit.scale=1000))  
+    nanana=tryCatch({lmrob(ll[,1] ~ ll[,2],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,2])})
     tro1=predict(nanana, interval='prediction')
-    sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
-    nanana=lmrob(ll[,1] ~ ll[,3] ,control = lmrob.control(maxit.scale=1000))  
+    sf=which(sell$finaloutput$shift[,ii]<tro1[,2]|sell$finaloutput$shift[,ii]>tro1[,3])
+    nanana=tryCatch({lmrob(ll[,1] ~ ll[,3],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,3])})    
     tro2=predict(nanana, interval='prediction')
     sg=which(sell$finaloutput$shift[,ii]<tro2[,2]|sell$finaloutput$shift[,ii]>tro2[,3])
     sell$flo[,ii,]=(tro1+tro2)/2
@@ -850,6 +824,7 @@ observeEvent(input$autorun, {
     sell$ab=melt(Xwit)
     colnames(sell$ab)=c('Metadata','Signal','Value')
     
+    
     tt=matrix(NA,length(ss),dim(t_test_data_2)[2])
     for (ind in seq_along(ss)) {
       for (k in 1:dim(t_test_data_2)[2]) {
@@ -867,7 +842,7 @@ observeEvent(input$autorun, {
       
      
     }
-    sell$p_value_final=t(as.matrix(p.adjust(p_value,method="BH")))
+    sell$p_value_final=round(t(as.matrix(p.adjust(p_value,method="BH"))),3)
     colnames(sell$p_value_final)=colnames(t_test_data_2)
     
     
@@ -913,7 +888,7 @@ observeEvent(input$autorun, {
           
           # }
         }
-        sell$p_value_final=t(as.matrix(p_value))
+        sell$p_value_final=round(t(as.matrix(p.adjust(p_value,method="BH"))),3)
         colnames(sell$p_value_final)=colnames(t_test_data_2)
   
   })
@@ -1064,7 +1039,6 @@ observeEvent(input$autorun, {
       plotdata3 <- melt(plotdata, id = "Xdata")
       plot_ly(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines') %>% layout(xaxis = list(range = c(round(sell$mtcars[1,1],6), round(sell$mtcars[1,2],6))),yaxis = list(range = c(0, max(sell$dataset[input$x1_rows_selected,lol:lol2]))))
     } else {
-      # ggplotly(v$blah$p) 
      print(v$blah$p)
 
     }
@@ -1074,9 +1048,10 @@ observeEvent(input$autorun, {
   output$autorun_plot <- renderPlotly({
     sell$p=autorun_model_spectrum(sell$autorun_data)
     
-      # ggplotly(v$blah$p) 
-    sell$p
-    
+    p=sell$p %>% add_trace(data=sell$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
+    print(p)
+  
+
   })
   
   output$quant_selection = DT::renderDataTable({ dat <- datatable(sell$outlier_table,selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(sell$outlier_table), backgroundColor = styleInterval(sell$brks2, sell$clrs2))
@@ -1100,7 +1075,7 @@ observeEvent(input$autorun, {
   
   output$plot_p_value_2 <- renderPlotly({
     plot_ly(sell$ab, x = ~Signal, y = ~Value, color = ~Metadata, type = "box") %>%
-      layout(boxmode = "group")
+      layout(boxmode = "group",margin=m)
   })
   output$corr_area_spectrum <- renderPlotly({
     cr=cor(t(sell$finaloutput$Area),use='pairwise.complete.obs',method='spearman')
@@ -1127,30 +1102,32 @@ observeEvent(input$autorun, {
     a=cbind(scale(sell$finaloutput$Area),sell$autorun_data$Metadata)
     a=missForest(a)$ximp
     b=prcomp(a)
+    carsDf2 <- data.frame(b$rotation)
     carsDf <- data.frame(b$x,metadata=sell$autorun_data$Metadata)
     colnames(carsDf)[length(colnames(carsDf))]='metadata'
-    p <- plot_ly(carsDf,x=~ PC1,y=~ PC2,
-      mode=~"markers",text = rownames(carsDf),color =~ metadata,marker=list(size=11))
-    p <- layout(p,title="PCA scores",
-      xaxis=list(title="PC1"),
-      yaxis=list(title="PC2"))
-    
+      p <- plot_ly(x=~ carsDf2$PC1,y=~ carsDf2$PC2,type='scatter',
+        mode=~"markers",text = rownames(carsDf2),color='loadings',marker=list(size=8))%>% add_trace(x=~ carsDf$PC1,y=~ carsDf$PC2,
+          mode=~"markers",text = rownames(carsDf),color =~ carsDf$metadata,marker=list(size=11))
+      p <- layout(p,title="PCA scores and loadings",
+        xaxis=list(title="PC1"),
+        yaxis=list(title="PC2"))
+      print(p)
   })
-  output$pcaloadings <- renderPlotly({
-    a=cbind(scale(sell$finaloutput$Area),sell$autorun_data$Metadata)
-    a=missForest(a)$ximp
-    b=prcomp(a)
-    
-    carsDf <- data.frame(b$rotation)
-    
-    
-    p <- plot_ly(carsDf,x=~ PC1,y=~ PC2,
-      mode=~"markers",text = rownames(carsDf),marker=list(size=11))
-    p <- layout(p,title="PCA loadings",
-      xaxis=list(title="PC1"),
-      yaxis=list(title="PC2"))
-    
-  })
+  # output$pcaloadings <- renderPlotly({
+  #   a=cbind(scale(sell$finaloutput$Area),sell$autorun_data$Metadata)
+  #   a=missForest(a)$ximp
+  #   b=prcomp(a)
+  #   
+  #   carsDf <- data.frame(b$rotation)
+  #   
+  #   
+  #   p <- plot_ly(carsDf,x=~ PC1,y=~ PC2,
+  #     mode=~"markers",text = rownames(carsDf),marker=list(size=11))
+  #   p <- layout(p,title="PCA loadings",
+  #     xaxis=list(title="PC1"),
+  #     yaxis=list(title="PC2"))
+  #   
+  # })
   observeEvent(input$x1_rows_selected, {
     if (sell$beginning ==T) {
       sell$mtcars=sell$ROI_data[sell$ROI_separator[as.numeric(input$select), 1]:sell$ROI_separator[as.numeric(input$select), 2],]
@@ -1242,7 +1219,53 @@ observeEvent(input$autorun, {
     )
     rm(imported_data)
     # sell$p=autorun_model_spectrum(sell$autorun_data)
+    other_fit_parameters = fitting_variables()
     
+    
+    sell$ROI_data = read.csv(sell$autorun_data$profile_folder_path, stringsAsFactors = F)
+    dummy = which(!is.na(sell$ROI_data[, 1]))
+    sell$ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(sell$ROI_data)[1]))
+    # mtcars2=ROI_data[1:2,4:11]
+    # mtcars=ROI_data[1:2,4:11]
+    
+    ROI_names=paste(sell$ROI_data[sell$ROI_separator[, 1],1],sell$ROI_data[sell$ROI_separator[, 1],2])
+    sell$select_options=1:length(ROI_names)
+    names(sell$select_options)=ROI_names
+    t_test_data=sell$autorun_data$dataset
+    
+    ss=unique(sell$autorun_data$Metadata[,1])
+    tt=matrix(NA,length(ss),dim(t_test_data)[2])
+    for (ind in seq_along(ss)) {
+      for (k in 1.:dim(t_test_data)[2]) {
+        tt[ind,k]=tryCatch(shapiro.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[ind],k])$p.value,error=function(e) NA)
+      }
+      
+    }
+    p_value_bucketing=rep(NA,dim(t_test_data)[2])
+    for (k in 1:dim(t_test_data)[2]) {
+      # if (!any(is.na(t_test_data[,k]))) {
+      if (!any(tt[,k]<0.05,na.rm=T)) {
+        p_value_bucketing[k]=tryCatch(suppressWarnings(wilcox.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,1]==ss[2],k]))$p.value,error=function(e) NA)
+      } else {
+        p_value_bucketing[k]=tryCatch(t.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,1]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
+      }
+      
+      # }
+    }
+    p_value_bucketing=p.adjust(p_value_bucketing,method="BH")
+    p_value_bucketing[is.na(p_value_bucketing)]=1
+    plotdata = data.frame(Xdata=sell$autorun_data$ppm, p_value_bucketing)
+    # sell$mediani=apply(sell$autorun_data$dataset,2,function(x) median(x,na.rm=T))
+    quartile_spectrum = as.numeric(apply(sell$autorun_data$dataset, 2, function(x)
+      quantile(x, 0.75,na.rm=T)))
+    ref_spectrum = sell$autorun_data$dataset[which.min(apply(sell$autorun_data$dataset, 1, function(x)
+      sqrt(mean((x - quartile_spectrum) ^ 2
+        ,na.rm=T)))),]
+    # plot_ly(data=plotdata,x=~Xdata,y=~Ydata)
+    sell$bucketing <- cbind(melt(plotdata, id = "Xdata"),ref_spectrum)
+    sell$bucketing=sell$bucketing[complete.cases(sell$bucketing),]
+    print(dim(sell$bucketing))
+    colnames(sell$bucketing)=c('Xdata','variable','pvalue','intensity')
     
   })
   
@@ -1306,43 +1329,7 @@ observeEvent(input$autorun, {
     sell$brks3 <- quantile(sell$corr_area_matrix, probs = seq(.05, .95, .05), na.rm = TRUE)
     sell$clrs3 <- round(seq(255, 40, length.out = length(sell$brks3) + 1), 0) %>%
     {paste0("rgb(255,", ., ",", ., ")")}
-    # shift_corrmatrix=cor(sell$finaloutput$shift,use='pairwise.complete.obs',method='spearman')
-    # sell$fo=matrix(0,dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2])
-    # sell$flo=array(0,dim=c(dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2],3))
-    # for (ii in 1:dim(shift_corrmatrix)[1]) {
-    #   ll=sell$finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
-    #   nanana=lmrob(ll[,1] ~ ll[,2] ,control = lmrob.control(maxit.scale=1000))  
-    #   tro1=predict(nanana, interval='prediction')
-    #   sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
-    #   nanana=lmrob(ll[,1] ~ ll[,3] ,control = lmrob.control(maxit.scale=1000))  
-    #   tro2=predict(nanana, interval='prediction')
-    #   sg=which(sell$finaloutput$shift[,ii]<tro2[,2]|sell$finaloutput$shift[,ii]>tro2[,3])
-    #   sell$flo[,ii,]=(tro1+tro2)/2
-    #   sell$fo[Reduce(intersect, list(sf,sg)),ii]=1
-    #   
-    # }
-    # colnames(sell$fo)=colnames(sell$finaloutput$shift)
-    # rownames(sell$fo)=rownames(sell$finaloutput$shift)
-    # 
-    # sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
-    # sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
-    # 
-    # medianwidth=apply(sell$finaloutput$width,2,median)
-    # for (ii in 1:dim(sell$finaloutput$width)[1]) {
-    #   nanana=tryCatch({lmrob(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth)})  
-    #   tro=predict(nanana, interval='prediction')
-    #   sell$flo2[ii,,]=tro
-    #   sell$fo2[ii,which(sell$finaloutput$width[ii,]<tro[,2]|sell$finaloutput$width[ii,]>tro[,3])]=1
-    # }
-    
-    # output$repository = DT::renderDataTable(
-    #   
-    #   sell$repository[which(sell$repository[,5]>revals$mtcars[1,2]&sell$repository[,5]<revals$mtcars[1,1]),] , server = T)
-    # proxy2 = dataTableProxy('repository')
-    # observe({
-    #   replaceData(proxy2,  sell$repository[which(sell$repository[,5]>revals$mtcars[1,2]&sell$repository[,5]<revals$mtcars[1,1]),] )
-    # })
-    output$x1 = DT::renderDataTable(
+     output$x1 = DT::renderDataTable(
       
       spectra , selection = list(mode = 'multiple', selected = 1),server = T)
     sell$beginning =T

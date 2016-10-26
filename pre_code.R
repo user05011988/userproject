@@ -121,18 +121,53 @@ for (k in 1:dim(t_test_data)[2]) {
     
   # }
 }
-p_value_bucketing[is.na(p_value_bucketing)]=0
+p_value_bucketing[is.na(p_value_bucketing)]=1
+p_value_bucketing=p.adjust(p_value_bucketing,method='BH')
+so=which(p_value_bucketing<0.05)
+rr=matrix(NA,length(so),2)
+pa=1
+
+rr[pa,1]=so[1]
+for (i in 2:length(so)) {
+  if (so[i]>so[i-1]+1) {
+    rr[pa,2]=so[i-1]
+  rr[pa+1,1]=so[i]
+    
+  pa=pa+1
+  }
+}
+rr[pa,2]=so[i]
+rr=rr[1:pa,]
+
+
+
 plotdata = data.frame(Xdata=autorun_data$ppm, p_value_bucketing)
 mediani=apply(autorun_data$dataset,2,function(x) median(x,na.rm=T))
 # plot_ly(data=plotdata,x=~Xdata,y=~Ydata)
 bucketing <- cbind(melt(plotdata, id = "Xdata"),mediani)
-plot_ly(data=bucketing,x=~Xdata,y=~mediani,color=~value,type='scatter',mode='lines') %>% layout(xaxis = list(autorange = "reversed"),yaxis = list(range = c(0, max(mediani))))
+bucketing=bucketing[complete.cases(bucketing),]
+
+shapes2 = list()
+  for (i in 1:dim(rr)[1]) {
+
+shapes2[[length(shapes2)+1]] <-list(type = "rect",
+    fillcolor = "red", line = list(color = "red"), opacity = 0.1,
+    x0 = autorun_data$ppm[rr[i,1]], x1 = autorun_data$ppm[rr[i,2]], xref = "x",
+    y0 = 0, y1 = max(mediani,na.rm=T), yref = "y")
+  }
+p=plot_ly(data=bucketing,x=~Xdata,y=~mediani,color=~value,type='scatter',mode='lines') %>% layout(xaxis = list(autorange = "reversed"),yaxis = list(range = c(0, max(mediani,na.rm=T))))
+# for (i in 1:dim(rr)[1]) {
+p <- layout(p,
+  shapes = shapes2)
+# }
+p
 
 t_test_data_2=finaloutput$Area
 t_test_data_2[finaloutput$fitting_error>other_fit_parameters$fitting_error_limit]=NA
 t_test_data_2[finaloutput$signal_area_ratio<other_fit_parameters$signal_area_ratio_limit]=NA
 
 ll=as.data.frame(t_test_data_2)
+rownames(ll)=paste(rownames(ll),p_value_final)
 Xwit=cbind(ll,factor(autorun_data$Metadata[,1]))
 # rownames(Xwit)=NULL
 ab=melt(Xwit)
