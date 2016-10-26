@@ -34,7 +34,7 @@ packages_sources = function() {
   source("interface_quant.R")
   source("fitting_optimization.R")
   source("peakpvoigt.R")
-  
+  source('autorun_model_spectrum.R')
   source("peakdet.R")
   source("fitting_prep.R")
   source("integration.R")

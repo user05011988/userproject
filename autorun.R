@@ -243,8 +243,7 @@ autorun = function(autorun_data, finaloutput) {
         #Other parameters necessary for the fitting independent of the type of signal
         
         other_fit_parameters$clean_fit = clean_fit
-        other_fit_parameters$freq=autorun_data$freq
-        
+
         
         #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
         FeaturesMatrix = fitting_prep(Xdata,
