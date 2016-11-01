@@ -10,7 +10,9 @@ plotgenerator = function(results_to_save,
                          plot_path) {
   #Created by Daniel Cañueto 30/08/2016
   #Generation of the plot of the quantification of the signal with information of the original ROI, of the fitting of every signal of interest of the ROI and of the background and addtional signals created to adapt the fitting to the concrete characteristics of the ROI
-  
+  # print(results_to_save$signal_area_ratio)
+  # print(other_fit_parameters$signals_to_quantify)
+  # print(results_to_save$fitting_error)
   for (r in 1:length(results_to_save$signal_area_ratio)) {
     #There is only creation of plot if the conditions specified in the Parameters file are accomplished
     if (results_to_save$signal_area_ratio[other_fit_parameters$signals_to_quantify[r]] < other_fit_parameters$signal_area_ratio_plot ||

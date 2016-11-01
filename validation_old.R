@@ -10,49 +10,43 @@ validation = function(finaloutput,
   
   #shift analysis
   #correlation matrix of shift of signals and finding for every signal the signal that has best ability to predict shift
-  ind=which(apply(finaloutput$width,2, function(x) all(is.na(x)))==F)
-  
-  corr_area_matrix=cor(finaloutput$Area,use='pairwise.complete.obs',method='spearman')
-  shift_corrmatrix=cor(finaloutput$shift,use='pairwise.complete.obs',method='spearman')
-  fo=matrix(0,dim(finaloutput$shift)[1],dim(finaloutput$shift)[2])
-  flo=array(0,dim=c(dim(finaloutput$shift)[1],dim(finaloutput$shift)[2],3))
- 
-  for (ii in seq_along(ind)) {
-    print(ii)
-    ll=finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
-    nanana=tryCatch({lmrob(ll[,1] ~ ll[,2],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,2])},warning= function(e) {lm(ll[,1] ~ ll[,2])})
-    tro1=suppressWarnings(predict(nanana, interval='prediction'))
-    sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
-    print('sa')
-    nanana=tryCatch({lmrob(ll[,1] ~ ll[,3],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,3])},warning= function(e) {lm(ll[,1] ~ ll[,3])})    
-    tro2=suppressWarnings(predict(nanana, interval='prediction'))
-    sg=which(finaloutput$shift[,ii]<tro2[,2]|finaloutput$shift[,ii]>tro2[,3])
-    print(dim(tro1))
-    print(dim(flo))
-    print(sg)
-    
-    flo[,ii,]=(tro1+tro2)/2
-    print('ape')
-    fo[Reduce(intersect, list(sf,sg)),ii]=1
-    
+shift_corrmatrix=cor(finaloutput$shift,use='pairwise.complete.obs',method='spearman')
+shift_corrmatrix=round(shift_corrmatrix,5)
+shift_corrmatrix[shift_corrmatrix==1]=0
+shift_reference=as.numeric(apply(shift_corrmatrix,1,which.max))
+#preparation of matrix that will contain suspicious quantifications according to shift information
+shift_alarmmatrix=matrix(0,dim(finaloutput$shift)[1],dim(finaloutput$shift)[2])
+#for every signal it is performed a robust linear model according to the signal with most similar behavior.
+#However, even robust linear models can suffer if there are too many spectra where there have been problems.
+#It is necessary to remove before outliers. I do it seeing how correlation evolves when I remove the sample
+#where there is more difference with the mean shift difference between the two signals.
+#To avoid perfect linear models because of too few samples that do not represent actual condtions, I penalze every removal of a sample.
+
+for (ii in 1:dim(shift_corrmatrix)[1]) {
+  rlm_preinfo=matrix(NA,dim(finaloutput$shift)[1],2)
+  rlm_samples=cbind(finaloutput$shift[,ii],finaloutput$shift[,shift_reference[[ii]]])
+  rlm_signalsdifference=rlm_samples[,1]-rlm_samples[,2]
+  rlm_signalsdifference_ind=sort(rlm_signalsdifference,decreasing=T,index.return=T)$ix
+  rlm_preinfo[dim(rlm_samples)[1],]=c(dim(rlm_samples)[1],dim(rlm_samples)[1]*cor(rlm_samples,use='pairwise.complete.obs',method='spearman')[1,2])
+  for (i in 1:(length(rlm_signalsdifference_ind)/2)) {
+    rlm_samples_sub=rlm_samples[-rlm_signalsdifference_ind[1:i],]
+    rlm_preinfo[dim(rlm_samples_sub)[1],]=c(dim(rlm_samples_sub)[1],dim(rlm_samples_sub)[1]*cor(rlm_samples,use='pairwise.complete.obs',method='spearman')[1,2])
+    }
+# I analyze with how many samples there has been the best correlation (penalization-adjusted) and save the samples that will be used for the robust linear model
+  if(length(rlm_signalsdifference_ind[dim(rlm_samples)[1]-which.max(rlm_preinfo[,2])])>0) {
+    rlm_samples_sub = rlm_samples[-rlm_signalsdifference_ind[dim(rlm_samples)[1]-which.max(rlm_preinfo[,2])],]
+  } else {
+    rlm_samples_sub=rlm_samples
   }
-  colnames(fo)=colnames(finaloutput$shift)
-  rownames(fo)=rownames(finaloutput$shift)
   
-  fo2=matrix(0,dim(finaloutput$width)[1],dim(finaloutput$width)[2])
-  flo2=array(0,dim=c(dim(finaloutput$width)[1],dim(finaloutput$width)[2],3))
-  medianwidth=apply(finaloutput$width,2,median)
-  for (ii in 1:dim(finaloutput$width)[1]) {
-    print(ii)
-    
-    nanana=tryCatch({lmrob(as.numeric(finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(finaloutput$width[ii,]) ~ medianwidth)},warning= function(e) {lm(as.numeric(finaloutput$width[ii,]) ~ medianwidth)}) 
-    tro=suppressWarnings(predict(nanana, interval='prediction'))
-    flo2[ii,ind,]=tro
-    fo2[ii,which(finaloutput$width[ii,ind]<tro[,2]|finaloutput$width[ii,ind]>tro[,3])]=1
+  #Robust linear model and prediction of expected shifts
+  rlm_model=lmrob(rlm_samples_sub[,1]~rlm_samples_sub[,2])
+  shift_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$shift[,shift_reference[[ii]]]
+  #Calculation of suspicious samples because of too much difference with expected shift
+  shift_suspicioussamples=which(abs(finaloutput$shift[,ii]-shift_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
+  shift_alarmmatrix[shift_suspicioussamples,c(ii,shift_reference[ii])]=1
+  
   }
-  colnames(fo2)=colnames(finaloutput$shift)
-  rownames(fo2)=rownames(finaloutput$shift)
-  
   
 #Analysis of which samples have too much fitting error
 fitting_error_alarmmatrix=matrix(0,dim(finaloutput$fitting_error)[1],dim(finaloutput$fitting_error)[2])
@@ -63,17 +57,15 @@ fitting_error_alarmmatrix[finaloutput$fitting_error<other_fit_parameters$fitting
 signal_area_ratio_alarmmatrix=matrix(0,dim(finaloutput$signal_area_ratio)[1],dim(finaloutput$signal_area_ratio)[2])
 signal_area_ratio_alarmmatrix[finaloutput$signal_area_ratio>other_fit_parameters$signal_area_ratio_limit]=1
 
-alarmmatrix=fo+fo2+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix
-colnames(alarmmatrix)=colnames(fo)
-rownames(alarmmatrix)=rownames(fo)
+
 
 #Analysis of which metabolites have have relative intensity too far from expected according to robust linear model constructed
 
 #Find which metabolites have more than one signal and analyzing case by case
 # ind=grep('_s1',colnames(finaloutput$intensity))[order(colnames(finaloutput$intensity)[grep('_s1',colnames(finaloutput$intensity))])]
 # ind2=grep('_s2',colnames(finaloutput$intensity))[order(colnames(finaloutput$intensity)[grep('_s2',colnames(finaloutput$intensity))])]
-# # 
-# # #I find how many samples will be used for the roubst linear model in the same way than with the shift
+# 
+# #I find how many samples will be used for the roubst linear model in the same way than with the shift
 # intensity_alarmmatrix=matrix(0,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
 # for (ii in 1:length(ind)) {
 #   rlm_preinfo=matrix(NA,dim(finaloutput$shift)[1],2)
@@ -93,19 +85,21 @@ rownames(alarmmatrix)=rownames(fo)
 #   }
 #   #Robust linear model and prediction of expected shifts
 #   rlm_model=lmrob(rlm_samples_sub[,1]~rlm_samples_sub[,2])
-# 
+#   
 #   intensity_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$intensity[,ind2[ii]]
 # 
 #   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[ii]]-intensity_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
 #   intensity_alarmmatrix[intensity_suspicioussamples,c(ind[ii],ind2[ii])]=1
 # 
-# 
+#   
 # }
 
 
 #I sum all "points" gained by every quantification
 # alarmmatrix=shift_alarmmatrix+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix+intensity_alarmmatrix
-validationdata=list(alarmmmatrix=alarmmatrix,flo=flo,flo2=flo2)
+alarmmatrix=shift_alarmmatrix+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix
+colnames(alarmmatrix)=colnames(finaloutput$shift)
+rownames(alarmmatrix)=rownames(finaloutput$shift)
 
-return(validationdata)
+return(alarmmatrix)
 }

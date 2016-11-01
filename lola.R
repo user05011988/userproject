@@ -1,9 +1,5 @@
 variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = elements = env =self = private = .values = ymax= ymin = label.row = x= y=c=integration_parameters = NULL # Setting the variables to NULL 
 setwd("C:/Users/user/Documents/Dolphin/R")
-library("lazyeval")
-
-f_eval(~ 1 + 2 + 3)
-
 
 library("minpack.lm")
 library("reshape")
@@ -216,7 +212,7 @@ server = function(input, output,session) {
   
   v <- reactiveValues(meh=NULL, blah = NULL,stop3=0)
   
-  sell <- reactiveValues(mtcars=NULL,ind=NULL,beginning=F,dataset=NULL,inFile=NULL,finaloutput=NULL,brks=NULL,brks2=NULL,brks3=NULL,clrs=NULL,clrs2=NULL,clrs3=NULL,autorun_data=NULL,outlier_table=NULL,ab=NULL,p_value_final=NULL,ROI_data=NULL,info=NULL,ROI_separator=NULL,bucketing=NULL,mediani=NULL,select_options=NULL,new_roi_profile=NULL,corr_area_matrix=NULL,p=NULL,bgColScales=NULL)
+  sell <- reactiveValues(mtcars=NULL,ind=NULL,beginning=F,dataset=NULL,inFile=NULL,finaloutput=NULL,brks=NULL,brks2=NULL,brks3=NULL,clrs=NULL,clrs2=NULL,clrs3=NULL,autorun_data=NULL,outlier_table=NULL,ab=NULL,p_value_final=NULL,ROI_data=NULL,info=NULL,ROI_separator=NULL,bucketing=NULL,mediani=NULL,select_options=NULL,new_roi_profile=NULL,corr_area_matrix=NULL,p=NULL)
   
   observeEvent(input$roirows, {
     sell$new_roi_profile= as.data.frame(matrix(NA,as.numeric(input$roirows),11))
@@ -254,19 +250,12 @@ server = function(input, output,session) {
   observeEvent(input$saveroi, {
    
     write.csv(sell$ROI_data,sell$autorun_data$profile_folder_path,row.names=F)
-    print("** saving environment! **")
-    elements=isolate(reactiveValuesToList(sell))
-    ## save objects in current environment
-    save(elements, file = paste(sell$autorun_data$export_path,"savedenvironment.Rdata",sep='/'), envir = environment())
-    
-    print("** done saving     **")
   })
     
     
   observeEvent(input$select, {
   
     if (sell$beginning ==T) {
-      print(sell$ROI_separator)
     sell$mtcars=sell$ROI_data[sell$ROI_separator[as.numeric(input$select), 1]:sell$ROI_separator[as.numeric(input$select), 2],]
     }
     
@@ -286,7 +275,7 @@ server = function(input, output,session) {
 
     resetInput(session, "mtcars_edit")
     resetInput(session, "mtcars2_edit")
-    print(sell$mtcars)
+    
     revals$mtcars <- sell$mtcars
     revals2$mtcars <- rbind(rep(NA,7),rep(NA,7))
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
@@ -454,15 +443,7 @@ server = function(input, output,session) {
           revals2$mtcars[row, col] <- as.numeric(val)
           val = round(as.numeric(val), 3)
           confirmEdit(session, tbl = "mtcars2", row = row, col = col, id = id, value = val)
-          
-          if (sell$ss==1) {
-            ptm <- proc.time()
-            sell$ss=0
-          }
-          print((proc.time()-ptm))
-          
-          if ((proc.time()-ptm)[1]<1) {
-            v$meh=signals_int(sell$autorun_data, sell$finaloutput,sell$ind,revals2$mtcars,revals$mtcars) 
+          v$meh=signals_int(sell$autorun_data, sell$finaloutput,sell$ind,revals2$mtcars,revals$mtcars) 
 
           revals3$mtcars=cbind(v$meh$results_to_save$Area,v$meh$results_to_save$fitting_error,v$meh$results_to_save$signal_area_ratio)
           colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
@@ -480,10 +461,7 @@ server = function(input, output,session) {
           v$blah$plot_path=v$meh$plot_path
           v$blah$import_excel_profile=v$meh$ROI_profile
           v$blah$signals_codes=v$meh$signals_codes
-          } else {
-            sell$ss=1
-            
-          }
+          
           
         }
         
@@ -497,9 +475,10 @@ server = function(input, output,session) {
       tableProps = tableProps,
       enableTf = F,
       edit=TRUE,
-      rowStyles = sell$bgColScales,
+      
       tableStyle = "table table-bordered")
-
+    # if (!is.null(val))
+    
   })
   
   
@@ -510,25 +489,15 @@ server = function(input, output,session) {
       print('Select one valid spectrum')
       return(NULL)
     }
-    print(revals$mtcars)
+    
     v$blah <- interface_quant(sell$autorun_data, sell$finaloutput, sell$ind,revals$mtcars,is_autorun) 
     v$stop3=1
-    sell$ss=1
-    
     revals3$mtcars=cbind(v$blah$results_to_save$Area,v$blah$results_to_save$fitting_error,v$blah$results_to_save$signal_area_ratio)
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
-    # fo=(dim(v$blah$signals_parameters)[1]+1):dim(v$blah$signals_parameters_2)[1]
-    sell$bgColScales = c(rep("", dim(v$blah$signals_parameters)[1]), rep("info", dim(v$blah$signals_parameters_2)[1]-dim(v$blah$signals_parameters)[1]))
-    # sell$bgColScales=list()
-    # for (i in 1:length(fo)) {
-    #       sell$bgColScales=c(sell$bgColScales, "auto:white:green")
-    #       names(sell$bgColScales)[[i]]=paste('row',fo[i],sep='_')
-    #   }
-    # print(sell$bgColScales)
+    
     
     if (!is.null(v$blah$signals_parameters)) {
       revals2$mtcars <- v$blah$signals_parameters_2
-      print(revals2$mtcars)
     revals2$rowIndex <- 1:nrow(revals2$mtcars)
     sell$stop=0
     sell$roi=1
@@ -554,53 +523,56 @@ server = function(input, output,session) {
     if (length(sell$info$row)!=1) {
       return(NULL)
     }
-   
-    # path=paste(sell$autorun_data$export_path,sell$autorun_data$Experiments[sell$info$row],paste(sell$autorun_data$signals_names[sell$info$col],sell$ROI_data[sell$info$col,7],sep='_'),sep='/')
-    # 
+    
     path=paste(sell$autorun_data$export_path,sell$autorun_data$Experiments[sell$info$row],sell$autorun_data$signals_names[sell$info$col],sep='/')
+    
     Xdata=as.numeric(import(file.path(path,'Xdata.csv'))[,-1])
     Ydata=as.numeric(import(file.path(path,'Ydata.csv'))[,-1])
-
     dummy=import(file.path(path,'plot_data.csv'))
     plot_data=as.matrix(dummy[,-1])
     other_fit_parameters=as.list(import(file.path(path,'other_fit_parameters.csv'))[1,])
     ROI_profile=import(file.path(path,'import_excel_profile.csv'))[,-1,drop=F]
+    
     other_fit_parameters$signals_to_quantify=ROI_profile[,7]
+    
     plotdata2 = data.frame(Xdata=Xdata,
       Ydata=Ydata,
       plot_data[3, ] ,
       plot_data[2, ])
     colnames(plotdata2)=c('Xdata','Ydata',"fitted_sum","baseline_sum")
-
     plotdata3 <- melt(plotdata2, id = "Xdata")
     plotdata3$variable = c(
       rep('Original Spectrum', length(Ydata)),
       rep('Generated Spectrum', length(Ydata)),
       rep('Generated Background', length(Ydata))
     )
-    plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F])))
-
+    plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F])
+        ))
     colnames(plotdata4)=c('Xdata',dummy[-c(1, 2, 3),1])
+    
     plotdata5 = melt(plotdata4, id = "Xdata")
-    r=which(paste(ROI_profile[,4],ROI_profile[,7],sep='_')==sell$autorun_data$signals_names[sell$info$col])
+    
+    r=which(ROI_profile[,4]==sell$autorun_data$signals_names[sell$info$col])
     plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
+    
     v$blah$p=plot_ly(plotdata,x = ~Xdata, y = ~signals, type = 'scatter', name= sell$autorun_data$signals_names[sell$info$col],mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>% add_trace(data=plotdata5,x=~Xdata,y=~value,color=~'Surrounding signals',type='scatter',mode='lines',fill=NULL)  %>%
       layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
         yaxis = list(title = 'Intensity'))
 
+    
     # }
     revals$mtcars=ROI_profile
     revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
+   
     revals4$mtcars=ROI_profile
-    ind=which(sell$ROI_separator[,2]-sell$info$col>=0)[1]
-    ind=(sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2])
-    
-    
+    ind=which(sell$ROI_separator[,1]-sell$info$col>=0)[1]
+
+    ind=sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2]
     revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
+
     revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
     revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
-
     revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$fitting_error[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
 
@@ -628,8 +600,6 @@ server = function(input, output,session) {
     if (length(sell$info$row)!=1) {
       return(NULL)
     }
-    # path=paste(sell$autorun_data$export_path,sell$autorun_data$Experiments[sell$info$row],paste(sell$autorun_data$signals_names[sell$info$col],sell$ROI_data[sell$info$col,7],sep='_'),sep='/')
-    # 
     path=paste(sell$autorun_data$export_path,sell$autorun_data$Experiments[sell$info$row],sell$autorun_data$signals_names[sell$info$col],sep='/')
     
     Xdata=as.numeric(import(file.path(path,'Xdata.csv'))[,-1])
@@ -656,7 +626,7 @@ server = function(input, output,session) {
     
     plotdata5 = melt(plotdata4, id = "Xdata")
     
-    r=which(paste(ROI_profile[,4],ROI_profile[,7],sep='_')==sell$autorun_data$signals_names[sell$info$col])
+    r=which(ROI_profile[,4]==sell$autorun_data$signals_names[sell$info$col])
     plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
     
     
@@ -670,7 +640,7 @@ server = function(input, output,session) {
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     
     revals4$mtcars=ROI_profile
-    ind=which(sell$ROI_separator[,2]-sell$info$col>=0)[1]
+    ind=which(sell$ROI_separator[,1]-sell$info$col>=0)[1]
     ind=sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2]
     revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
     revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
@@ -691,7 +661,11 @@ server = function(input, output,session) {
     
   })
   
-  
+  output$varselect <- renderUI({
+    if(is.null(sell$p)){return()}
+     actionButton('autorun', 'Autorun!')
+    
+  })
 
 observeEvent(input$autorun, {
   
@@ -724,23 +698,20 @@ observeEvent(input$autorun, {
   ll=as.data.frame(t_test_data_2)
   colnames(ll)=paste(colnames(ll),'(p= ',sell$p_value_final,')',sep='')
   
-  # sell$outlier_table=matrix(0,dim(ll)[1],dim(ll)[2])
-  # sell$outlier_table=as.data.frame(sell$outlier_table)
-  # 
-  # colnames(sell$outlier_table)=colnames(t_test_data_2)
-  # rownames(sell$outlier_table)=rownames(sell$finaloutput$fitting_error)
-  # 
-  # 
-  # for (j in 1:length(ss)) {
-  #   sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
-  #   
-  #   # ind=which(autorun_data$Metadata==ss[j])
-  #   # sell$outlier_table[ind[sell$finaloutput$Area[autorun_data$Metadata==ss[j],i] %in%  outliers],i]=1
-  # }
-  dummy=validation(sell$finaloutput,sell$other_fit_parameters)
-  sell$flo=dummy$flo
-  sell$flo2=dummy$flo2
-  sell$outlier_table=dummy$alarmmatrix
+  sell$outlier_table=matrix(0,dim(ll)[1],dim(ll)[2])
+  sell$outlier_table=as.data.frame(sell$outlier_table)
+  
+  colnames(sell$outlier_table)=colnames(t_test_data_2)
+  rownames(sell$outlier_table)=rownames(sell$finaloutput$fitting_error)
+  
+  
+  for (j in 1:length(ss)) {
+    sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
+    
+    # ind=which(autorun_data$Metadata==ss[j])
+    # sell$outlier_table[ind[sell$finaloutput$Area[autorun_data$Metadata==ss[j],i] %in%  outliers],i]=1
+  }
+ 
   
   t_test_data_2=sell$finaloutput$Area
   # t_test_data_2[sell$finaloutput$fitting_error>other_fit_parameters$fitting_error_limit]=NA
@@ -775,36 +746,35 @@ observeEvent(input$autorun, {
   {paste0("rgb(255,", ., ",", ., ")")}
   sell$corr_area_matrix=cor(sell$finaloutput$Area,use='pairwise.complete.obs',method='spearman')
   shift_corrmatrix=cor(sell$finaloutput$shift,use='pairwise.complete.obs',method='spearman')
-  # sell$fo=matrix(0,dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2])
-  # sell$flo=array(0,dim=c(dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2],3))
-  # sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
-  # sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
-  # for (ii in 1:dim(shift_corrmatrix)[1]) {
-  #   ll=sell$finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
-  #   nanana=tryCatch({lmrob(ll[,1] ~ ll[,2],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,2])})
-  #   tro1=predict(nanana, interval='prediction')
-  #   sf=which(sell$finaloutput$shift[,ii]<tro1[,2]|sell$finaloutput$shift[,ii]>tro1[,3])
-  #   nanana=tryCatch({lmrob(ll[,1] ~ ll[,3],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,3])})    
-  #   tro2=predict(nanana, interval='prediction')
-  #   sg=which(sell$finaloutput$shift[,ii]<tro2[,2]|sell$finaloutput$shift[,ii]>tro2[,3])
-  #   sell$flo[,ii,]=(tro1+tro2)/2
-  #   sell$fo[Reduce(intersect, list(sf,sg)),ii]=1
-  # 
-  # }
-  # colnames(sell$fo)=colnames(sell$finaloutput$shift)
-  # rownames(sell$fo)=rownames(sell$finaloutput$shift)
-  # 
-  # sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
-  # sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
-  # medianwidth=apply(sell$finaloutput$width,2,median)
-  # for (ii in 1:dim(sell$finaloutput$width)[1]) {
-  #   nanana=tryCatch({lmrob(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth)}) 
-  #   tro=predict(nanana, interval='prediction')
-  #   sell$flo2[ii,,]=tro
-  #   sell$fo2[ii,which(sell$finaloutput$width[ii,]<tro[,2]|sell$finaloutput$width[ii,]>tro[,3])]=1
-  # }
-  # 
+  sell$fo=matrix(0,dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2])
+  sell$flo=array(0,dim=c(dim(sell$finaloutput$shift)[1],dim(sell$finaloutput$shift)[2],3))
+  sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
+  sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
 
+  for (ii in 1:dim(shift_corrmatrix)[1]) {
+    ll=sell$finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
+    nanana=tryCatch({lmrob(ll[,1] ~ ll[,2],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,2])})
+    tro1=predict(nanana, interval='prediction')
+    sf=which(sell$finaloutput$shift[,ii]<tro1[,2]|sell$finaloutput$shift[,ii]>tro1[,3])
+    nanana=tryCatch({lmrob(ll[,1] ~ ll[,3],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,3])})    
+    tro2=predict(nanana, interval='prediction')
+    sg=which(sell$finaloutput$shift[,ii]<tro2[,2]|sell$finaloutput$shift[,ii]>tro2[,3])
+    sell$flo[,ii,]=(tro1+tro2)/2
+    sell$fo[Reduce(intersect, list(sf,sg)),ii]=1
+    
+  }
+  colnames(sell$fo)=colnames(sell$finaloutput$shift)
+  rownames(sell$fo)=rownames(sell$finaloutput$shift)
+  
+  sell$fo2=matrix(0,dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2])
+  sell$flo2=array(0,dim=c(dim(sell$finaloutput$width)[1],dim(sell$finaloutput$width)[2],3))
+  medianwidth=apply(sell$finaloutput$width,2,median)
+  for (ii in 1:dim(sell$finaloutput$width)[1]) {
+    nanana=tryCatch({lmrob(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(sell$finaloutput$width[ii,]) ~ medianwidth)}) 
+    tro=predict(nanana, interval='prediction')
+    sell$flo2[ii,,]=tro
+    sell$fo2[ii,which(sell$finaloutput$width[ii,]<tro[,2]|sell$finaloutput$width[ii,]>tro[,3])]=1
+  }
   output$x1 = DT::renderDataTable(
     
     spectra , selection = list(mode = 'multiple', selected = 1),server = T)
@@ -839,16 +809,13 @@ observeEvent(input$autorun, {
 
     sell$finaloutput <- remove_quant(sell$info,sell$autorun_data, sell$finaloutput) 
 
-    # sell$outlier_table[,]=0
-    # ss=unique(sell$autorun_data$Metadata[,1])
-    # 
-    #   for (j in 1:length(ss)) {
-    #     sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
-    #    
-    #   }
-    
-    sell$outlier_table=validation(sell$finaloutput,sell$other_fit_parameters)
-    
+    sell$outlier_table[,]=0
+    ss=unique(sell$autorun_data$Metadata[,1])
+
+      for (j in 1:length(ss)) {
+        sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
+       
+      }
     t_test_data_2=as.data.frame(sell$finaloutput$Area)
     
     Xwit=cbind(t_test_data_2,factor(sell$autorun_data$Metadata[,1]))
@@ -887,23 +854,14 @@ observeEvent(input$autorun, {
     }
    
     sell$finaloutput=save_roi_testing(v$blah,sell$autorun_data, sell$finaloutput) 
-    
-    print("** saving environment! **")
-    elements=isolate(reactiveValuesToList(sell))
-    ## save objects in current environment
-    save(elements, file = paste(sell$autorun_data$export_path,"savedenvironment.Rdata",sep='/'), envir = environment())
-    
-    print("** done saving     **")
 
-    # sell$outlier_table[,]=0
-    # ss=unique(sell$autorun_data$Metadata[,1])
-    # 
-    # for (j in 1:length(ss)) {
-    #   sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
-    #   
-    # }
-    sell$outlier_table=validation(sell$finaloutput,sell$other_fit_parameters)
-    
+    sell$outlier_table[,]=0
+    ss=unique(sell$autorun_data$Metadata[,1])
+
+    for (j in 1:length(ss)) {
+      sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
+      
+    }
     t_test_data_2=as.data.frame(sell$finaloutput$Area)
     
         Xwit=cbind(t_test_data_2,factor(sell$autorun_data$Metadata[,1]))
@@ -943,12 +901,7 @@ observeEvent(input$autorun, {
     sell$ROI_data[sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2],]=revals$mtcars
     
     write.csv(sell$ROI_data,sell$autorun_data$profile_folder_path,row.names=F)
-    print("** saving environment! **")
-    elements=isolate(reactiveValuesToList(sell))
-    ## save objects in current environment
-    save(elements, file = paste(sell$autorun_data$export_path,"savedenvironment.Rdata",sep='/'), envir = environment())
-    
-    print("** done saving     **")
+
     
     
   })
@@ -1088,7 +1041,16 @@ observeEvent(input$autorun, {
 
     }
   })
+  
+  
+  output$autorun_plot <- renderPlotly({
+    p=autorun_model_spectrum(sell$autorun_data)
+    print('a')
+    p=p %>% add_trace(data=sell$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
+    print(p)
+  
 
+  })
   
   output$quant_selection = DT::renderDataTable({ dat <- datatable(sell$outlier_table,selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(sell$outlier_table), backgroundColor = styleInterval(sell$brks2, sell$clrs2))
   return(dat)
@@ -1111,47 +1073,39 @@ observeEvent(input$autorun, {
   
   output$plot_p_value_2 <- renderPlotly({
     plot_ly(sell$ab, x = ~Signal, y = ~Value, color = ~Metadata, type = "box") %>%
-      layout(boxmode='group',margin=m)
+      layout(boxmode = "group",margin=m)
   })
   output$corr_area_spectrum <- renderPlotly({
-    ind=which(apply(sell$finaloutput$width,2, function(x) all(is.na(x)))==F)
-    
-    cr=cor(t(sell$finaloutput$Area[,ind]),use='pairwise.complete.obs',method='spearman')
+    cr=cor(t(sell$finaloutput$Area),use='pairwise.complete.obs',method='spearman')
     bb=hclust(dist(cr))$order
     dr=cr[bb,bb]
     p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
     p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"))
   })
   output$corr_area_signal <- renderPlotly({
-    ind=which(apply(sell$finaloutput$width,2, function(x) all(is.na(x)))==F)
-    
-    cr=cor(sell$finaloutput$Area[,ind],use='pairwise.complete.obs',method='spearman')
+    cr=cor(sell$finaloutput$Area,use='pairwise.complete.obs',method='spearman')
     bb=hclust(dist(cr))$order
     dr=cr[bb,bb]
     p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
     p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"))
   })
   output$corr_shift_signal <- renderPlotly({
-    ind=which(apply(sell$finaloutput$width,2, function(x) all(is.na(x)))==F)
-    
-    cr=cor(sell$finaloutput$shift[,ind],use='pairwise.complete.obs',method='spearman')
+    cr=cor(sell$finaloutput$shift,use='pairwise.complete.obs',method='spearman')
     bb=hclust(dist(cr))$order
     dr=cr[bb,bb]
     p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
     p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"))
   })
   output$pcascores <- renderPlotly({
-    ind=which(apply(sell$finaloutput$width,2, function(x) all(is.na(x)))==F)
-    
-    a=cbind(scale(sell$finaloutput$Area[,ind]),sell$autorun_data$Metadata)
+    a=cbind(scale(sell$finaloutput$Area),sell$autorun_data$Metadata)
     a=missForest(a)$ximp
     b=prcomp(a)
     carsDf2 <- data.frame(b$rotation)
-    carsDf <- data.frame(b$x,metadata=sell$autorun_data$Metadata)
+    carsDf <- data.frame(b$x,metadata=factor(sell$autorun_data$Metadata))
     colnames(carsDf)[length(colnames(carsDf))]='metadata'
       p <- plot_ly(x=~ carsDf2$PC1,y=~ carsDf2$PC2,type='scatter',
         mode=~"markers",text = rownames(carsDf2),color='loadings',marker=list(size=8))%>% add_trace(x=~ carsDf$PC1,y=~ carsDf$PC2,
-          mode=~"markers",text = rownames(carsDf),color =~ as.factor(carsDf$metadata),marker=list(size=11))
+          mode=~"markers",text = rownames(carsDf),color =~ carsDf$metadata,marker=list(size=11))
       p <- layout(p,title="PCA scores and loadings",
         xaxis=list(title="PC1"),
         yaxis=list(title="PC2"))
@@ -1224,8 +1178,6 @@ observeEvent(input$autorun, {
     dummy = matrix(NaN,
       dim(imported_data$dataset)[1],
       length(imported_data$signals_names))
-    sell$ROI_data = read.csv(imported_data$profile_folder_path, stringsAsFactors = F)
-    imported_data$signals_names=paste(imported_data$signals_names,sell$ROI_data[1:dim(dummy)[2],7],sep='_')
     rownames(dummy) = imported_data$Experiments
     colnames(dummy) = imported_data$signals_names
     sell$finaloutput$Area = sell$finaloutput$signal_area_ratio = sell$finaloutput$fitting_error =
@@ -1264,17 +1216,13 @@ observeEvent(input$autorun, {
       Metadata=imported_data$Metadata
     )
     rm(imported_data)
-    
-    
     # sell$p=autorun_model_spectrum(sell$autorun_data)
     other_fit_parameters = fitting_variables()
     
     
     sell$ROI_data = read.csv(sell$autorun_data$profile_folder_path, stringsAsFactors = F)
-    dummy = which(is.na(sell$ROI_data[, 1]))
-    if (length(dummy)==0) dummy=dim(sell$ROI_data)[1]+1
-    lal=which(duplicated(sell$ROI_data[-dummy,1:2])==F)
-    sell$ROI_separator = cbind(lal, c(lal[-1] - 1, dim(sell$ROI_data[-dummy,])[1]))
+    dummy = which(!is.na(sell$ROI_data[, 1]))
+    sell$ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(sell$ROI_data)[1]))
     # mtcars2=ROI_data[1:2,4:11]
     # mtcars=ROI_data[1:2,4:11]
     
@@ -1316,18 +1264,6 @@ observeEvent(input$autorun, {
     sell$bucketing=sell$bucketing[complete.cases(sell$bucketing),]
     colnames(sell$bucketing)=c('Xdata','variable','pvalue','intensity')
     
-    output$autorun_plot <- renderPlotly({
-      p=autorun_model_spectrum(sell$autorun_data)
-      p=p %>% add_trace(data=sell$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
-    })
-    
-    
-    output$varselect <- renderUI({
-      if(is.null(p)){return()}
-      actionButton('autorun', 'Autorun!')
-      
-    })
-    
   })
   
   observeEvent(input$file2, {
@@ -1364,8 +1300,8 @@ observeEvent(input$autorun, {
     sell$ab=elements$ab
     sell$p_value_final=elements$p_value_final
     sell$ROI_data=elements$ROI_data
-    # sell$fo=elements$fo
-    #   sell$fo2=elements$fo2
+    sell$fo=elements$fo
+      sell$fo2=elements$fo2
     sell$flo=elements$flo
       sell$flo2=elements$flo2
     

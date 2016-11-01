@@ -35,7 +35,7 @@ import_data = function(parameters_path) {
   profile_folder_path = as.character(import_profile[6, 2])
 
   ROI_data=read.csv(profile_folder_path)
-  signals_names=ROI_data[,4]
+  signals_names=ROI_data[which(!is.na(ROI_data[, 1])),4]
   signals_codes = 1:length(signals_names)
 
 
@@ -140,9 +140,44 @@ import_data = function(parameters_path) {
       imported_data$dataset=as.numeric(as.matrix(dummy[-1,]))
       dim(imported_data$dataset)=pa
       colnames(imported_data$dataset) = dummy[1,]
-      imported_data$ppm = as.numeric(dummy[1,])
+      imported_data$ppm = round(as.numeric(dummy[1,]),4)
       rownames(imported_data$dataset) = Experiments
-
+      if (params$disol_suppression == 'Y') {
+        for (i in dim(params$disol_suppression_ppm)[1]) imported_data$dataset[,which(imported_data$ppm==round(params$disol_suppression_ppm[i,1],4)):which(imported_data$ppm==round(params$disol_suppression_ppm[i,2],4))] = 0
+          
+      }
+      if (alignment == 1) {
+        #Glucose
+        limi=c(5.5,5.1)
+      } else if (alignment == 2) {
+        #TSP
+        limi=c(0.1,-0.1)
+      } else if (alignment == 3) {
+        #Formate
+        limi=c(8.48,8.42)
+      }
+      
+      spectra_lag=rep(NA,dim(imported_data$dataset)[1])
+      for (i in 1:dim(imported_data$dataset)[1]) {
+        d <-
+          ccf(imported_data$dataset[i, which(imported_data$ppm==limi[1]):which(imported_data$ppm==limi[2])],
+            apply(imported_data$dataset[, which(imported_data$ppm==limi[1]):which(imported_data$ppm==limi[2]),drop=F], 2, median),
+            type = 'covariance',
+            plot = FALSE)
+        spectra_lag[i]=d$lag[which.max(d$acf)]
+      }
+      so=(1+max(abs(spectra_lag))):(length(imported_data$ppm)-max(abs(spectra_lag)))
+      for (i in 1:dim(imported_data$dataset)[1])   imported_data$dataset[i,so-spectra_lag[i]]=imported_data$dataset[i,so]
+      
+      if (params$norm_AREA == 'Y') {
+        for (i in 1:dim(imported_data$dataset)[1])
+          imported_data$dataset[i,]=imported_data$dataset[i,]*mean(rowSums(imported_data$dataset[,which(imported_data$ppm==params$norm_left_ppm):which(imported_data$ppm==params$norm_right_ppm)]))/sum(imported_data$dataset[i,which(imported_data$ppm==params$norm_left_ppm):which(imported_data$ppm==params$norm_right_ppm)])
+      } else if (params$norm_PEAK == 'Y') {
+        for (i in 1:dim(imported_data$dataset)[1])
+          imported_data$dataset[i,]=imported_data$dataset[i,]*mean(apply(imported_data$dataset[,which(imported_data$ppm==params$norm_left_ppm):which(imported_data$ppm==params$norm_right_ppm)],1,max))/sum(imported_data$dataset[i,which(imported_data$ppm==params$norm_left_ppm):which(imported_data$ppm==params$norm_right_ppm)])
+      }
+      
+        
       params$buck_step = ifelse(
         as.character(import_profile[13, 2]) == '',
         abs(imported_data$ppm[1] - imported_data$ppm[length(imported_data$ppm)]) /

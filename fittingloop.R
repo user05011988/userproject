@@ -86,7 +86,13 @@ fittingloop = function(FeaturesMatrix,
       # if (iterrep %in% seq(3,18,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=2/3,max=1)
       # # s0[which(seq_along(s0)%%5==3)]=s0[which(seq_along(s0)%%5==3)]/1.5
       # s0[which(seq_along(s0)%%5==5)]=s0[which(seq_along(s0)%%5==5)]/2
-      s0[which(seq_along(s0)%%5!=2)]=lb[which(seq_along(s0)%%5!=2)] + (ub[which(seq_along(s0)%%5!=2)] - lb[which(seq_along(s0)%%5!=2)]) * runif(1,min=0,max=(iterrep%%3)/3)
+      
+      aaa=iter%%3/3
+      bbb=ifelse((iter+1)%%3/3==0,1,(iter+1)%%3/3)
+      
+      s0[which(seq_along(s0)%%5==2)]=lb[which(seq_along(s0)%%5==2)] + (ub[which(seq_along(s0)%%5==2)] - lb[which(seq_along(s0)%%5==2)]) * runif(1,min=aaa,max=bbb)
+      
+      
       #
       # if (exists('nls.out')) {
       #   s0=paramprov+ (ub-lb)*0.2*matrix(runif(dim(lb)[1] * dim(lb)[2],min=-1,max=1), dim(lb)[1], dim(lb)[2])
@@ -96,6 +102,7 @@ fittingloop = function(FeaturesMatrix,
       #   }
       #
       # print(ple)
+
       nls.out <-
         nls.lm(
           par = s0,

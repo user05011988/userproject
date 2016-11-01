@@ -1,12 +1,15 @@
 autorun_model_spectrum = function(autorun_data) {
 
+  
+  variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = elements = env =self = private = .values = ymax= ymin = label.row = x= y=c=integration_parameters = NULL # Setting the variables to NULL 
     #Preparation of necessary variables and folders to store figures and information of the fitting
   # if (is_autorun=='N') {indexes=input$x1_select
   
-  # print(ROI_profile)
   ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
-  dummy = which(!is.na(ROI_data[, 1]))
-  ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(ROI_data)[1]))
+  dummy = which(is.na(ROI_data[, 1]))
+  if (length(dummy)==0) dummy=dim(ROI_data)[1]+1
+    lal=which(duplicated(ROI_data[-dummy,1:2])==F)
+  ROI_separator = cbind(lal, c(lal[-1] - 1, dim(ROI_data[-dummy,])[1]))
   quartile_spectrum = as.numeric(apply(autorun_data$dataset, 2, function(x)
     quantile(x, 0.75,na.rm=T)))
   spectrum_index = which.min(apply(autorun_data$dataset, 1, function(x)
@@ -36,7 +39,7 @@ autorun_model_spectrum = function(autorun_data) {
     
     
     fitting_type = as.character(ROI_profile[1, 3])
-    signals_to_quantify = which(ROI_profile[, 7] == 1)
+    signals_to_quantify = which(ROI_profile[, 7] > 1)
 
       ROI_buckets=which(round(autorun_data$ppm,6)==round(ROI_profile[1,1],6)):which(round(autorun_data$ppm,6)==round(ROI_profile[1,2],6))
   # print(ROI_buckets)
@@ -48,25 +51,27 @@ autorun_model_spectrum = function(autorun_data) {
    
     
     
-    signals_codes = replicate(length(signals_to_quantify), NA)
-    signals_names = replicate(length(signals_to_quantify), NA)
-    j = 1
-    for (i in signals_to_quantify) {
-      k = which(autorun_data$signals_names == ROI_profile[i,
-        4])
-      signals_codes[j] = autorun_data$signals_codes[k]
-      signals_names[j] = as.character(autorun_data$signals_names[k])
-      j = j + 1
-    }
-    
-
-    experiment_name = autorun_data$Experiments[[spectrum_index]]
-    plot_path = file.path(autorun_data$export_path,
-                          experiment_name,
-                          signals_names)
-    for (i in seq_along(plot_path))
-      if (!dir.exists(plot_path[i]))
-        dir.create(plot_path[i])
+    # signals_codes = replicate(length(signals_to_quantify), NA)
+    # signals_names = replicate(length(signals_to_quantify), NA)
+    # j = 1
+    # for (i in signals_to_quantify) {
+    #   k = which(autorun_data$signals_names == pre_import_excel_profile[i,
+    #     4] & ROI_data[,7] == pre_import_excel_profile[i,
+    #       7])
+    #   
+    #   signals_codes[j] = autorun_data$signals_codes[k]
+    #   signals_names[j] = paste(as.character(autorun_data$signals_names[k]),pre_import_excel_profile[i,7],sep = '')
+    #   j = j + 1
+    # }
+    # 
+    # 
+    # experiment_name = autorun_data$Experiments[[spectrum_index]]
+    # plot_path = file.path(autorun_data$export_path,
+    #                       experiment_name,
+    #                       signals_names)
+    # for (i in seq_along(plot_path))
+    #   if (!dir.exists(plot_path[i]))
+    #     dir.create(plot_path[i])
     # If the quantification is through integration with or without baseline
     if (fitting_type == "Clean Sum" ||
         fitting_type == "Baseline Sum") {
@@ -125,14 +130,42 @@ autorun_model_spectrum = function(autorun_data) {
                                        Xdata,
                                        Ydata,
                                        other_fit_parameters)
-
+        
       #Fitting of the signals
       multiplicities=FeaturesMatrix[,11]
       roof_effect=FeaturesMatrix[,12]
+      dummy = ROI_data[which(is.na(ROI_data[, 1])),]
+      
+      dummy2= list()
+      for (i in 1:dim(ROI_profile)[1]) {
+        
+        if (length(which(dummy[,4] == ROI_profile[i,4]))>0 & ROI_profile[i,7] == 1) {
+        dummy2[[length(dummy2)+1]]=which(dummy[,4] == ROI_profile[i,4])
+        for (j in 1:length(dummy2[[i]])) {
+        
+          cc= signals_parameters[(5*i-4):(5*i)]
+          cc[5]=dummy[dummy2[[i]][j],][9]
+          cc[1]=dummy[dummy2[[i]][j],][12]*cc[1]
+          cc[2]=as.numeric(dummy[dummy2[[i]][j],][5])+(as.numeric(cc[2])-as.numeric(ROI_profile[i,5]))
+          # cc[5]=dummy[dummy2[[i]][j],][9]
+          # cc[1]=dummy[dummy2[[i]][j],][12]*cc[1]
+          # cc[2]=dummy[dummy2[[i]][j],][5]-(cc[2]-ROI_profile[i,5])
+         
+         signals_parameters=c(signals_parameters,cc)
+         multiplicities=c(multiplicities,dummy[dummy2[[i]][j],][8])
+         roof_effect=c(roof_effect,dummy[dummy2[[i]][j],][10])
+        }   
+        }
+      }
+      Xdata=autorun_data$ppm
+      signals_parameters=unlist(signals_parameters)
+      multiplicities=unlist(multiplicities)
+      roof_effect=unlist(roof_effect)
+     
       fitted_signals = fitting_optimization(signals_parameters,
                                          Xdata,multiplicities,roof_effect,Ydata,other_fit_parameters$freq)
       # signals_parameters=as.matrix(signals_parameters)
-      dim(signals_parameters) = c(5, dim(FeaturesMatrix)[1])
+      dim(signals_parameters) = c(5, length(signals_parameters)/5)
       rownames(signals_parameters) = c(
         'intensity',
         'shift',
@@ -141,7 +174,8 @@ autorun_model_spectrum = function(autorun_data) {
         'J_coupling'
          )     
       other_fit_parameters$signals_to_quantify=signals_to_quantify
-
+      Ydata = as.numeric(autorun_data$dataset[spectrum_index, ])
+      
 
       #Generation of output data about the fitting and of the necessary variables for the generation ofa figure
       output_data = output_generator(
@@ -151,9 +185,20 @@ autorun_model_spectrum = function(autorun_data) {
         Xdata,
         signals_parameters,multiplicities
       )
-
-      plotdata2$Ydata[ROI_buckets]= plotdata2$Ydata[ROI_buckets]+output_data$signals_sum
-      plotdata3$Ydata[ROI_buckets]= plotdata3$Ydata[ROI_buckets]+output_data$fitted_sum
+      
+      plotdata2$Ydata= plotdata2$Ydata+output_data$signals_sum
+      plotdata3$Ydata= plotdata3$Ydata+output_data$fitted_sum
+      
+      # for (i in 1:length(dummy2)) {
+      #   if (length(dummy2[[i]])>0) {
+      #     print('Ha')
+      #     dummy4=ROI_buckets+(ROI_profile[i,5]-dummy[dummy2[[i]],5])/autorun_data$buck_step
+      #     plotdata2$Ydata[dummy4]= plotdata2$Ydata[dummy4]+output_data$signals_sum
+      #     
+      #     
+      #   }
+      # }
+      
 }
    
     

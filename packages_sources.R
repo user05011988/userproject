@@ -9,18 +9,21 @@ packages_sources = function() {
   # requireNamespace("robust", quietly = TRUE)
   # requireNamespace("apcluster", quietly = TRUE)
   # requireNamespace("rio", quietly = TRUE)
-  library("minpack.lm")
+  
+   library("minpack.lm")
   library("reshape")
   library("ggplot2")
   library("compiler")
   library("robust")
-  library("apcluster")
   library("rio")
   library("png")
   library(plotly)
   library(DT)
   library(D3TableFilter)
   library(shiny)
+  
+  library("lazyeval")
+  
   
   source('sign_par.R')
   source('signals_int.R')

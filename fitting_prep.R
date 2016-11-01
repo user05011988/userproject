@@ -6,7 +6,7 @@ fitting_prep = function(Xdata,
   #Preparation of parameters to optimize to achieve the best fitting
 
   #TO DO: more intuitive way to change how the parameters are prepared previously to optimization
-
+  Ydata[Ydata<0]=0
   signals_to_fit = length(initial_fit_parameters$positions)
   ROIlength = length(Xdata)
 
@@ -101,7 +101,7 @@ fitting_prep = function(Xdata,
     FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1], 12] = 0
 
 
-    ss=approx(round((BGSigleftlimits+BGSigrightlimits)/2,3),BGSig_maximums,xout=Xdata)$y/ (max(Ydata))
+    ss=approx(round((BGSigleftlimits+BGSigrightlimits)/2,3),BGSig_maximums,xout=Xdata)$y
 
     # optimization of baseline parameters , to be sure that the algorithm doesn ot try ti fot spurious signals as basleine
     BG_parameters = fittingloop_bg(FeaturesMatrix[(signals_to_fit + 1):dim(FeaturesMatrix)[1],],

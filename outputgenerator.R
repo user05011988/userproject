@@ -7,7 +7,7 @@ output_generator = function(signals_to_quantify,
   #Created by Daniel Cañueto 30/08/2016
   #Creation of quantification variables (Area, fitting_error,shift,signal_area_ratio)
   #and of necessary variables to make a plot of the quantification
-
+  fitted_signals[is.na(fitted_signals)]=0
 
   BGsignals = (multiplicities == 0) #finds background signals
 

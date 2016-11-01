@@ -19,7 +19,7 @@ parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_20_
 parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer.csv"
 parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository.csv"
 
-parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_reduced_20.csv"
+parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository_added_signals.csv"
 
 #import of data (dataset in csv format or Bruker nmr folder)
 imported_data = import_data(parameters_path)
@@ -37,6 +37,8 @@ finaloutput = list()
 dummy = matrix(NaN,
   dim(imported_data$dataset)[1],
   length(imported_data$signals_names))
+ROI_data = read.csv(imported_data$profile_folder_path, stringsAsFactors = F)
+imported_data$signals_names=paste(imported_data$signals_names,ROI_data[1:dim(dummy)[2],7],sep='_')
 rownames(dummy) = imported_data$Experiments
 colnames(dummy) = imported_data$signals_names
 finaloutput$Area = finaloutput$signal_area_ratio = finaloutput$fitting_error =

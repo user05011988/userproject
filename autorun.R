@@ -7,8 +7,11 @@ autorun = function(autorun_data, finaloutput) {
   
   # Loading of ROIs parameters
   ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
-  dummy = which(!is.na(ROI_data[, 1]))
-  ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(ROI_data)[1]))
+  dummy = which(is.na(ROI_data[, 1]))
+  if (length(dummy)==0) dummy=dim(ROI_data)[1]+1
+  lal=which(duplicated(ROI_data[-dummy,1:2])==F)
+  ROI_separator = cbind(lal, c(lal[-1] - 1, dim(ROI_data[-dummy,])[1]))
+  
   for (ROI_index in seq_along(ROI_separator[, 1])) {
     
     
@@ -31,7 +34,7 @@ autorun = function(autorun_data, finaloutput) {
     
     
     fitting_type = as.character(pre_import_excel_profile[1, 3])
-    signals_to_quantify = which(pre_import_excel_profile[, 7] == 1)
+    signals_to_quantify = which(pre_import_excel_profile[, 7] > 1)
   #   
   #   quartile_spectrum = as.numeric(apply(autorun_data$dataset[, other_fit_parameters$ROI_buckets,drop=F], 2, function(x)
   #     quantile(x, 0.75)))
@@ -163,13 +166,14 @@ autorun = function(autorun_data, finaloutput) {
     
     # bf=apcluster(negDistMat(r=2),dd[be,])
     fitting_type = as.character(pre_import_excel_profile[1, 3])
-    signals_to_quantify = which(pre_import_excel_profile[, 7] == 1)
+    signals_to_quantify = which(pre_import_excel_profile[, 7] > 0)
     signals_codes = replicate(length(signals_to_quantify), NA)
     signals_names = replicate(length(signals_to_quantify), NA)
     j = 1
     for (i in signals_to_quantify) {
-      k = which(autorun_data$signals_names == pre_import_excel_profile[i,
-        4])
+      k = which(autorun_data$signals_names == paste(pre_import_excel_profile[i,
+        4],pre_import_excel_profile[i,7],sep='_'))
+      
       signals_codes[j] = autorun_data$signals_codes[k]
       signals_names[j] = as.character(autorun_data$signals_names[k])
       j = j + 1
@@ -315,7 +319,7 @@ autorun = function(autorun_data, finaloutput) {
         rownames(plot_data) = c("signals_sum",
           "baseline_sum",
           "fitted_sum",
-          as.character(import_excel_profile[,4]),rep('additional signal',dim(plot_data)[1]-length(import_excel_profile[,4])-3))
+          as.character(paste(import_excel_profile[,4],import_excel_profile[,7],sep='_')),rep('additional signal',dim(plot_data)[1]-length(import_excel_profile[,4])-3))
         
         other_fit_parameters$signals_to_quantify=signals_to_quantify
         

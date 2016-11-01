@@ -1,12 +1,11 @@
 save_roi_testing=function(blah,autorun_data,finaloutput) {
-  p=blah$p
+  p=blah$p2
   # blah$finaloutput=finaloutput
   results_to_save=blah$results_to_save
   spectrum_index=blah$spectrum_index
   signals_codes=blah$signals_codes
   fitting_type=blah$fitting_type
   plot_path=blah$plot_path
-  
 # list2env(blah,.GlobalEnv)
 if (fitting_type == "Clean Sum" ||
     fitting_type == "Baseline Sum") {
@@ -43,6 +42,9 @@ write.csv(
   Xdata=blah$Xdata
 for (r in 1:length(results_to_save$signal_area_ratio)) {
   #There is only creation of plot if the conditions specified in the Parameters file are accomplished
+  print('la4')
+  print(other_fit_parameters$signals_to_quantify[r])
+  print(results_to_save$signal_area_ratio)
   if (results_to_save$signal_area_ratio[other_fit_parameters$signals_to_quantify[r]] < other_fit_parameters$signal_area_ratio_plot ||
       results_to_save$fitting_error[other_fit_parameters$signals_to_quantify[r]] > other_fit_parameters$fitting_error_plot) {
 # ggsave(paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit.jpeg",sep='/'),plot = p,width = 10, height = 5)

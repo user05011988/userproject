@@ -12,56 +12,49 @@ validation = function(finaloutput,
   #correlation matrix of shift of signals and finding for every signal the signal that has best ability to predict shift
   ind=which(apply(finaloutput$width,2, function(x) all(is.na(x)))==F)
   
-  corr_area_matrix=cor(finaloutput$Area,use='pairwise.complete.obs',method='spearman')
-  shift_corrmatrix=cor(finaloutput$shift,use='pairwise.complete.obs',method='spearman')
-  fo=matrix(0,dim(finaloutput$shift)[1],dim(finaloutput$shift)[2])
-  flo=array(0,dim=c(dim(finaloutput$shift)[1],dim(finaloutput$shift)[2],3))
+  corr_area_matrix=cor(finaloutput$Area[,ind],use='pairwise.complete.obs',method='spearman')
+  shift_corrmatrix=cor(finaloutput$shift[,ind],use='pairwise.complete.obs',method='spearman')
+  fo=matrix(0,dim(finaloutput$shift)[1],dim(finaloutput$shift[,ind])[2])
+  flo=array(0,dim=c(dim(finaloutput$shift)[1],dim(finaloutput$shift[,ind])[2],3))
  
   for (ii in seq_along(ind)) {
-    print(ii)
-    ll=finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
+    ll=shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
     nanana=tryCatch({lmrob(ll[,1] ~ ll[,2],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,2])},warning= function(e) {lm(ll[,1] ~ ll[,2])})
     tro1=suppressWarnings(predict(nanana, interval='prediction'))
-    sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
-    print('sa')
+    sf=which(shift[,ii]<tro1[,2]|shift[,ii]>tro1[,3])
     nanana=tryCatch({lmrob(ll[,1] ~ ll[,3],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,3])},warning= function(e) {lm(ll[,1] ~ ll[,3])})    
     tro2=suppressWarnings(predict(nanana, interval='prediction'))
-    sg=which(finaloutput$shift[,ii]<tro2[,2]|finaloutput$shift[,ii]>tro2[,3])
-    print(dim(tro1))
-    print(dim(flo))
-    print(sg)
-    
+    sg=which(shift[,ii]<tro2[,2]|shift[,ii]>tro2[,3])
     flo[,ii,]=(tro1+tro2)/2
-    print('ape')
     fo[Reduce(intersect, list(sf,sg)),ii]=1
     
   }
-  colnames(fo)=colnames(finaloutput$shift)
+  colnames(fo)=colnames(finaloutput$shift)[ind]
   rownames(fo)=rownames(finaloutput$shift)
   
-  fo2=matrix(0,dim(finaloutput$width)[1],dim(finaloutput$width)[2])
-  flo2=array(0,dim=c(dim(finaloutput$width)[1],dim(finaloutput$width)[2],3))
-  medianwidth=apply(finaloutput$width,2,median)
-  for (ii in 1:dim(finaloutput$width)[1]) {
+  fo2=matrix(0,dim(finaloutput$width)[1],length(ind))
+  flo2=array(0,dim=c(dim(finaloutput$width)[1],length(ind),3))
+  medianwidth=apply(finaloutput$width,2,median)[ind]
+  for (ii in seq_along(ind)) {
     print(ii)
     
-    nanana=tryCatch({lmrob(as.numeric(finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(finaloutput$width[ii,]) ~ medianwidth)},warning= function(e) {lm(as.numeric(finaloutput$width[ii,]) ~ medianwidth)}) 
+    nanana=tryCatch({lmrob(as.numeric(finaloutput$width[ii,ind]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(finaloutput$width[ii,ind]) ~ medianwidth)},warning= function(e) {lm(as.numeric(finaloutput$width[ii,ind]) ~ medianwidth)}) 
     tro=suppressWarnings(predict(nanana, interval='prediction'))
-    flo2[ii,ind,]=tro
+    flo2[ii,,]=tro
     fo2[ii,which(finaloutput$width[ii,ind]<tro[,2]|finaloutput$width[ii,ind]>tro[,3])]=1
   }
-  colnames(fo2)=colnames(finaloutput$shift)
+  colnames(fo2)=colnames(finaloutput$shift)[ind]
   rownames(fo2)=rownames(finaloutput$shift)
   
   
 #Analysis of which samples have too much fitting error
-fitting_error_alarmmatrix=matrix(0,dim(finaloutput$fitting_error)[1],dim(finaloutput$fitting_error)[2])
-fitting_error_alarmmatrix[finaloutput$fitting_error<other_fit_parameters$fitting_error_limit]=1
+fitting_error_alarmmatrix=matrix(0,dim(finaloutput$fitting_error)[1],dim(finaloutput$fitting_error[,ind])[2])
+fitting_error_alarmmatrix[finaloutput$fitting_error[,ind]<other_fit_parameters$fitting_error_limit]=1
 
 
 #Analysis of which samples have too scant signal respective to the total area where the signal is located
-signal_area_ratio_alarmmatrix=matrix(0,dim(finaloutput$signal_area_ratio)[1],dim(finaloutput$signal_area_ratio)[2])
-signal_area_ratio_alarmmatrix[finaloutput$signal_area_ratio>other_fit_parameters$signal_area_ratio_limit]=1
+signal_area_ratio_alarmmatrix=matrix(0,dim(finaloutput$signal_area_ratio)[1],dim(finaloutput$signal_area_ratio[,ind])[2])
+signal_area_ratio_alarmmatrix[finaloutput$signal_area_ratio[,ind]>other_fit_parameters$signal_area_ratio_limit]=1
 
 alarmmatrix=fo+fo2+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix
 colnames(alarmmatrix)=colnames(fo)
