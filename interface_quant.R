@@ -126,20 +126,13 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       for (i in 1:dim(ROI_profile)[1]) {
         dummy = ROI_data[which(ROI_data[, 7] != ROI_profile[i, 7]),]
         dummy=dummy[which(duplicated(rbind(ROI_profile,dummy))[(dim(ROI_profile)[1]+1):(dim(ROI_profile)[1]+dim(dummy))]==F),]
-        # dummy = ROI_data[which(ROI_data[, 7] ==0),,drop=F]
-        print(dummy)
         if (length(which(dummy[,4] == ROI_profile[i,4]))>0) {
           dummy2[[length(dummy2)+1]]=which(dummy[,4] == ROI_profile[i,4])
           for (j in 1:length(dummy2[[i]])) {
-            print(j)
-            print(dummy2)
-            print(signals_parameters_2)
-            print(multiplicities)
-            print(dummy)
+           
             
             cc= signals_parameters_2[(5*i-4):(5*i)]
-            print(cc)
-            
+
             cc[5]=dummy[dummy2[[i]][j],][9]
             cc[1]=dummy[dummy2[[i]][j],][12]*cc[1]
             cc[2]=as.numeric(dummy[dummy2[[i]][j],][5])+(as.numeric(cc[2])-as.numeric(ROI_profile[i,5]))
@@ -169,8 +162,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       ) 
       other_fit_parameters$signals_to_quantify=signals_to_quantify
       Ydata_2 = as.numeric(autorun_data$dataset[spectrum_index, ])
-      print('lal3')
-      
+
       #Generation of output data about the fitting and of the necessary variables for the generation ofa figure
       output_data = output_generator(
         signals_to_quantify,
@@ -220,8 +212,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       )
       plotdata4 = data.frame(Xdata=Xdata_2, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
       plotdata5 = melt(plotdata4, id = "Xdata")
-      print('lal4')
-      
+
 
       
       plotdata = data.frame(Xdata=Xdata_2, signals = plot_data[1, ] )
@@ -242,8 +233,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       )
       plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
       plotdata5 = melt(plotdata4, id = "Xdata")
-      print('lal5')
-      
+
       
       blah$p2=ggplot() +
         geom_line(data = plotdata3,

@@ -18,21 +18,16 @@ validation = function(finaloutput,
   flo=array(0,dim=c(dim(finaloutput$shift)[1],dim(finaloutput$shift)[2],3))
  
   for (ii in seq_along(ind)) {
-    print(ii)
     ll=finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
     nanana=tryCatch({lmrob(ll[,1] ~ ll[,2],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,2])},warning= function(e) {lm(ll[,1] ~ ll[,2])})
     tro1=suppressWarnings(predict(nanana, interval='prediction'))
     sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
-    print('sa')
     nanana=tryCatch({lmrob(ll[,1] ~ ll[,3],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,3])},warning= function(e) {lm(ll[,1] ~ ll[,3])})    
     tro2=suppressWarnings(predict(nanana, interval='prediction'))
     sg=which(finaloutput$shift[,ii]<tro2[,2]|finaloutput$shift[,ii]>tro2[,3])
-    print(dim(tro1))
-    print(dim(flo))
-    print(sg)
+    
     
     flo[,ii,]=(tro1+tro2)/2
-    print('ape')
     fo[Reduce(intersect, list(sf,sg)),ii]=1
     
   }
@@ -43,8 +38,7 @@ validation = function(finaloutput,
   flo2=array(0,dim=c(dim(finaloutput$width)[1],dim(finaloutput$width)[2],3))
   medianwidth=apply(finaloutput$width,2,median)
   for (ii in 1:dim(finaloutput$width)[1]) {
-    print(ii)
-    
+
     nanana=tryCatch({lmrob(as.numeric(finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(finaloutput$width[ii,]) ~ medianwidth)},warning= function(e) {lm(as.numeric(finaloutput$width[ii,]) ~ medianwidth)}) 
     tro=suppressWarnings(predict(nanana, interval='prediction'))
     flo2[ii,ind,]=tro
@@ -105,7 +99,7 @@ rownames(alarmmatrix)=rownames(fo)
 
 #I sum all "points" gained by every quantification
 # alarmmatrix=shift_alarmmatrix+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix+intensity_alarmmatrix
-validationdata=list(alarmmmatrix=alarmmatrix,flo=flo,flo2=flo2)
+validationdata=list(alarmmatrix=alarmmatrix,flo=flo,flo2=flo2)
 
 return(validationdata)
 }
