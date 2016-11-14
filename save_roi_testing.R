@@ -42,13 +42,11 @@ write.csv(
   Xdata=blah$Xdata
 for (r in 1:length(results_to_save$signal_area_ratio)) {
   #There is only creation of plot if the conditions specified in the Parameters file are accomplished
-  print('la4')
-  print(other_fit_parameters$signals_to_quantify[r])
-  print(results_to_save$signal_area_ratio)
-  if (results_to_save$signal_area_ratio[other_fit_parameters$signals_to_quantify[r]] < other_fit_parameters$signal_area_ratio_plot ||
-      results_to_save$fitting_error[other_fit_parameters$signals_to_quantify[r]] > other_fit_parameters$fitting_error_plot) {
+  
+  if (results_to_save$signal_area_ratio[r] < other_fit_parameters$signal_area_ratio_plot ||
+      results_to_save$fitting_error[r] > other_fit_parameters$fitting_error_plot) {
 # ggsave(paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit.jpeg",sep='/'),plot = p,width = 10, height = 5)
-    png(filename=paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit2.png",sep='/'), 
+    png(filename=paste(plot_path[r],"Fit2.png",sep='/'), 
       type="cairo",
       units="in", 
       width=8, 

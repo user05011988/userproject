@@ -10,7 +10,7 @@ compiler::enableJIT(3)
 parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_portuguesos.csv"
 parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_portuguesos_new.csv"
 
-parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_19_TSP_improved.csv"
+parameters_path = "C:/Users/user/Documents/r_dolphin - csv/example aligned/Parameters_19_TSP_improved_2.csv"
 parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_dataset.csv"
 parameters_path = "C:/Users/user/Dropbox/interface_example/Parameters.csv"
 parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_dataset_new.txt"

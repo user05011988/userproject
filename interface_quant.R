@@ -63,6 +63,8 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       
       results_to_save=fa$results_to_save
       p=fa$p
+      blah$p2=fa$p2
+      
       
       blah$integration_parameters=integration_parameters
       #Generation of output variables specific of every quantification
@@ -294,6 +296,15 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
      
       finaloutput=save_roi_testing(blah,autorun_data, finaloutput)
       blah$finaloutput=finaloutput
+      png(filename=paste(plot_path,"Fit2.png",sep='/'), 
+        type="cairo",
+        units="in", 
+        width=8, 
+        height=4, 
+        pointsize=12, 
+        res=96)
+      print(blah$p2)
+      dev.off()
     }
   }
     

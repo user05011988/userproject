@@ -44,7 +44,7 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   plotdata3$variable = rep('Original Spectrum', length(Ydata))
   plotdata4 = data.frame(Xdata, integrated_signal)
   plotdata5 = melt(plotdata4, id = "Xdata")
-  p=ggplot() +
+  p2=ggplot() +
     geom_line(data = plotdata3,
       aes(
         x = Xdata,
@@ -61,8 +61,10 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
         fill = 'Quantified Signal'
       )) +
     scale_x_reverse()
-  
-  fa=list(results_to_save=output,p=p)
+  p=plot_ly(plotdata,x = ~Xdata, y = ~senyal, type = 'scatter', color= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL) %>%
+    layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
+      yaxis = list(range=c(0,max(Ydata)),title = 'Intensity'))
+  fa=list(results_to_save=output,p=p,p2=p2)
 
   return(fa)
 }

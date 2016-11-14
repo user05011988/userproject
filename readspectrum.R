@@ -15,6 +15,7 @@ topspin_read_spectrum2 <- function(partname, filename, minppm, maxppm){
     storedpars$SW     = 0
     storedpars$real   = NaN
     storedpars$NC_proc = 0
+	storedpars$XDIM = 0
     return()
   }
   
@@ -23,7 +24,8 @@ topspin_read_spectrum2 <- function(partname, filename, minppm, maxppm){
   storedpars$SI=as.numeric(storedpars$SI)
   storedpars$NC_proc=as.numeric(storedpars$NC_proc)
   storedpars$SW=as.numeric(storedpars$SW)
-  
+  storedpars$XDIM=as.numeric(storedpars$XDIM)
+
  
   minppmindex = floor((storedpars$OFFSET-minppm)/storedpars$SW*(storedpars$SI-1))
   maxppmindex = ceiling((storedpars$OFFSET-maxppm)/storedpars$SW*(storedpars$SI-1))
@@ -41,6 +43,8 @@ topspin_read_spectrum2 <- function(partname, filename, minppm, maxppm){
     storedpars$SW     = 0
     storedpars$real   = NaN
     storedpars$NC_proc = 0
+	    storedpars$XDIM = 0
+
   }
   
   
@@ -129,7 +133,7 @@ parseProcs <- function(inDir, params){
   
   ## Designate parameters if not provided
   if (missing(params))
-    params <- c('SW_p','SF','SI','OFFSET','NC_proc','BYTORDP')
+    params <- c('SW_p','SF','SI','OFFSET','NC_proc','BYTORDP','XDIM')
   paramVar <- paste('##$', params, sep='')
   
   ## Search inDir for necessary processing parameter files
@@ -181,7 +185,7 @@ parseProcs <- function(inDir, params){
   if (!is.na(proc2s))
     rownames(pars) <- c('w2', 'w1')
   pars$SW=as.numeric(pars$SW_p)/as.numeric(pars$SF)
-  pars=pars[3:7]
+  pars=pars[3:8]
   return(pars)
 }
 

@@ -37,7 +37,7 @@ integration = function(integration_parameters, Xdata, Ydata) {
   output$shift = mean(Xdata[peaks$maxtab$pos])
 
   #plot
-  png(filename=paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit2.png",sep='/'), 
+  png(filename=paste(integration_parameters$plot_path,"Fit2.png",sep='/'), 
     type="cairo",
     units="in", 
     width=8, 

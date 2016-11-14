@@ -21,12 +21,14 @@ autorun_model_spectrum = function(autorun_data) {
     
   for (ROI_index in seq_along(ROI_separator[, 1])) {
     
-    print(ROI_index)
     #Loading of every ROI parameters
     ROI_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
     ROI_limits = round(as.numeric(ROI_profile[1, 1:2]),3)
+    print(paste(ROI_limits[1], ROI_limits[2], sep = '-'))
+    
     if (ROI_limits[1] < ROI_limits[2])
-      rev(ROI_limits)
+      ROI_limits=rev(ROI_limits)
+    
     ROI_buckets = which(autorun_data$ppm <= ROI_limits[1] &
         autorun_data$ppm >=
         ROI_limits[2])
@@ -39,7 +41,7 @@ autorun_model_spectrum = function(autorun_data) {
     
     
     fitting_type = as.character(ROI_profile[1, 3])
-    signals_to_quantify = which(ROI_profile[, 7] > 1)
+    signals_to_quantify = which(ROI_profile[, 7] >= 1)
 
       ROI_buckets=which(round(autorun_data$ppm,6)==round(ROI_profile[1,1],6)):which(round(autorun_data$ppm,6)==round(ROI_profile[1,2],6))
   # print(ROI_buckets)
@@ -78,7 +80,7 @@ autorun_model_spectrum = function(autorun_data) {
       is_roi_testing = "N"
       clean_fit = ifelse(fitting_type == "Clean Sum", "Y", "N")
       baseline = replicate(length(Xdata), 0)
-      if (integration_parameters$clean_fit == 'N')
+      if (clean_fit == 'N')
         baseline = seq(mean(Ydata[1:3]), mean(Ydata[(length(Xdata) - 2):length(Xdata)]), length =
             length(Xdata))
       
@@ -212,8 +214,7 @@ autorun_model_spectrum = function(autorun_data) {
       yaxis = list(title = 'Intensity'))
     
     # blah$finaloutput=finaloutput
-    print(p)
-    
+
     # blah$autorun_data=autorun_data
   return(p)
 }

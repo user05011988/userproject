@@ -169,35 +169,35 @@ fitting_optimization = function(parS, Xdata,multiplicities,roof_effect,Ydata,fre
           Xdata
         )
       } else if (multiplicities[s] == 4) {
-        # fitted_signals[s, ] = peakpvoigt(
-        #   c(
-        #     signals_parameters[1, s] / 3,
-        #     (signals_parameters[2, s] - 3 * signals_parameters[5, s]),
-        #     signals_parameters[3, s],
-        #     signals_parameters[4, s]
-        #   ),
-        #   Xdata
-        # ) + peakpvoigt(c(
-        #   signals_parameters[1, s] ,
-        #   (signals_parameters[2, s] - signals_parameters[5, s]) ,
-        #   signals_parameters[3, s],
-        #   signals_parameters[4, s]
-        # ),
-        # Xdata) + peakpvoigt(c(
-        #   signals_parameters[1, s],
-        #   (signals_parameters[2, s] + signals_parameters[5, s]),
-        #   signals_parameters[3, s],
-        #   signals_parameters[4, s]
-        # ),
-        # Xdata) + peakpvoigt(
-        #   c(
-        #     signals_parameters[1, s] / 3,
-        #     (signals_parameters[2, s] + 3 * signals_parameters[5, s]) ,
-        #     signals_parameters[3, s],
-        #     signals_parameters[4, s]
-        #   ),
-        #   Xdata
-        # )
+        fitted_signals[s, ] = peakpvoigt(
+          c(
+            signals_parameters[1, s] / 3,
+            (signals_parameters[2, s] - 3 * signals_parameters[5, s]),
+            signals_parameters[3, s],
+            signals_parameters[4, s]
+          ),
+          Xdata
+        ) + peakpvoigt(c(
+          signals_parameters[1, s] ,
+          (signals_parameters[2, s] - signals_parameters[5, s]) ,
+          signals_parameters[3, s],
+          signals_parameters[4, s]
+        ),
+        Xdata) + peakpvoigt(c(
+          signals_parameters[1, s],
+          (signals_parameters[2, s] + signals_parameters[5, s]),
+          signals_parameters[3, s],
+          signals_parameters[4, s]
+        ),
+        Xdata) + peakpvoigt(
+          c(
+            signals_parameters[1, s] / 3,
+            (signals_parameters[2, s] + 3 * signals_parameters[5, s]) ,
+            signals_parameters[3, s],
+            signals_parameters[4, s]
+          ),
+          Xdata
+        )
       }
     } else if (roof_effect[s] < 0) {
       if (multiplicities[s] == 1) {

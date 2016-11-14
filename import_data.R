@@ -46,6 +46,8 @@ import_data = function(parameters_path) {
   freq = as.numeric(as.character(import_profile[11, 2]))
   
   biofluid=import_profile[14, 2]
+  jres_path=as.character(import_profile[15, 2])
+  
   repository=rio::import(as.character(import_profile[12, 2]))
   if (biofluid=='Urine') {
     repository=repository[which(repository[,3]==1),]
@@ -119,7 +121,7 @@ import_data = function(parameters_path) {
     params$disol_suppression_ppm = as.numeric(strsplit(suppression, '-|;')[[1]])
     dim(params$disol_suppression_ppm) = c(length(params$disol_suppression_ppm) /
                                             2, 2)
-    params$disol_suppression_ppm = t(params$disol_suppression_ppm)
+    if (dim(params$disol_suppression_ppm)[1]>1) params$disol_suppression_ppm = t(params$disol_suppression_ppm)
   }
 
   #Variables only necessary for reading Bruker files
@@ -138,6 +140,7 @@ import_data = function(parameters_path) {
       pa=dim(dummy[-1,])
       
       imported_data$dataset=as.numeric(as.matrix(dummy[-1,]))
+      imported_data$dataset[is.na(imported_data$dataset)]=0
       dim(imported_data$dataset)=pa
       colnames(imported_data$dataset) = dummy[1,]
       imported_data$ppm = round(as.numeric(dummy[1,]),4)
@@ -215,7 +218,8 @@ import_data = function(parameters_path) {
     imported_data$dataset=s$pqndatanoscale
   }
     
-    
+  imported_data$dataset=  imported_data$dataset[,which(apply(imported_data$dataset,2,function(x) all(is.na(x)))==F)]
+  imported_data$ppm=imported_data$ppm[which(!is.na(imported_data$ppm))]
   #Storage of parameters needed to perform the fit in a single variable to return.
   
   imported_data$buck_step = params$buck_step
@@ -229,6 +233,7 @@ import_data = function(parameters_path) {
   imported_data$freq = freq
   imported_data$Metadata=Metadata
   imported_data$repository=repository
+  imported_data$jres_path=jres_path
   
   return(imported_data)
 

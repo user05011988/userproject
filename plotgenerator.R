@@ -14,9 +14,10 @@ plotgenerator = function(results_to_save,
   # print(other_fit_parameters$signals_to_quantify)
   # print(results_to_save$fitting_error)
   for (r in 1:length(results_to_save$signal_area_ratio)) {
+    
     #There is only creation of plot if the conditions specified in the Parameters file are accomplished
-    if (results_to_save$signal_area_ratio[other_fit_parameters$signals_to_quantify[r]] < other_fit_parameters$signal_area_ratio_plot ||
-        results_to_save$fitting_error[other_fit_parameters$signals_to_quantify[r]] > other_fit_parameters$fitting_error_plot) {
+    if (results_to_save$signal_area_ratio[r] < other_fit_parameters$signal_area_ratio_plot ||
+        results_to_save$fitting_error[r] > other_fit_parameters$fitting_error_plot) {
       plotdata = data.frame(Xdata, signals = plot_data[3 + other_fit_parameters$signals_to_quantify[r], ] )
       plotdata2 = data.frame(Xdata,
                              Ydata,
@@ -31,7 +32,7 @@ plotgenerator = function(results_to_save,
       plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
       plotdata5 = melt(plotdata4, id = "Xdata")
       
-        png(filename=paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit2.png",sep='/'), 
+        png(filename=paste(plot_path[r],"Fit2.png",sep='/'), 
           type="cairo",
           units="in", 
           width=8, 
