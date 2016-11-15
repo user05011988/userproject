@@ -1,65 +1,89 @@
 validation = function(finaloutput,
-                                 other_fit_parameters) {
+                                 other_fit_parameters,validation_type) {
 
   #Created by Daniel Cañueto 13/09/2016
   #Finding of suspicious quantifications through difference with predicted shift, signal to total area ratio, fitting error, and difference with expected relative intensity
   
   #TO DO: maybe would be better to analyze official relative intensity. 
   #TO DO: allow more than two signals when analyzing official relative intensity. 
+  print(validation_type)
   
   
   #shift analysis
   #correlation matrix of shift of signals and finding for every signal the signal that has best ability to predict shift
-  ind=which(apply(finaloutput$width,2, function(x) all(is.na(x)))==F)
-  
-  corr_area_matrix=cor(finaloutput$Area,use='pairwise.complete.obs',method='spearman')
-  shift_corrmatrix=cor(finaloutput$shift,use='pairwise.complete.obs',method='spearman')
-  fo=matrix(0,dim(finaloutput$shift)[1],dim(finaloutput$shift)[2])
-  flo=array(0,dim=c(dim(finaloutput$shift)[1],dim(finaloutput$shift)[2],3))
- 
-  for (ii in seq_along(ind)) {
-    ll=finaloutput$shift[,sort(abs(shift_corrmatrix[,ii]),decreasing=T,index.return=T)$ix[1:3]]
+  #Analysis of which samples have too much fitting error
+  if (validation_type==1) {
+  alarmmatrix=finaloutput$fitting_error
+  brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  clrs <- round(seq(255, 40, length.out = length(brks) + 1), 0) %>%
+  {paste0("rgb(255,", ., ",", ., ")")}
+} else if (validation_type==2) { 
+  alarmmatrix=finaloutput$signal_area_ratio
+  brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
+  {paste0("rgb(255,", ., ",", ., ")")}
+} else if (validation_type==3) { 
+  ind=which(apply(finaloutput$shift,2, function(x) all(is.na(x)))==F)
+  shift_corrmatrix=cor(finaloutput$shift[,ind],use='pairwise.complete.obs',method='spearman')
+  alarmmatrix=matrix(NA,dim(finaloutput$shift)[1],dim(finaloutput$shift)[2])
+  colnames(alarmmatrix)=colnames(finaloutput$shift)
+  rownames(alarmmatrix)=rownames(finaloutput$shift)
+  for (i in seq_along(ind)) {
+    ll=finaloutput$shift[,ind[sort(abs(shift_corrmatrix[,i]),decreasing=T,index.return=T)$ix][1:3]]
     nanana=tryCatch({lmrob(ll[,1] ~ ll[,2],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,2])},warning= function(e) {lm(ll[,1] ~ ll[,2])})
     tro1=suppressWarnings(predict(nanana, interval='prediction'))
-    sf=which(finaloutput$shift[,ii]<tro1[,2]|finaloutput$shift[,ii]>tro1[,3])
     nanana=tryCatch({lmrob(ll[,1] ~ ll[,3],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(ll[,1] ~ ll[,3])},warning= function(e) {lm(ll[,1] ~ ll[,3])})    
     tro2=suppressWarnings(predict(nanana, interval='prediction'))
-    sg=which(finaloutput$shift[,ii]<tro2[,2]|finaloutput$shift[,ii]>tro2[,3])
-    
-    
-    flo[,ii,]=(tro1+tro2)/2
-    fo[Reduce(intersect, list(sf,sg)),ii]=1
-    
-  }
-  colnames(fo)=colnames(finaloutput$shift)
-  rownames(fo)=rownames(finaloutput$shift)
-  
-  fo2=matrix(0,dim(finaloutput$width)[1],dim(finaloutput$width)[2])
-  flo2=array(0,dim=c(dim(finaloutput$width)[1],dim(finaloutput$width)[2],3))
+  alarmmatrix[,i]=apply(rbind(finaloutput$shift[,ind[i]]-tro1[,1],finaloutput$shift[,ind[i]]-tro2[,1]),2,min)}
+
+  brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  clrs <- round(c(seq(40, 255, length.out = (length(brks) + 1)/2),seq(255, 40, length.out = (length(brks) + 1)/2)), 0) %>%
+  {paste0("rgb(255,", ., ",", ., ")")}
+  } else if (validation_type==4) { 
+    ind=which(apply(finaloutput$width,2, function(x) all(is.na(x)))==F)
+ alarmmatrix=matrix(NA,dim(finaloutput$width)[1],dim(finaloutput$width)[2])
+    colnames(alarmmatrix)=colnames(finaloutput$width)
+    rownames(alarmmatrix)=rownames(finaloutput$width)
   medianwidth=apply(finaloutput$width,2,median)
-  for (ii in 1:dim(finaloutput$width)[1]) {
-
-    nanana=tryCatch({lmrob(as.numeric(finaloutput$width[ii,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(finaloutput$width[ii,]) ~ medianwidth)},warning= function(e) {lm(as.numeric(finaloutput$width[ii,]) ~ medianwidth)}) 
+  for (i in 1:dim(finaloutput$width)[1]) {
+    nanana=tryCatch({lmrob(as.numeric(finaloutput$width[i,]) ~ medianwidth,control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(as.numeric(finaloutput$width[i,]) ~ medianwidth)},warning= function(e) {lm(as.numeric(finaloutput$width[i,]) ~ medianwidth)}) 
     tro=suppressWarnings(predict(nanana, interval='prediction'))
-    flo2[ii,ind,]=tro
-    fo2[ii,which(finaloutput$width[ii,ind]<tro[,2]|finaloutput$width[ii,ind]>tro[,3])]=1
+    alarmmatrix[i,ind]=finaloutput$width[i,ind]-tro[,1]
   }
-  colnames(fo2)=colnames(finaloutput$shift)
-  rownames(fo2)=rownames(finaloutput$shift)
+  brks <- quantile(abs(alarmmatrix), probs = seq(.05, .95, .05), na.rm = TRUE)
+  clrs <- round(c(seq(40, 255, length.out = (length(brks) + 1)/2),seq(255, 40, length.out = (length(brks) + 1)/2)), 0) %>%
+  {paste0("rgb(255,", ., ",", ., ")")}
+  } else if (validation_type==5) { 
+    
   
+  alarmmatrix=matrix(NA,dim(finaloutput$Area)[1],dim(finaloutput$Area)[2])
+  ss=unique(autorun_data$Metadata[,1])
   
-#Analysis of which samples have too much fitting error
-fitting_error_alarmmatrix=matrix(0,dim(finaloutput$fitting_error)[1],dim(finaloutput$fitting_error)[2])
-fitting_error_alarmmatrix[finaloutput$fitting_error<other_fit_parameters$fitting_error_limit]=1
+  alarmmatrix=matrix(NA,dim(finaloutput$width)[1],dim(finaloutput$width)[2])
+  colnames(alarmmatrix)=colnames(finaloutput$Area)
+  rownames(alarmmatrix)=rownames(finaloutput$Area)
+  for (k in 1:length(ss)) {
+    
+    a=apply(finaloutput$Area[autorun_data$Metadata[,1]==ss[k],],2,function(x) IQR(x,na.rm=T))
+    b=rbind(apply(finaloutput$Area[autorun_data$Metadata[,1]==ss[k],],2,function(x) quantile(x,0.25,na.rm=T)),apply(finaloutput$Area[autorun_data$Metadata[,1]==ss[k],],2,function(x) quantile(x,0.75,na.rm=T)))
+    for (i in which(autorun_data$Metadata[,1]==ss[k])) {
+      for (j in which(!is.na(a))) {
+        if (finaloutput$Area[i,j]>b[1,j]&finaloutput$Area[i,j]<b[2,j]) {
+          alarmmatrix[i,j]=0
+        } else if (finaloutput$Area[i,j]<b[1,j]) {
+          alarmmatrix[i,j]=abs(finaloutput$Area[i,j]-b[1,j])/a[j]
+        } else if (finaloutput$Area[i,j]>b[2,j]) {
+          alarmmatrix[i,j]=abs(finaloutput$Area[i,j]-b[2,j])/a[j]
+        }
+      }
+    }}
+  brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  clrs <- round(seq(255, 40, length.out = length(brks) + 1), 0) %>%
+  {paste0("rgb(255,", ., ",", ., ")")}
+  }
+  
 
 
-#Analysis of which samples have too scant signal respective to the total area where the signal is located
-signal_area_ratio_alarmmatrix=matrix(0,dim(finaloutput$signal_area_ratio)[1],dim(finaloutput$signal_area_ratio)[2])
-signal_area_ratio_alarmmatrix[finaloutput$signal_area_ratio>other_fit_parameters$signal_area_ratio_limit]=1
-
-alarmmatrix=fo+fo2+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix
-colnames(alarmmatrix)=colnames(fo)
-rownames(alarmmatrix)=rownames(fo)
 
 #Analysis of which metabolites have have relative intensity too far from expected according to robust linear model constructed
 
@@ -69,9 +93,9 @@ rownames(alarmmatrix)=rownames(fo)
 # # 
 # # #I find how many samples will be used for the roubst linear model in the same way than with the shift
 # intensity_alarmmatrix=matrix(0,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
-# for (ii in 1:length(ind)) {
+# for (i in 1:length(ind)) {
 #   rlm_preinfo=matrix(NA,dim(finaloutput$shift)[1],2)
-#   rlm_samples=cbind(finaloutput$intensity[,ind[ii]],finaloutput$intensity[,ind2[ii]])
+#   rlm_samples=cbind(finaloutput$intensity[,ind[i]],finaloutput$intensity[,ind2[i]])
 #   rlm_signalsdifference=rlm_samples[,1]-rlm_samples[,2]
 #   rlm_signalsdifference_ind=sort(rlm_signalsdifference,decreasing=T,index.return=T)$ix
 #   rlm_preinfo[dim(rlm_samples)[1],]=c(dim(rlm_samples)[1],dim(rlm_samples)[1]*cor(rlm_samples,use='pairwise.complete.obs',method='spearman')[1,2])
@@ -88,18 +112,18 @@ rownames(alarmmatrix)=rownames(fo)
 #   #Robust linear model and prediction of expected shifts
 #   rlm_model=lmrob(rlm_samples_sub[,1]~rlm_samples_sub[,2])
 # 
-#   intensity_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$intensity[,ind2[ii]]
+#   intensity_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$intensity[,ind2[i]]
 # 
-#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[ii]]-intensity_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
-#   intensity_alarmmatrix[intensity_suspicioussamples,c(ind[ii],ind2[ii])]=1
+#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[i]]-intensity_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
+#   intensity_alarmmatrix[intensity_suspicioussamples,c(ind[i],ind2[i])]=1
 # 
 # 
 # }
 
 
 #I sum all "points" gained by every quantification
-# alarmmatrix=shift_alarmmatrix+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix+intensity_alarmmatrix
-validationdata=list(alarmmatrix=alarmmatrix,flo=flo,flo2=flo2)
+# alarmmatrix=shift_alarmmatrix+signal_area_ratio_alarmmatrix+alarmmatrix+intensity_alarmmatrix
+validationdata=list(alarmmatrix=alarmmatrix,brks=brks,clrs=clrs)
 
 return(validationdata)
 }

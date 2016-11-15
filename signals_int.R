@@ -1,6 +1,6 @@
 signals_int = function(autorun_data, finaloutput,spectrum_index,signals_introduce,ROI_profile) {
   
-  
+  c=NULL
     #Preparation of necessary variables and folders to store figures and information of the fitting
   
   

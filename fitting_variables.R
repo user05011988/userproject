@@ -10,7 +10,7 @@ fitting_variables = function() {
   other_fit_parameters$BGdensity=50
 other_fit_parameters$widthtolerance=0.2
 other_fit_parameters$gaussian=0
-other_fit_parameters$j_coupling_variation=0.4
+other_fit_parameters$j_coupling_variation=0.2
 other_fit_parameters$BG_gaussian_percentage=0
 other_fit_parameters$BG_width=12
 other_fit_parameters$BG_width_tolerance=0.25
@@ -28,7 +28,7 @@ other_fit_parameters$factor=0.01
 #Parameters related to the addition of other signals post fitting
 other_fit_parameters$additional_signal_ppm_distance=0.002
 other_fit_parameters$signals_to_add = 2
-other_fit_parameters$fitting_maxiterrep = 1
+other_fit_parameters$fitting_maxiterrep = 2
 other_fit_parameters$additional_signal_improvement=0.75
 other_fit_parameters$additional_signal_percentage_limit=5
 other_fit_parameters$peakdet_minimum=0.01
