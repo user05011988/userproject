@@ -17,7 +17,8 @@ ui <- fluidPage(
     $('#mynavlist a:contains(\"Dubious Quantifications\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"Uni and multivariate analysis\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"ROI Profiles\")').parent().addClass('disabled')
-    
+    $('#mynavlist a:contains(\"Dendrogram heatmaps\")').parent().addClass('disabled')
+
 }
     
     Shiny.addCustomMessageHandler('activeNavs', function(nav_label) {
@@ -43,16 +44,15 @@ ui <- fluidPage(
         mainPanel(
           uiOutput('varselect'),
           uiOutput('varselect2'),
+          uiOutput('align_button'),
+          uiOutput('peak_analysis'),
+          
           fluidRow(column(width = 12, h4("You can watch how the signals have been quantified in the spectrum model and, at the same time, an univariate analysis of every bin in the spectrum, according to the metadata given by the user.The idea is that you can analyze other parts of the spectrum with significant differences and add a ROI profile through the 'Profiles' tab."))),
           
-          plotlyOutput("autorun_plot"),
-          fluidRow(column(width = 12, h4("Here the spectra have been previously clusterized and the exemplars of every cluster are plotted. This plot tries to give a general idea of how should be the ROI profiles (for example, how the shift tolerance would have to be) without having to analyze all spectra. There are red lines representing the most relevant peaks, to help the user set the peaks to quantify. This peak picking can be improved."))),
+          plotlyOutput("autorun_plot")
           
-          plotlyOutput("apcluster_plot")
-          
-        )
-      )
-    ),   
+        ))),
+    
     tabPanel("ROI Testing",
       fluidRow(column(width = 12, h4("Here you can change the quantifications and save them or remove them if they can't be well quantified. You can also save the edited profile of the ROI"))),
       sidebarLayout(
@@ -88,8 +88,8 @@ ui <- fluidPage(
           fluidRow(column(width = 12, h4("You have here some indicators of quality of the quantification"))),
           
           D3TableFilter::d3tfOutput('mtcars3',width = "100%", height = "auto"),
-          fluidRow(column(width = 12, h4("You can see a proposed model for the ROI profile, according to the information acquired during quantifications. I'm not sure it currently works"))),
-          D3TableFilter::d3tfOutput('mtcars4',width = "100%", height = "auto"),
+          # fluidRow(column(width = 12, h4("You can see a proposed model for the ROI profile, according to the information acquired during quantifications. I'm not sure it currently works"))),
+          # D3TableFilter::d3tfOutput('mtcars4',width = "100%", height = "auto"),
           fluidRow(column(width = 12, h4("Here you can see the signals in the HMDB Repository located at the same zone of the spectrum, selected by biofluid"))),
           fluidRow(
             column(width = 12,
@@ -142,62 +142,23 @@ ui <- fluidPage(
       fluidRow(
         column(width = 12,
           DT::dataTableOutput("quant_selection")
-        )
-        
-      )
-      
-    ),
-    
+        ))),
     
     tabPanel("Uni and multivariate analysis", 
-      # pageWithSidebar(headerPanel("Title"),
-      #   
-      # sidebarPanel(),
-      # 
-      # mainPanel(
-      #   
       fluidRow(column(width = 12, h4("Here you have boxplots for every quantified signal, with p values on the x axis"))),
-      
         plotlyOutput(outputId = "plot_p_value_2"),
-      fluidRow(column(width = 12, h4("Here you have the dendrogram heatmap of quantification, so you can analyze relationships between spectra and between signals "))),
-      
-        plotlyOutput(outputId = "corr_area_spectrum"),
-      fluidRow(column(width = 12, h4("Here you have the dendrogram heatmap of chemical shift, so you can analyze relationships between spectra and between signals"))),
-      
-      #   plotlyOutput(outputId = "corr_area_signal"),
-      # fluidRow(column(width = 12, h4("Here you have the correlated chemical shifts between signals, to help analyze relationships between signals and make inferences about unknown signals "))),
-      # 
-        plotlyOutput(outputId = "corr_shift_signal"),
+      # fluidRow(column(width = 12, h4("Here you have the dendrogram heatmap of quantification, so you can analyze relationships between spectra and between signals "))),
+      #   plotlyOutput(outputId = "corr_area_spectrum"),
+      # fluidRow(column(width = 12, h4("Here you have the dendrogram heatmap of chemical shift, so you can analyze relationships between spectra and between signals"))),
+      #   plotlyOutput(outputId = "corr_shift_signal"),
       fluidRow(column(width = 12, h4("PCA with loadings and scores"))),
-      
         plotlyOutput(outputId = "pcascores"))
-#   )
-# )
-
-    # ))
-    #   
-    #   fluidRow(
-    #     column(width = 12, h4("Boxplots with p value in the x axis labels"),
-    #       mainPanel(plotlyOutput("plot_p_value_2")))    ),
-    #   fluidRow(
-    #     column(width = 12, h4("Correrlation between spectra by quantification"),
-    #       mainPanel(plotlyOutput("corr_area_spectrum")))    ),
-    #   fluidRow(
-    #         column(width = 12, h4("Correrlation between signals by quantification"),
-    #           mainPanel(plotlyOutput("corr_area_signal")))    ),
-    #   fluidRow(
-    #             column(width = 12, h4("Correrlation between signals by chemical shift"),
-    #               mainPanel(plotlyOutput("corr_shift_signal")))    ),
-    #   fluidRow(
-    #     column(width = 12, h4("PCA Scores"),
-    #       mainPanel(plotlyOutput("pcascores")))    )
-    #   # fluidRow(
-    #   #   column(width = 12, h4("PCA Loadings"),
-    #   #     mainPanel(plotlyOutput("pcaloadings")))    )
-    # )
-    # 
     
-    
+    ,tabPanel("Dendrogram heatmaps", 
+      fluidRow(column(width = 12, h4("Here you have the dendrogram heatmap of quantification, so you can analyze relationships between spectra and between signals "))),
+      plotlyOutput(outputId = "corr_area_spectrum"),
+      fluidRow(column(width = 12, h4("Here you have the dendrogram heatmap of chemical shift, so you can analyze relationships between spectra and between signals"))),
+      plotlyOutput(outputId = "corr_shift_signal"))
     
  ))
   
@@ -208,7 +169,7 @@ server = function(input, output,session) {
   revals <- reactiveValues()
   revals2 <- reactiveValues()
   revals3 <- reactiveValues()
-  revals4 <- reactiveValues()
+  # revals4 <- reactiveValues()
   
   m <- list(
     l = 150,
@@ -220,7 +181,7 @@ server = function(input, output,session) {
   
   v <- reactiveValues(meh=NULL, blah = NULL,stop3=0)
   
-  sell <- reactiveValues(mtcars=NULL,ind=NULL,beginning=F,dataset=NULL,inFile=NULL,finaloutput=NULL,brks=NULL,brks2=NULL,brks3=NULL,clrs=NULL,clrs2=NULL,clrs3=NULL,autorun_data=NULL,outlier_table=NULL,ab=NULL,p_value_final=NULL,ROI_data=NULL,info=c(),ROI_separator=NULL,bucketing=NULL,mediani=NULL,select_options=NULL,new_roi_profile=NULL,corr_area_matrix=NULL,p=NULL,bgColScales=NULL)
+  sell <- reactiveValues(mtcars=NULL,ind=NULL,beginning=F,dataset=NULL,inFile=NULL,finaloutput=NULL,brks=NULL,brks2=NULL,brks3=NULL,clrs=NULL,clrs2=NULL,clrs3=NULL,autorun_data=NULL,outlier_table=NULL,ab=NULL,p_value_final=NULL,ROI_data=NULL,info=c(),ROI_separator=NULL,bucketing=NULL,mediani=NULL,select_options=NULL,new_roi_profile=NULL,corr_area_matrix=NULL,p=NULL,bgColScales=NULL,ll=NULL)
   
   observeEvent(input$roirows, {
     sell$new_roi_profile= as.data.frame(matrix(NA,as.numeric(input$roirows),11))
@@ -293,7 +254,7 @@ server = function(input, output,session) {
     revals2$mtcars <- rbind(rep(NA,7),rep(NA,7))
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     revals3$mtcars <- rbind(rep(NA,3),rep(NA,3))
-    revals4$mtcars <- sell$mtcars
+    # revals4$mtcars <- sell$mtcars
     
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
     
@@ -504,7 +465,11 @@ server = function(input, output,session) {
 
   })
   
-  
+  output$autorun_plot <- renderPlotly({
+    
+    p=plot_ly(data=sell$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
+    p
+  })
   observeEvent(input$action, {
 print(input$mynavlist)   
     is_autorun='N'
@@ -594,14 +559,14 @@ print(input$mynavlist)
     revals$mtcars=ROI_profile
     revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
-    revals4$mtcars=ROI_profile
+    # revals4$mtcars=ROI_profile
     ind=which(sell$ROI_separator[,2]-sell$info$col>=0)[1]
     ind=(sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2])
     
-    
-    revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
-    revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
-    revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
+    # 
+    # revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
+    # revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
+    # revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
 
     revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$fitting_error[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
@@ -671,13 +636,13 @@ print(input$mynavlist)
     revals2$mtcars=t(import(file.path(path,'signals_parameters.csv'))[,-1])
     colnames(revals2$mtcars)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     
-    revals4$mtcars=ROI_profile
+    # revals4$mtcars=ROI_profile
     ind=which(sell$ROI_separator[,2]-sell$info$col>=0)[1]
     ind=sell$ROI_separator[ind, 1]:sell$ROI_separator[ind, 2]
-    revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
-    revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
-    
-    revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
+    # revals4$mtcars[,5]=sell$flo[sell$info$row,ind,1]
+    # revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
+    # 
+    # revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
     revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$fitting_error[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
     updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
@@ -701,31 +666,24 @@ print(input$mynavlist)
       p
     })
   })
-    
+  
+  observeEvent(input$alignment, {
+    sell$autorun_data$dataset=alignment(sell$autorun_data$dataset,sell$autorun_data$ppm)
+    sell$ll=1
+  })
+    observeEvent(input$peak_analysis, {
+      if (is.null(sell$ll)) {
+        print('Before analysing peaks, I have to align them. Then Ill analyze them')
+        dummy=alignment(sell$autorun_data$dataset,sell$autorun_data$ppm)
+        sell$ll=1
+      }
+
+      peak_analysis(dummy,sell$autorun_data$ppm,sell$autorun_data$export_path,sell$autorun_data$Metadata[,1])
+    })
+  
 observeEvent(input$autorun, {
   
   sell$finaloutput = autorun(sell$autorun_data, sell$finaloutput)
-  
-  
-  
-  # sell$outlier_table=matrix(0,dim(ll)[1],dim(ll)[2])
-  # sell$outlier_table=as.data.frame(sell$outlier_table)
-  # 
-  # colnames(sell$outlier_table)=colnames(t_test_data_2)
-  # rownames(sell$outlier_table)=rownames(sell$finaloutput$fitting_error)
-  # 
-  # 
-  # for (j in 1:length(ss)) {
-  #   sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
-  #   
-  #   # ind=which(autorun_data$Metadata==ss[j])
-  #   # sell$outlier_table[ind[sell$finaloutput$Area[autorun_data$Metadata==ss[j],i] %in%  Dubious Quantifications],i]=1
-  # }
-  
-  
-  
-  
-
   is_autorun='Y'
   sell$dataset=rbind(sell$autorun_data$dataset,colMeans(sell$autorun_data$dataset),apply(sell$autorun_data$dataset,2,median))
   rownames(sell$dataset)[(dim(sell$autorun_data$dataset)[1]+1):dim(sell$dataset)[1]]=c('Mean spectrum', 'Median spectrum')
@@ -763,6 +721,8 @@ observeEvent(input$autorun, {
   session$sendCustomMessage('activeNavs', 'Fitting error values')
   session$sendCustomMessage('activeNavs', 'Uni and multivariate analysis')
   session$sendCustomMessage('activeNavs', 'Dubious Quantifications')
+  session$sendCustomMessage('activeNavs', 'Dendrogram heatmaps')
+  
   updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
 })
   
@@ -842,24 +802,24 @@ observeEvent(input$autorun, {
     
     # })
   })
-  output$mtcars4 <- renderD3tf({
-    tableProps <- list(
-      btn_reset = TRUE,
-      sort = TRUE,
-      sort_config = list(
-        sort_types = c("String", rep("Number", ncol(revals4$mtcars)))
-      )
-    )
-    
-    d3tf(revals4$mtcars,
-      tableProps = tableProps,
-      enableTf = F,
-      edit=F,
-      
-      tableStyle = "table table-bordered")
-    
-    # })
-  })
+  # output$mtcars4 <- renderD3tf({
+  #   tableProps <- list(
+  #     btn_reset = TRUE,
+  #     sort = TRUE,
+  #     sort_config = list(
+  #       sort_types = c("String", rep("Number", ncol(revals4$mtcars)))
+  #     )
+  #   )
+  #   
+  #   d3tf(revals4$mtcars,
+  #     tableProps = tableProps,
+  #     enableTf = F,
+  #     edit=F,
+  #     
+  #     tableStyle = "table table-bordered")
+  #   
+  #   # })
+  # })
   
   output$new_roi_profile <- renderD3tf({
     tableProps <- list(
@@ -993,27 +953,8 @@ observeEvent(input$autorun, {
   
   
   output$plot_p_value_2 <- renderPlotly({
-    t_test_data_2=sell$finaloutput$Area
-    ss=unique(sell$autorun_data$Metadata[,1])
-    tt=matrix(NA,length(ss),dim(t_test_data_2)[2])
-    for (ind in seq_along(ss)) {
-      for (k in 1:dim(t_test_data_2)[2]) {
-        tt[ind,k]=tryCatch(shapiro.test(t_test_data_2[sell$autorun_data$Metadata[,1]==ss[ind],k])$p.value,error=function(e) NA)
-      }
+    p_value_final=p_values(sell$finaloutput$Area,sell$autorun_data$Metadata[,1])
       
-    }
-    p_value=rep(NA,dim(t_test_data_2)[2])
-    for (k in 1:dim(t_test_data_2)[2]) {
-      # if (!any(is.na(t_test_data_2[,k]))) {
-      if (!any(tt[,k]<0.05,na.rm=T)) {
-        p_value[k]=tryCatch(wilcox.test(t_test_data_2[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data_2[sell$autorun_data$Metadata[,1]==ss[2],k])$p.value,error=function(e) NA)
-      } else {
-        p_value[k]=tryCatch(t.test(t_test_data_2[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data_2[sell$autorun_data$Metadata[,1]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
-      }
-      
-      # }
-    }
-    p_value_final=round(t(as.matrix(p.adjust(p_value,method="BH"))),3)
     ll=as.data.frame(sell$finaloutput$Area)
     colnames(ll)=paste(colnames(ll),'(p= ',p_value_final,')',sep='')
     Xwit=cbind(ll,factor(sell$autorun_data$Metadata[,1]))
@@ -1024,37 +965,14 @@ observeEvent(input$autorun, {
       layout(boxmode='group',margin=m)
   })
   output$corr_area_spectrum <- renderPlotly({
-    # ind=which(apply(sell$finaloutput$width,2, function(x) all(is.na(x)))==F)
-    # 
-    # cr=cor(t(sell$finaloutput$Area[,ind]),use='pairwise.complete.obs',method='spearman')
-    # bb=hclust(dist(cr))$order
-    # dr=cr[bb,bb]
-    # p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
-    # p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"),margin=m)
     cc=as.data.frame(sell$finaloutput$Area)[!apply(as.data.frame(sell$finaloutput$Area),2,function(x)all(is.na(x)))]
     heatmaply(scale(cc)) %>% layout(margin = list(l = 130, b = 130))
   })
   output$corr_area_signal <- renderPlotly({
-    # ind=which(apply(sell$finaloutput$width,2, function(x) all(is.na(x)))==F)
-    # 
-    # cr=cor(sell$finaloutput$Area[,ind],use='pairwise.complete.obs',method='spearman')
-    # bb=hclust(dist(cr))$order
-    # dr=cr[bb,bb]
-    # p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
-    # p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"),margin=m)
   })
   output$corr_shift_signal <- renderPlotly({
-    # ind=which(apply(sell$finaloutput$width,2, function(x) all(is.na(x)))==F)
-    # 
-    # cr=cor(sell$finaloutput$shift[,ind],use='pairwise.complete.obs',method='spearman')
-    # bb=hclust(dist(cr))$order
-    # dr=cr[bb,bb]
-    # p= plot_ly(x=rownames(dr),y=colnames(dr), z = dr, type = "heatmap")
-    # p<- layout(p, xaxis = list(categoryarray = rownames(dr), categoryorder = "array"),yaxis = list(categoryarray = colnames(dr), categoryorder = "array"),margin=m)
     cc=as.data.frame(sell$finaloutput$shift)[!apply(as.data.frame(sell$finaloutput$shift),2,function(x)all(is.na(x)))]
     heatmaply(scale(cc,scale=F)) %>% layout(margin = list(l = 130, b = 130))
-    # hm2 <- heatmaply(scale(sell$finaloutput$shift)) %>% layout(margin = list(l = 130, b = 130))
-    # print(subplot(hm1, hm2, margin = .1))
   })
   output$pcascores <- renderPlotly({
     ind=which(apply(sell$finaloutput$width,2, function(x) all(is.na(x)))==F)
@@ -1145,7 +1063,6 @@ observeEvent(input$autorun, {
     colnames(dummy) = imported_data$signals_names
     sell$finaloutput$Area = sell$finaloutput$signal_area_ratio = sell$finaloutput$fitting_error =
       sell$finaloutput$shift = sell$finaloutput$intensity = sell$finaloutput$width = dummy
-    
     #creation of several outputs with data of interest before beginnig the quantification
     write.csv(
       as.data.frame(imported_data$params),
@@ -1171,7 +1088,6 @@ observeEvent(input$autorun, {
         pp=fhs(sell$jres_path)
         pp
       }))
-    
     sell$autorun_data = list(
       dataset = imported_data$dataset,
       ppm = imported_data$ppm,
@@ -1198,64 +1114,38 @@ observeEvent(input$autorun, {
     sell$ROI_separator = cbind(lal, c(lal[-1] - 1, dim(sell$ROI_data[-dummy,])[1]))
     # mtcars2=ROI_data[1:2,4:11]
     # mtcars=ROI_data[1:2,4:11]
-    
     ROI_names=paste(sell$ROI_data[sell$ROI_separator[, 1],1],sell$ROI_data[sell$ROI_separator[, 1],2])
     sell$select_options=1:length(ROI_names)
     names(sell$select_options)=ROI_names
-    t_test_data=sell$autorun_data$dataset
-    
-    ss=unique(sell$autorun_data$Metadata[,1])
-    tt=matrix(NA,length(ss),dim(t_test_data)[2])
-    for (ind in seq_along(ss)) {
-      for (k in 1.:dim(t_test_data)[2]) {
-        tt[ind,k]=tryCatch(shapiro.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[ind],k])$p.value,error=function(e) NA)
-      }
-      
-    }
-    p_value_bucketing=rep(NA,dim(t_test_data)[2])
-    for (k in 1:dim(t_test_data)[2]) {
-      # if (!any(is.na(t_test_data[,k]))) {
-      if (!any(tt[,k]<0.05,na.rm=T)) {
-        p_value_bucketing[k]=tryCatch(suppressWarnings(wilcox.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,1]==ss[2],k]))$p.value,error=function(e) NA)
-      } else {
-        p_value_bucketing[k]=tryCatch(t.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,1]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
-      }
-      
-      # }
-    }
-    p_value_bucketing=p.adjust(p_value_bucketing,method="BH")
+
+    p_value_bucketing=as.vector(p_values(sell$autorun_data$dataset,sell$autorun_data$Metadata[,1]))
     p_value_bucketing[is.na(p_value_bucketing)]=1
     plotdata = data.frame(Xdata=sell$autorun_data$ppm, p_value_bucketing)
-    # sell$mediani=apply(sell$autorun_data$dataset,2,function(x) median(x,na.rm=T))
+    print(dim(plotdata))
+    output$varselect <- renderUI({
+      if(is.null(plotdata)){return()}
+      actionButton('autorun', 'Autorun all spectra')
+    })
+    output$varselect2 <- renderUI({
+      if(is.null(plotdata)){return()}
+      actionButton('autorun_model', 'Autorun model spectrum')
+    })
+    output$align_button <- renderUI({
+      if(is.null(plotdata)){return()}
+      actionButton('alignment', 'Alignment of signals')
+    })
+    output$peak_analysis <- renderUI({
+      if(is.null(plotdata)){return()}
+      actionButton('peak_analysis', 'Peak analysis')
+    })
     quartile_spectrum = as.numeric(apply(sell$autorun_data$dataset, 2, function(x)
       quantile(x, 0.75,na.rm=T)))
-    ref_spectrum = sell$autorun_data$dataset[which.min(apply(sell$autorun_data$dataset, 1, function(x)
-      sqrt(mean((x - quartile_spectrum) ^ 2
-        ,na.rm=T)))),]
-    # plot_ly(data=plotdata,x=~Xdata,y=~Ydata)
+    ref_spectrum = sell$autorun_data$dataset[which.min(apply(sell$autorun_data$dataset, 1, function(x) sqrt(mean((x - quartile_spectrum) ^ 2 ,na.rm=T)))),]
     sell$bucketing <- cbind(melt(plotdata, id = "Xdata"),ref_spectrum)
     sell$bucketing=sell$bucketing[complete.cases(sell$bucketing),]
     colnames(sell$bucketing)=c('Xdata','variable','pvalue','intensity')
     
-    output$autorun_plot <- renderPlotly({
-      p=autorun_model_spectrum(sell$autorun_data)
-      p=p %>% add_trace(data=sell$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
-      p
-    })
-    output$varselect <- renderUI({
-      if(is.null(p)){return()}
-      actionButton('autorun', 'Autorun all spectra')
-      
-    })
-    output$varselect2 <- renderUI({
-      if(is.null(p)){return()}
-      actionButton('autorun_model', 'Autorun model spectrum again')
-    })
-    output$apcluster_plot <- renderPlotly({
-      p=clustspectraplot(sell$autorun_data)
-      p
-    })
-   
+   print('rep6')
     
     session$sendCustomMessage('activeNavs', 'ROI Profiles')
     
@@ -1322,10 +1212,7 @@ observeEvent(input$autorun, {
       p=p %>% add_trace(data=sell$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
       p
     })
-    output$apcluster_plot <- renderPlotly({
-      p=clustspectraplot(sell$autorun_data)
-      print(p)
-    })
+    
     if (sell$jres_path!='')
       output$jres_plot <- try(renderPlotly({
         pp=fhs(sell$jres_path)
@@ -1341,6 +1228,12 @@ observeEvent(input$autorun, {
       actionButton('autorun', 'Autorun all spectra')
       
     })
+    output$align_button <- renderUI({
+      actionButton('alignment', 'Alignment of signals')
+    })
+    output$peak_analysis <- renderUI({
+      actionButton('peak_analysis', 'Peak analysis')
+    })
      output$x1 = DT::renderDataTable(
       
       spectra , selection = list(mode = 'multiple', selected = 1),server = T)
@@ -1353,6 +1246,8 @@ observeEvent(input$autorun, {
     session$sendCustomMessage('activeNavs', 'Dubious Quantifications')
     session$sendCustomMessage('activeNavs', 'Uni and multivariate analysis')
     session$sendCustomMessage('activeNavs', 'ROI Profiles')
+    session$sendCustomMessage('activeNavs', 'Dendrogram heatmaps')
+    
     updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
     
 

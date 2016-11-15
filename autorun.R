@@ -3,6 +3,7 @@ autorun = function(autorun_data, finaloutput) {
   #Autorun of quantification for all experiments using the information located at the ROI files.
   
   #TO DO: solving problem of intensity of signals of same metabolite through loading of all ROIs, calculation of maximum intensity for every signal in every spectrum and adaptation of maximum intensity to relative intensity (ROIs sholud have a new parameter)
+  print('Be patient. Gonna take a while. You should be writing, meanwhile.')
   
   
   # Loading of ROIs parameters
@@ -20,7 +21,7 @@ autorun = function(autorun_data, finaloutput) {
     ROI_limits = round(as.numeric(import_excel_profile[1, 1:2]),3)
     if (ROI_limits[1] < ROI_limits[2])
       ROI_limits=rev(ROI_limits)
-    print(paste(ROI_limits[1], ROI_limits[2], sep = '-'))
+    print(paste("Processing ROI ",ROI_limits[1], "-", ROI_limits[2], sep = ''))
     ROI_buckets = which(autorun_data$ppm <= ROI_limits[1] &
         autorun_data$ppm >=
         ROI_limits[2])
@@ -56,7 +57,7 @@ autorun = function(autorun_data, finaloutput) {
     
     for (spectrum_index in 1:dim(autorun_data$dataset)[1]) {
       
-      print(spectrum_index)
+      print(paste("Spectrum ",spectrum_index))
       
       
       #Preparation of necessary variables and folders to store figures and information of the fitting
@@ -304,7 +305,7 @@ autorun = function(autorun_data, finaloutput) {
     }
     
   }
-  
+  print("Done!")
   #Validation post-quantification system
   # alarmmatrix=validation(finaloutput, other_fit_parameters)
   # write.csv(alarmmatrix,
