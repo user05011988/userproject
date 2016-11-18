@@ -406,7 +406,7 @@ server = function(input, output,session) {
 
   output$autorun_plot <- renderPlotly({
     
-    p=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
+    p=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
     p
   })
   observeEvent(input$action, {
@@ -511,8 +511,7 @@ server = function(input, output,session) {
 
     
   })
-  
-  
+ 
   observeEvent(input$autorun_model, {
     output$autorun_plot <- renderPlotly({
       p=autorun_model_spectrum(reactiveprogramdata$autorun_data)
@@ -911,7 +910,7 @@ observeEvent(input$autorun, {
       spectra , selection = list(mode = 'multiple', selected = 1),server = T)
     output$autorun_plot <- renderPlotly({
       
-      p=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum')
+      p=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
       p
     })
     

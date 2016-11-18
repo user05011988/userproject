@@ -18,13 +18,9 @@ autorun = function(autorun_data, finaloutput) {
     
     #Loading of every ROI parameters
     import_excel_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
-    ROI_limits = round(as.numeric(import_excel_profile[1, 1:2]),3)
-    if (ROI_limits[1] < ROI_limits[2])
-      ROI_limits=rev(ROI_limits)
-    print(paste("Processing ROI ",ROI_limits[1], "-", ROI_limits[2], sep = ''))
-    ROI_buckets = which(autorun_data$ppm <= ROI_limits[1] &
-        autorun_data$ppm >=
-        ROI_limits[2])
+    print(paste(import_excel_profile[1,1], import_excel_profile[1,2], sep = '-'))
+    
+    ROI_buckets = which.min(abs(as.numeric(import_excel_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(import_excel_profile[1, 2])-autorun_data$ppm))
     Xdata = autorun_data$ppm[ROI_buckets]
     
     #Preparation of necessary parameters

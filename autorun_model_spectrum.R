@@ -23,15 +23,11 @@ autorun_model_spectrum = function(autorun_data) {
     
     #Loading of every ROI parameters
     ROI_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
-    ROI_limits = round(as.numeric(ROI_profile[1, 1:2]),3)
-    print(paste(ROI_limits[1], ROI_limits[2], sep = '-'))
+
+    ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
+    print(paste(ROI_profile[1,1], ROI_profile[1,2], sep = '-'))
     
-    if (ROI_limits[1] < ROI_limits[2])
-      ROI_limits=rev(ROI_limits)
     
-    ROI_buckets = which(autorun_data$ppm <= ROI_limits[1] &
-        autorun_data$ppm >=
-        ROI_limits[2])
 
     #Preparation of necessary parameters
     other_fit_parameters = fitting_variables()
@@ -210,7 +206,7 @@ autorun_model_spectrum = function(autorun_data) {
   #   layout(xaxis = list(range=c(max(autorun_data$ppm,na.rm=T),min(autorun_data$ppm,na.rm=T)),title = 'ppm'),
   #     yaxis = list(title = 'Intensity'))
   p=plot_ly(plotdata2,x = ~Xdata, y = ~Ydata, type = 'scatter', name= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~Ydata,name='Fitted spectrum',fill=NULL)  %>%
-    layout(xaxis = list(range=c(max(autorun_data$ppm,na.rm=T),min(autorun_data$ppm,na.rm=T)),title = 'ppm'),
+    layout(xaxis = list(autorange = "reversed",title = 'ppm'),
       yaxis = list(title = 'Intensity'))
     
     # blah$finaloutput=finaloutput
