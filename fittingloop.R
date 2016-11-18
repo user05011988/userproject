@@ -61,14 +61,12 @@ fittingloop = function(FeaturesMatrix,
     errorprov = 3000
     error1 = 3000
     worsterror = 0
-    if (iterrep>0) print(FeaturesMatrix[,2])
 
     
     # bounds = list(ub = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
     #                                                         2) - 2), lb = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
     #                                                                                                            2) - 2))
-    lb = as.vector(t(FeaturesMatrix[, seq(1, 9, 2), drop = F]))
-    ub = as.vector(t(FeaturesMatrix[, seq(2, 10, 2), drop = F]))
+   
     multiplicities=FeaturesMatrix[,11]
     roof_effect=FeaturesMatrix[,12]
    
@@ -80,6 +78,8 @@ fittingloop = function(FeaturesMatrix,
       # bounds=list(ub=matrix(0,dim(FeaturesMatrix)[1],dim(FeaturesMatrix)[2]/2),lb=matrix(0,dim(FeaturesMatrix)[1],dim(FeaturesMatrix)[2]/2))
       
       #Initialization of parameters to optimize. In every iteration the initialization will be different
+      lb = as.vector(t(FeaturesMatrix[, seq(1, 9, 2), drop = F]))
+      ub = as.vector(t(FeaturesMatrix[, seq(2, 10, 2), drop = F]))
       s0 = lb + (ub - lb) * runif(length(ub))
       # if (iterrep %in% seq(1,16,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=0,max=1/3)
       # if (iterrep %in% seq(2,17,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=1/3,max=2/3)
@@ -91,6 +91,33 @@ fittingloop = function(FeaturesMatrix,
       bbb=ifelse((iter+1)%%3/3==0,1,(iter+1)%%3/3)
       
       s0[which(seq_along(s0)%%5==2)]=lb[which(seq_along(s0)%%5==2)] + (ub[which(seq_along(s0)%%5==2)] - lb[which(seq_along(s0)%%5==2)]) * runif(1,min=aaa,max=bbb)
+      
+      if (iter<2) {
+      lol = peakdet(Ydata, other_fit_parameters$peakdet_minimum*0.1*max(Ydata),Xdata)
+      
+      peaks=lol$maxtab$pos[sort(lol$maxtab$val,decreasing=T,index.return=T)$ix[1:sum(multiplicities[signals_to_quantify])]]
+      peaks_compare=rowMeans(FeaturesMatrix[signals_to_quantify,3:4])
+      print(peaks)
+      print(peaks_compare)
+      for (i in 1:length(peaks_compare)) {
+        # if (multiplicities[i]==1) {
+          # aa=which.min(abs(peaks-peaks_compare[i]))
+          # if (peaks[aa]>FeaturesMatrix[i,3]&peaks[aa]<FeaturesMatrix[i,4]) {
+          #   s0[which(seq_along(s0)%%5==2)[i]]=peaks[aa]
+          #   lb[which(seq_along(s0)%%5==2)[i]]=peaks[aa]-0.001
+          #   ub[which(seq_along(s0)%%5==2)[i]]=peaks[aa]+0.001
+          #   
+          # } else if (multiplicities[i]==2) {
+            aa=sort(abs(peaks-peaks_compare[i]),index.return=T)$ix[1:multiplicities[i]]
+            if (mean(peaks[aa])>FeaturesMatrix[i,3]&mean(peaks[aa])<FeaturesMatrix[i,4]) {
+              s0[which(seq_along(s0)%%5==2)[i]]=mean(peaks[aa])
+              lb[which(seq_along(s0)%%5==2)[i]]=mean(peaks[aa])-0.001
+              ub[which(seq_along(s0)%%5==2)[i]]=mean(peaks[aa])+0.001
+
+          }
+        }
+      }
+ 
       
       
       #
@@ -216,10 +243,11 @@ fittingloop = function(FeaturesMatrix,
     # print(error2)
     #If the fitting seems to be still clearly improvable through the addition of signals
     if (error2 < (other_fit_parameters$additional_signal_improvement * dummy) &
-        (error1 > other_fit_parameters$additional_signal_percentage_limit)) {
+        (error1 > other_fit_parameters$additional_signal_percentage_limit)&length(peaks)>sum(multiplicities[signals_to_quantify])) {
+      print('Trying to improve initial fit adding peaks')
       # print(iterrep)
       #Finding of signals in the vector of the difference between the fitted and the original ROI
-      lol = peakdet(nls.out$fvec, other_fit_parameters$peakdet_minimum)
+      lol = peakdet(nls.out$fvec, other_fit_parameters$peakdet_minimum*max(Ydata))
       if (is.null(lol$maxtab) == F) {
         #Preparation of information of where signals of interest are located
         lolll = matrix(

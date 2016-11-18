@@ -14,8 +14,6 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     #   indexes=input$x1_rows_selected
     # } else {
       indexes=ind
-      # indexes=input$troco_cell_clicked$row
-    # }
   } else {
     indexes=1:dim(autorun_data$dataset)[1]
   }
@@ -127,7 +125,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       dummy2= list()
       for (i in 1:dim(ROI_profile)[1]) {
         dummy = ROI_data[which(ROI_data[, 7] != ROI_profile[i, 7]),]
-        dummy=dummy[which(duplicated(rbind(ROI_profile,dummy))[(dim(ROI_profile)[1]+1):(dim(ROI_profile)[1]+dim(dummy))]==F),]
+        dummy=dummy[which(duplicated(rbind(ROI_profile,dummy))[(dim(ROI_profile)[1]+1):(dim(ROI_profile)[1]+dim(dummy)[1])]==F),]
         if (length(which(dummy[,4] == ROI_profile[i,4]))>0) {
           dummy2[[length(dummy2)+1]]=which(dummy[,4] == ROI_profile[i,4])
           for (j in 1:length(dummy2[[i]])) {
@@ -308,7 +306,6 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     }
   }
     
-    # blah$finaloutput=finaloutput
 
     # blah$autorun_data=autorun_data
   return(blah)

@@ -28,7 +28,7 @@ packages_sources = function() {
   
   source("recurAlign.R")
 source("alignSp.R")
-source("localrecurAlign.R")
+source("localRecurAlign.R")
 source("FFTcorr.R")
 source("shift.R")
 source("corrcoef_aligned.R")

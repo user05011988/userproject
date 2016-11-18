@@ -60,7 +60,6 @@ names(mtrx.melt) <- c('j', 'ppm', 'value')
 # Return data to numeric form
 mtrx.melt$j <- as.numeric(str_sub(mtrx.melt$j, str_locate(mtrx.melt$j, '=')[1,1] + 1))
 mtrx.melt$ppm <- as.numeric(str_sub(mtrx.melt$ppm, str_locate(mtrx.melt$ppm, '=')[1,1] + 1))
-plot_ly(mtrx.melt, x = ~wt, y = ~hp, z = ~qsec, type = "contour") %>% layout(autosize = F, width = 600, height = 500)
 
 p=plot_ly(mtrx.melt,x = ~ ppm,y = ~ j,z = ~value,type = "contour",autocontour=F,contours=list(coloring='lines',end=quantile(newmat,0.99,na.rm=T),start=quantile(newmat,0.9,na.rm=T),size=quantile(newmat,0.99,na.rm=T)/5),showscale=F)%>% layout(xaxis = list(autorange = "reversed"))
 return(p)

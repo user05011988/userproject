@@ -7,19 +7,19 @@ packages_sources()
 compiler::enableJIT(3)
 
 #Reading of parameters file
-parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_portuguesos.csv"
-parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_portuguesos_new.csv"
-
-parameters_path = "C:/Users/user/Documents/r_dolphin - csv/example aligned/Parameters_19_TSP_improved_2.csv"
-parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_dataset.csv"
-parameters_path = "C:/Users/user/Dropbox/interface_example/Parameters.csv"
-parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_dataset_new.txt"
-parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_20_2.csv"
-
-parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer.csv"
-parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository.csv"
-
-parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository_added_signals.csv"
+# parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_portuguesos.csv"
+# parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_portuguesos_new.csv"
+# 
+# parameters_path = "C:/Users/user/Documents/r_dolphin - csv/example aligned/Parameters_19_TSP_improved_2.csv"
+# parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_dataset.csv"
+# parameters_path = "C:/Users/user/Dropbox/interface_example/Parameters.csv"
+# parameters_path = "C:/Users/user/Documents/r_dolphin - csv/Parameters_binning_dataset_new.txt"
+# parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_20_2.csv"
+# 
+# parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer.csv"
+# parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository.csv"
+# 
+# parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository_added_signals.csv"
 
 #import of data (dataset in csv format or Bruker nmr folder)
 imported_data = import_data(parameters_path)
