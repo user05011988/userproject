@@ -1,4 +1,4 @@
-peak_analysis=function(dataset,ppm,export_path,metadata,repository) {
+peak_analysis=function(dataset,ppm,freq,export_path,metadata,repository) {
   print('Processing. Talk some gossip, meanwhile.')
   
   if (ppm[1]<ppm[2]) {
@@ -8,8 +8,10 @@ peak_analysis=function(dataset,ppm,export_path,metadata,repository) {
     setupRSPA(-ppm)
     
   }
-# refdataset<-dataset[suppressWarnings(selectRefSp(dataset,recursion$step)),]
-refdataset<-apply(dataset,2,median)
+  peakParam$ampThr=quantile(dataset,0.60,na.rm=T)
+  
+refdataset<-dataset[suppressWarnings(selectRefSp(dataset,recursion$step)),]
+# refdataset<-apply(dataset,2,function(x)median(x,na.rm=T))
 refSegments<- segmentateSp(refdataset, peakParam)
 
 
@@ -18,9 +20,6 @@ for (i in 1:length(refSegments$Peaks)) peak_ppm=c(peak_ppm,ppm[unlist(refSegment
 
 peak_info=matrix(NA,0,11)
 for (i in 1:length(refSegments$Peaks)) peak_info=rbind(peak_info,refSegments$Peaks[[i]])
-
-print(dim(dataset))
-  print(dim(peak_info))
 
 peak_shape_corr=matrix(NA,dim(dataset)[1],dim(peak_info)[1])
 for (j in 1:dim(peak_info)[1]) {
@@ -101,14 +100,51 @@ signals_list=unique(append(secure_multiplets,signals_clusters))
 for (i in 1:length(which(colSums(threshold_corr_matrix)<=1)))  signals_list[[length(signals_list)+1]]=which(colSums(threshold_corr_matrix)<=1)[i]
 
 peak_quantification_median=apply(peak_quantification,2,function(x)median(x,na.rm=T))
-ROI_profile_suggestion=matrix(NA,0,9)
+
+
+CV <- function(x){
+(sd(x)/mean(x))
+}
+
+p_value_final=p_values(peak_quantification,metadata)
+# p_value_final=p_value_final[sort(as.numeric(names(p_value_final)),index.return=T)$ix]
+
+ROI_profile_suggestion=matrix(NA,0,10)
 for (i in 1:length(signals_list)) {
-  signals_patterns=cbind(1:length(signals_list[[i]]),1:length(signals_list[[i]]))
+  so=as.numeric(names(signals_list[[i]]))
+  tt=which(abs(diff(so))>0.02)
+  
+  if(length(tt)>0) {
+    dr=cbind(c(1,tt+1),c(tt,length(so)))
+    
+    cvb=which(dr[,2]-dr[,1]>0)
+    if (length(cvb)>0) {
+      ds=matrix(NA,0,2)
+      
+      for (j in 1:length(cvb)) {
+        comp=peak_quantification_median[signals_list[[i]][dr[cvb[j],1]:dr[cvb[j],2]]]
+        vb=ifelse(is.na(CV(comp)),0,CV(comp))
+        if (vb>0.1){
+          ds=rbind(ds,cbind(dr[cvb[j],1]:dr[cvb[j],2],dr[cvb[j],1]:dr[cvb[j],2]))
+          # dr[cvb[j],which.max(dr[cvb[j],])]
+        } else {
+          ds=rbind(ds,dr[cvb[j],])
+        }
+      }
+    } else {
+      ds=dr
+    }
+  }else {
+    ds=t(as.matrix(c(1,length(so))))
+  }
+  signals_patterns=ds
+  # signals_patterns=cbind(1:length(signals_list[[i]]),1:length(signals_list[[i]]))
   signals_intensities=c()
   for (k in 1:dim(signals_patterns)[1]) signals_intensities=c(signals_intensities,mean(peak_quantification_median[signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]]))
   for (k in 1:dim(signals_patterns)[1]) {
-    # ROI_profile_suggestion=rbind(ROI_profile_suggestion,c(paste(i,k,sep='_'),mean(as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))),1,1,length(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]),abs((as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))[2]-as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))[1])*600.2),0,0.001,signals_intensities[k]/max(signals_intensities)))
-    ROI_profile_suggestion=rbind(ROI_profile_suggestion,c(paste(i,k,sep='_'),mean(as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))),1,1,length(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]),0,0,0.001,signals_intensities[k]/max(signals_intensities)))
+    p_v=mean(p_value_final[signals_list[[i]]][signals_patterns[k,1]:signals_patterns[k,2]])
+    # ROI_profile_suggestion=rbind(ROI_profile_suggestion,c(paste(i,k,sep='_'),mean(as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))),1,1,length(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]),abs((as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))[2]-as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))[1])*500.3),0,0.001,signals_intensities[k]/max(signals_intensities)))
+    ROI_profile_suggestion=rbind(ROI_profile_suggestion,c(i,mean(as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))),0.7,k,length(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]),abs((as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))[2]-as.numeric(names(signals_list[[i]][signals_patterns[k,1]:signals_patterns[k,2]]))[1])*freq),0,0.001,signals_intensities[k]/max(signals_intensities),p_v))
     
   }
 }
@@ -116,29 +152,34 @@ for (i in 1:length(signals_list)) {
 
 
 ROI_profile_suggestion[is.na(ROI_profile_suggestion)]=0 
-ROI_profile_suggestion=as.data.frame(ROI_profile_suggestion[sort(ROI_profile_suggestion[,2],index.return=T)$ix,],stringsAsFactors = F)
+ROI_profile_suggestion=as.data.frame(ROI_profile_suggestion[sort(ROI_profile_suggestion[,2],decreasing=T,index.return=T)$ix,],stringsAsFactors = F)
 ROI_profile_suggestion[,-1]=lapply(ROI_profile_suggestion[,-1],function(x) as.numeric(x))
 
-signals_diff=c(0,which(diff(ROI_profile_suggestion[,2])>0.03),dim(ROI_profile_suggestion)[1])
+signals_diff=c(0,which(abs(diff(ROI_profile_suggestion[,2]))>0.03),dim(ROI_profile_suggestion)[1])
 ROI_limits_suggestion=matrix(NA,dim(ROI_profile_suggestion)[1],2)
 for (i in 1:dim(ROI_profile_suggestion)[1]) {
   relevant_signals_diff=which(signals_diff %in% i ==T)
   if (length(relevant_signals_diff)>0) {
-    ROI_limits_suggestion[(signals_diff[relevant_signals_diff-1]+1):signals_diff[relevant_signals_diff],]=matrix(rep(c(ROI_profile_suggestion[(signals_diff[relevant_signals_diff-1]+1),2]-0.015,ROI_profile_suggestion[signals_diff[relevant_signals_diff],2]+0.015),2),length((signals_diff[relevant_signals_diff-1]+1):signals_diff[relevant_signals_diff]),2,byrow=T)
+    ROI_limits_suggestion[(signals_diff[relevant_signals_diff-1]+1):signals_diff[relevant_signals_diff],]=matrix(rep(c(ROI_profile_suggestion[(signals_diff[relevant_signals_diff-1]+1),2]+0.02,ROI_profile_suggestion[signals_diff[relevant_signals_diff],2]-0.02),2),length((signals_diff[relevant_signals_diff-1]+1):signals_diff[relevant_signals_diff]),2,byrow=T)
   }
 }
-p_value_final=p_values(peak_quantification,metadata)
-p_value_final=p_value_final[sort(as.numeric(names(p_value_final)),index.return=T)$ix]
 
-ROI_profile_suggestion=cbind(round(ROI_limits_suggestion,3),rep('Baseline Fitting',dim(ROI_profile_suggestion)[1]),ROI_profile_suggestion,as.vector(p_value_final))
+ROI_profile_suggestion=cbind(round(ROI_limits_suggestion,3),rep('Baseline Fitting',dim(ROI_profile_suggestion)[1]),ROI_profile_suggestion)
 colnames(ROI_profile_suggestion)=c('ROI_left','ROI_right','Q.Mode','Signal','Position..ppm.','Width','Q.Signal','Multiplicity','J.coupling..Hz.','Roof.effect','Shift.tolerance','Intensity','p_value')
 
 suggested_metabolites=matrix(NA,dim(ROI_profile_suggestion)[1],5)
 colnames(suggested_metabolites)=paste('Suggested Metabolite',1:5)
-for (i in 1:dim(suggested_metabolites)[1]) suggested_metabolites[i,]=paste(repository[!is.na(repository[,5]),][sort(abs(repository[,5]-ROI_profile_suggestion[i,5]),index.return=T)$ix[1:5],1],' (', round(sort(abs(repository[,5]-ROI_profile_suggestion[i,5]),index.return=T)$x[1:5],3),')',sep='')
+for (i in 1:dim(suggested_metabolites)[1]) {
+  a=which(abs(repository[,5]-ROI_profile_suggestion[i,5])<0.05)
+  b=which(as.numeric(repository[a,7])==ROI_profile_suggestion[i,8])
+  d=a[sort(abs(repository[a,5]-ROI_profile_suggestion[i,5]),index.return=T)$ix[1:5]]
+  e=c(setdiff(a[b],d),d)
+  e=unique(e)[1:5]
+  suggested_metabolites[i,]=paste(repository[e,1],' (', round(abs(repository[e,5]-ROI_profile_suggestion[i,5])[1:5],3),')',sep='')
+}
+
+# suggested_metabolites[i,]=paste(repository[!is.na(repository[,5]),][sort(abs(repository[,5]-ROI_profile_suggestion[i,5]),index.return=T)$ix[1:5],1],' (', round(sort(abs(repository[,5]-ROI_profile_suggestion[i,5]),index.return=T)$x[1:5],3),')',sep='')
 ROI_profile_suggestion=cbind(ROI_profile_suggestion,suggested_metabolites)
-
-
 
 write.csv(ROI_profile_suggestion,paste(export_path,'ROI_profile_suggestion.csv',sep='/'),row.names = F)
 write.csv(peak_quantification,paste(export_path,'peak_quantification.csv',sep='/'),row.names = F)

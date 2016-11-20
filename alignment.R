@@ -6,7 +6,7 @@ alignment=function(dataset,ppm) {
   ##Segmentation and matching parameters
   if (ppm[1]<ppm[2]) ppm=rev(ppm)
   setupRSPA(-ppm)
-  peakParam$ampThr=quantile(dataset,0.75)
+  peakParam$ampThr=quantile(dataset,0.75,na.rm=T)
   
   
   
@@ -27,6 +27,6 @@ for (i in 1:dim(dataset)[1]) {
   aligneddataset[i,]<- suppressWarnings(alignSp(refSp,refSegs,dataset[i,],testSegs,recursion,MAX_DIST_FACTOR,MIN_RC))
 }
 print('Done!')
-
+aligneddataset[is.na(aligneddataset)]=0
 return(aligneddataset)
 }

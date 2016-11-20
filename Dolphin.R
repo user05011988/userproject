@@ -163,7 +163,7 @@ server = function(input, output,session) {
   
   reactivequantdata <- reactiveValues(method2=NULL, method1 = NULL,stop3=0)
   
-  reactiveprogramdata <- reactiveValues(ROIdata=NULL,ind=NULL,beginning=F,dataset=NULL,finaloutput=NULL,autorun_data=NULL,p_value_final=NULL,ROI_data=NULL,info=c(),ROI_separator=NULL,bucketing=NULL,select_options=NULL,new_roi_profile=NULL,p=NULL)
+  reactiveprogramdata <- reactiveValues(ROIdata=NULL,ind=NULL,beginning=F,dataset=NULL,finaloutput=NULL,autorun_data=NULL,p_value_final=NULL,ROI_data=NULL,info=c(),ROI_separator=NULL,bucketing=NULL,select_options=NULL,new_roi_profile=NULL,p=NULL,bgColScales=NULL)
   
   observeEvent(input$roirows, {
     reactiveprogramdata$new_roi_profile= as.data.frame(matrix(NA,as.numeric(input$roirows),11))
@@ -217,7 +217,7 @@ server = function(input, output,session) {
     reactiveprogramdata$change2=1
     reactiveprogramdata$stop2=0
     reactivequantdata$stop3=0
-    reactiveprogramdata$roi=NULL
+    # reactiveprogramdata$roi=NULL
     reactiveprogramdata$info=c()
     
 
@@ -260,7 +260,7 @@ server = function(input, output,session) {
             # rownames can not start with a digit
             if(grepl('^\\d', val)) {
               rejectEdit(session, tbl = "ROIdata", row = row, col = col,  id = id, value = oldval)
-              reactiveprogramdata$roi=0
+              # reactiveprogramdata$roi=0
               
               return(NULL)
             }
@@ -272,7 +272,7 @@ server = function(input, output,session) {
               rejectEdit(session, tbl = "ROIdata", row = row, col = col, id = id, value = oldval)
               
               
-              reactiveprogramdata$roi=0
+              # reactiveprogramdata$roi=0
               return(NULL)
             }
           } else if (col %in% c(3)) {
@@ -293,7 +293,7 @@ server = function(input, output,session) {
             if(col == 0) {
             } else if (col %in% c(1:2,5:11)) {
               reactiveROItestingdata$ROIpar[row, col] <- as.numeric(val)
-              reactiveprogramdata$roi=1
+              # reactiveprogramdata$roi=1
               print('step')
             } else if (col %in% c(3)) {
               reactiveROItestingdata$ROIpar[row, col] <- val
@@ -314,7 +314,8 @@ server = function(input, output,session) {
   })
   
   output$mtcars2 <- renderD3tf({
-    
+    print(reactiveROItestingdata$signpar)
+    print(ncol(reactiveROItestingdata$signpar))
     tableProps <- list(
       btn_reset = TRUE,
       sort = TRUE,
@@ -345,14 +346,14 @@ server = function(input, output,session) {
           # rownames can not start with a digit
           if(grepl('^\\d', val)) {
             rejectEdit(session, tbl = "mtcars2", row = row, col = col,  id = id, value = oldval)
-            reactiveprogramdata$roi=0
+            # reactiveprogramdata$roi=0
             return(NULL)
           }
         } else if (col %in% c(1:7)){
           if(is.na(suppressWarnings(as.numeric(val)))) {
             oldval <- reactiveROItestingdata$signpar[row, col]
             rejectEdit(session, tbl = "mtcars2", row = row, col = col, id = id, value = oldval)
-            reactiveprogramdata$roi=0
+            # reactiveprogramdata$roi=0
             return(NULL)
           }
         } 
@@ -417,7 +418,7 @@ server = function(input, output,session) {
     }
     reactivequantdata$method1 <- interface_quant(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput, reactiveprogramdata$ind,reactiveROItestingdata$ROIpar,is_autorun) 
     reactivequantdata$stop3=1
-    reactiveprogramdata$ss=1
+    reactiveprogramdata$alignment_check=1
     
     reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method1$results_to_save$Area,reactivequantdata$method1$results_to_save$fitting_error,reactivequantdata$method1$results_to_save$signal_area_ratio)
     colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting error','signal/total area ratio')
@@ -425,9 +426,10 @@ server = function(input, output,session) {
     if (!is.null(reactivequantdata$method1$signals_parameters)) {
       reactiveprogramdata$bgColScales = c(rep("", dim(reactivequantdata$method1$signals_parameters)[1]), rep("info", dim(reactivequantdata$method1$signals_parameters_2)[1]-dim(reactivequantdata$method1$signals_parameters)[1]))
       reactiveROItestingdata$signpar <- reactivequantdata$method1$signals_parameters_2
-    reactivesignpardata$rowIndex <- 1:nrow(reactiveROItestingdata$signpar)
+      dim(reactivequantdata$method1$signals_parameters_2)
+      dim(reactiveROItestingdata$signpar)
     reactiveprogramdata$stop=0
-    reactiveprogramdata$roi=1
+    # reactiveprogramdata$roi=1
     }
   })
   
@@ -452,18 +454,18 @@ server = function(input, output,session) {
    
     path=paste(reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Experiments[reactiveprogramdata$info$row],reactiveprogramdata$autorun_data$signals_names[reactiveprogramdata$info$col],sep='/')
     Xdata=try(as.numeric(
-      import(file.path(path,'Xdata.csv'))[,-1]),silent=T)
+      suppressWarnings(import(file.path(path,'Xdata.csv'))[,-1])),silent=T)
     if (class(Xdata)=="try-error") {
          print('Choose valid quantification')
          return(NULL)
     }
    
-    Ydata=as.numeric(import(file.path(path,'Ydata.csv'))[,-1])
+    Ydata=as.numeric(suppressWarnings(import(file.path(path,'Ydata.csv')))[,-1])
 
-    dummy=import(file.path(path,'plot_data.csv'))
+    dummy=suppressWarnings(import(file.path(path,'plot_data.csv')))
     plot_data=as.matrix(dummy[,-1])
-    other_fit_parameters=as.list(import(file.path(path,'other_fit_parameters.csv'))[1,])
-    ROI_profile=import(file.path(path,'import_excel_profile.csv'))[,-1,drop=F]
+    other_fit_parameters=as.list(suppressWarnings(import(file.path(path,'other_fit_parameters.csv')))[1,])
+    ROI_profile=suppressWarnings(import(file.path(path,'import_excel_profile.csv')))[,-1,drop=F]
     other_fit_parameters$signals_to_quantify=ROI_profile[,7]
     plotdata2 = data.frame(Xdata=Xdata,
       Ydata=Ydata,
@@ -489,7 +491,7 @@ server = function(input, output,session) {
 
     # }
     reactiveROItestingdata$ROIpar=ROI_profile
-    reactiveROItestingdata$signpar=t(import(file.path(path,'signals_parameters.csv'))[,-1])
+    reactiveROItestingdata$signpar=t(suppressWarnings(import(file.path(path,'signals_parameters.csv')))[,-1])
     colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     ind=which(reactiveprogramdata$ROI_separator[,2]-reactiveprogramdata$info$col>=0)[1]
     ind=(reactiveprogramdata$ROI_separator[ind, 1]:reactiveprogramdata$ROI_separator[ind, 2])
@@ -739,7 +741,7 @@ observeEvent(input$autorun, {
     reactiveprogramdata$change2=1
     reactiveprogramdata$stop2=0
     reactivequantdata$stop3=0
-    reactiveprogramdata$roi=NULL
+    # reactiveprogramdata$roi=NULL
     reactiveprogramdata$info=c()
     
     

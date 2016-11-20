@@ -96,7 +96,7 @@ import_data = function(parameters_path) {
   }
 
   #Alignment
-  alignment = as.numeric(import_profile[9, 2])
+  alignment = import_profile[9, 2]
   params$glucose_alignment = 'N'
   params$tsp_alignment = 'N'
   params$peak_alignment = 'N'
@@ -157,7 +157,7 @@ import_data = function(parameters_path) {
         #Formate
         limi=c(8.48,8.42)
       }
-      if (alignment<=3) {
+      if (alignment!=4) {
       spectra_lag=rep(NA,dim(imported_data$dataset)[1])
       for (i in 1:dim(imported_data$dataset)[1]) {
         d <-
@@ -206,18 +206,25 @@ import_data = function(parameters_path) {
     ss=boxplot.stats(vardata3)$out
     vardata3=vardata3[!(vardata3 %in% ss)]
     param=seq(5,100,5)*max(vardata3,na.rm=T)/100
+    dummy=imported_data$dataset
+    ll=c(intersect(which(imported_data$ppm>5.6),which(imported_data$ppm<6.1)),intersect(which(imported_data$ppm>4.6),which(imported_data$ppm<4.9)),intersect(which(imported_data$ppm>-0.5),which(imported_data$ppm<0.5)))
+    dummy[,ll]=0
     for (i in 1:length(param)) {
-      s=plele(param[i],imported_data$dataset,vardata3);
+      s=plele(param[i],dummy,vardata3);
     
     
     tra[i]=median(s$lol2[apply(imported_data$dataset,2,function(x) median(x,na.rm=T))>median(imported_data$dataset,na.rm=T)],na.rm=T);
     }
-    s=plele(param[which.min(tra)],imported_data$dataset,vardata3);
-    imported_data$dataset=s$pqndatanoscale
+    s=plele(param[which.min(tra)],dummy,vardata3);
+    imported_data$dataset=imported_data$dataset/s$pqndatanoscale
   }
     
   imported_data$dataset=  imported_data$dataset[,which(apply(imported_data$dataset,2,function(x) all(is.na(x)))==F)]
   imported_data$ppm=imported_data$ppm[which(!is.na(imported_data$ppm))]
+  if (imported_data$ppm[1]<imported_data$ppm[2]) {
+    imported_data$ppm=rev(imported_data$ppm)
+    imported_data$dataset=t(apply(imported_data$dataset,1,rev))
+  }
   #Storage of parameters needed to perform the fit in a single variable to return.
   
   imported_data$buck_step = params$buck_step

@@ -1,5 +1,5 @@
 validation = function(finaloutput,
-                                 other_fit_parameters,validation_type) {
+                                 other_fit_parameters,validation_type,profile_folder_path) {
 
   #Created by Daniel Cañueto 13/09/2016
   #Finding of suspicious quantifications through difference with predicted shift, signal to total area ratio, fitting error, and difference with expected relative intensity
@@ -7,6 +7,7 @@ validation = function(finaloutput,
   #TO DO: maybe would be better to analyze official relative intensity. 
   #TO DO: allow more than two signals when analyzing official relative intensity. 
   print(validation_type)
+  
   
   
   #shift analysis
@@ -80,6 +81,41 @@ validation = function(finaloutput,
   brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
   clrs <- round(seq(255, 40, length.out = length(brks) + 1), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
+  } else if (validation_type==6) { 
+    
+    relative_intensity = read.csv(profile_folder_path, stringsAsFactors = F)
+    
+    alarmmatrix=matrix(NA,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
+    
+    alarmmatrix=matrix(0,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
+    colnames(alarmmatrix)=colnames(finaloutput$intensity)
+    rownames(alarmmatrix)=rownames(finaloutput$intensity)
+    ma=relative_intensity[which(relative_intensity[,7]>0),c(4,7)]
+    # for (i in 1:dim(finaloutput$intensity)[2]) {
+    # ma[[length(ma)+1]]=
+    CV <- function(x){
+      (sd(x)/mean(x))
+    }
+    
+    ss=which(ma[,2]==2)
+    for (i in ss) {
+      b=which(ma[,1]==ma[i,1])
+      ccv=relative_intensity[b,12]
+      ccvv=finaloutput$intensity[,b]
+      ccvvv=finaloutput$fitting_error[,b]
+      for (j in 1:nrow(ccvvv)) {
+        aa=ccvv[j,]*ccv[which.min(ccvvv[j,])]/ccvv[j,which.min(ccvvv[j,])] - ccv
+        alarmmatrix[j,b]=aa
+      }
+    }
+    nn=rep(NA,19)
+    nn[10]=0.5
+    aa=quantile(alarmmatrix, probs = seq(0, 1, length.out=1001))
+    nn[11:19]=seq(which(aa>0)[1]-1,1000,length.out = 9)/1000
+    nn[1:9]=seq(0,which(aa<0)[length(which(aa<0))]-1,length.out = 9)/1000
+    brks <- quantile(alarmmatrix, probs = nn, na.rm = TRUE)
+    clrs <- round(c(seq(40, 255, length.out = (length(brks) + 1)/2),seq(255, 40, length.out = (length(brks) + 1)/2)), 0) %>%
+    {paste0("rgb(255,", ., ",", ., ")")}
   }
   
 

@@ -1,6 +1,6 @@
 p_values=function(dataset,metadata) {
 
-ss=unique(metadata)
+ss=as.vector(as.matrix(unique(metadata)))
 tt=matrix(NA,length(ss),dim(dataset)[2])
 for (ind in seq_along(ss)) {
   for (k in 1:dim(dataset)[2]) {

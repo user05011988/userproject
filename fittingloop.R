@@ -17,7 +17,7 @@ fittingloop = function(FeaturesMatrix,
   #TO DO: ideally, multiplicity and roof effect should not be incorporated into the optimization. Maybe this is ithe cause of the improper input parameters message. However, it would be necessary to load it from a txt file in every iteration, or with a global variable. I guess this procedures would make it much more slower. But it can be checked.
   #TO DO: another revision of algorithm alternatives
   
-  
+ 
   #Depending on the complexity of the ROI, more or less iterations are performed
   if (is.numeric(other_fit_parameters$fitting_maxiter)) {
     fitting_maxiter = other_fit_parameters$fitting_maxiter
@@ -96,9 +96,8 @@ fittingloop = function(FeaturesMatrix,
       lol = peakdet(Ydata, other_fit_parameters$peakdet_minimum*0.1*max(Ydata),Xdata)
       
       peaks=lol$maxtab$pos[sort(lol$maxtab$val,decreasing=T,index.return=T)$ix[1:sum(multiplicities[signals_to_quantify])]]
-      peaks_compare=rowMeans(FeaturesMatrix[signals_to_quantify,3:4])
-      print(peaks)
-      print(peaks_compare)
+      peaks_compare=rowMeans(FeaturesMatrix[signals_to_quantify,3:4,drop=F])
+     
       for (i in 1:length(peaks_compare)) {
         # if (multiplicities[i]==1) {
           # aa=which.min(abs(peaks-peaks_compare[i]))
@@ -151,7 +150,6 @@ fittingloop = function(FeaturesMatrix,
         )
       
       iter = iter + 1
-      
       # #Procedure to calculate the fititng error in all the ROI
       #An adapted MSE error is calculated, and the parameters of the optimization with less MSE are stored
       errorprov = (sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -
