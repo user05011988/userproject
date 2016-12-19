@@ -32,7 +32,7 @@ plotgenerator = function(results_to_save,
       plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
       plotdata5 = melt(plotdata4, id = "Xdata")
       
-        png(filename=paste(plot_path[r],"Fit2.png",sep='/'), 
+        png(filename=paste(plot_path[r],"Fit.png",sep='/'), 
           type="cairo",
           units="in", 
           width=8, 

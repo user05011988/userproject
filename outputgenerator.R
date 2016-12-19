@@ -29,6 +29,8 @@ output_generator = function(signals_to_quantify,
     cumulative_area = cumsum(fitted_signals[i2, ]) / sum(fitted_signals[i2, ])
     subregion_leftlimit = ifelse(is.nan(sum(cumulative_area)), 1, which.min(abs(cumulative_area - 0.05)))
     subregion_rightlimit = ifelse(is.nan(sum(cumulative_area)), length(Xdata), which.min(abs(cumulative_area - 0.95)))
+    # print(subregion_leftlimit)
+    # print(subregion_rightlimit)
     subregion_spectrum = Ydata[subregion_leftlimit:subregion_rightlimit]
     subregion_signals = fitted_signals[i2, subregion_leftlimit:subregion_rightlimit]
     subregion_fitted = output_data$fitted_sum[subregion_leftlimit:subregion_rightlimit]
@@ -37,9 +39,12 @@ output_generator = function(signals_to_quantify,
                                              ((
                                                abs(sum(subregion_spectrum) - sum(subregion_signals)) / sum(subregion_spectrum)
                                              ) * 100))
-    output_data$fitting_error = append(output_data$fitting_error,
-                                       mean(((subregion_spectrum - subregion_fitted) ^ 2
-                                       ) / subregion_spectrum ^ 2) * 100)
+    aa=cor(subregion_spectrum, subregion_fitted)
+    if (is.na(aa)) aa=0
+    output_data$fitting_error = append(output_data$fitting_error,aa
+                                       # mean(((subregion_spectrum - subregion_fitted) ^ 2
+                                       # ) / subregion_spectrum ^ 2) * 100)
+      )
   }
 
   output_data$Area = rowSums(fitted_signals[signals_to_quantify, , drop =

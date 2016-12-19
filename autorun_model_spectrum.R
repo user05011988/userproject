@@ -25,8 +25,6 @@ autorun_model_spectrum = function(autorun_data) {
     ROI_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
 
     ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
-    print(paste(ROI_profile[1,1], ROI_profile[1,2], sep = '-'))
-    
     
 
     #Preparation of necessary parameters
@@ -40,8 +38,9 @@ autorun_model_spectrum = function(autorun_data) {
     signals_to_quantify = which(ROI_profile[, 7] >= 1)
 
       ROI_buckets=which(round(autorun_data$ppm,6)==round(ROI_profile[1,1],6)):which(round(autorun_data$ppm,6)==round(ROI_profile[1,2],6))
-  # print(ROI_buckets)
-  
+      if (ROI_buckets[1]>ROI_buckets[2]) ROI_buckets=rev(ROI_buckets)
+      print(ROI_buckets)
+      
     
     
     Xdata= as.numeric(autorun_data$ppm[ROI_buckets])

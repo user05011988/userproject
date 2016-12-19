@@ -532,7 +532,7 @@ server = function(input, output,session) {
         reactiveprogramdata$alignment_check=1
       }
 
-      peak_analysis(dummy,reactiveprogramdata$autorun_data$ppm,reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Metadata[,1])
+      peak_analysis(dummy,reactiveprogramdata$autorun_data$ppm,reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Metadata[,2])
     })
   
 observeEvent(input$autorun, {
@@ -692,11 +692,11 @@ observeEvent(input$autorun, {
   })
   
   output$plot_p_value_2 <- renderPlotly({
-    p_value_final=p_values(reactiveprogramdata$finaloutput$Area,reactiveprogramdata$autorun_data$Metadata[,1])
+    p_value_final=p_values(reactiveprogramdata$finaloutput$Area,reactiveprogramdata$autorun_data$Metadata[,2])
       
     boxplotdata=as.data.frame(reactiveprogramdata$finaloutput$Area)
     colnames(boxplotdata)=paste(colnames(boxplotdata),'(p= ',p_value_final,')',sep='')
-    boxplotdata=cbind(boxplotdata,factor(reactiveprogramdata$autorun_data$Metadata[,1]))
+    boxplotdata=cbind(boxplotdata,factor(reactiveprogramdata$autorun_data$Metadata[,2]))
     boxplotdata=melt(boxplotdata)
     colnames(boxplotdata)=c('Metadata','Signal','Value')
     
@@ -843,7 +843,7 @@ observeEvent(input$autorun, {
     names(reactiveprogramdata$select_options)=ROI_names
     updateSelectInput(session, "select",choices = reactiveprogramdata$select_options,selected = 1)
 
-    p_value_bucketing=as.vector(p_values(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$Metadata[,1]))
+    p_value_bucketing=as.vector(p_values(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$Metadata[,2]))
     p_value_bucketing[is.na(p_value_bucketing)]=1
     plotdata = data.frame(Xdata=reactiveprogramdata$autorun_data$ppm, p_value_bucketing)
     output$varselect <- renderUI({

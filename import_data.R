@@ -48,15 +48,19 @@ import_data = function(parameters_path) {
   biofluid=import_profile[14, 2]
   jres_path=as.character(import_profile[15, 2])
   
-  repository=rio::import(as.character(import_profile[12, 2]))
-  if (biofluid=='Urine') {
-    repository=repository[which(repository[,3]==1),]
-  } else if (biofluid=='Serum') {
-    repository=repository[which(repository[,2]==1),]
-  } else {
-    
-  }
-    
+  repository=as.data.frame(rio::import(as.character(import_profile[12, 2])))
+  der=which(colnames(repository)==biofluid)
+  fa=repository[,der]
+  # repository=repository[repository[,der]>0&!is.na(repository[,der])&!is.nan(repository[,der]),]
+  repository=repository[!is.na(fa),]
+  fa=repository[,der]
+  
+  repository=repository[fa>0,]
+  
+  fa=repository[,der]
+  
+  repository=repository[sort(fa,decreasing = T,index.return=T)$ix,]
+  
 
 
   #Kind of normalization
@@ -202,7 +206,7 @@ import_data = function(parameters_path) {
   imported_data$dataset[is.na(imported_data$dataset)]=min(abs(imported_data$dataset)[abs(imported_data$dataset)>0])
   if (pqn=='Y') {
     tra=rep(NA,20)
-    vardata3=apply(imported_data$dataset,2,function(x) sd(x,na.rm=T)/mean(x,na.rm=T))
+    vardata3=apply(imported_data$dataset,2,function(x) mad(x,na.rm=T)/median(x,na.rm=T))
     ss=boxplot.stats(vardata3)$out
     vardata3=vardata3[!(vardata3 %in% ss)]
     param=seq(5,100,5)*max(vardata3,na.rm=T)/100
@@ -218,8 +222,10 @@ import_data = function(parameters_path) {
     s=plele(param[which.min(tra)],dummy,vardata3);
     imported_data$dataset=imported_data$dataset/s$pqndatanoscale
   }
-    
+  imported_data$dataset=imported_data$dataset/quantile(imported_data$dataset,0.9,na.rm=T)
+  
   imported_data$dataset=  imported_data$dataset[,which(apply(imported_data$dataset,2,function(x) all(is.na(x)))==F)]
+  
   imported_data$ppm=imported_data$ppm[which(!is.na(imported_data$ppm))]
   if (imported_data$ppm[1]<imported_data$ppm[2]) {
     imported_data$ppm=rev(imported_data$ppm)

@@ -809,7 +809,7 @@ observeEvent(input$autorun, {
     print("** done saving     **")
 
     # sell$outlier_table[,]=0
-    # ss=unique(sell$autorun_data$Metadata[,1])
+    # ss=unique(sell$autorun_data$Metadata[,2])
     # 
     # for (j in 1:length(ss)) {
     #   sell$outlier_table[sell$autorun_data$Metadata==ss[j],][sapply(as.data.frame(sell$finaloutput$Area[sell$autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1
@@ -1009,11 +1009,11 @@ observeEvent(input$autorun, {
   
   output$plot_p_value_2 <- renderPlotly({
     t_test_data_2=sell$finaloutput$Area
-    ss=unique(sell$autorun_data$Metadata[,1])
+    ss=unique(sell$autorun_data$Metadata[,2])
     tt=matrix(NA,length(ss),dim(t_test_data_2)[2])
     for (ind in seq_along(ss)) {
       for (k in 1:dim(t_test_data_2)[2]) {
-        tt[ind,k]=tryCatch(shapiro.test(t_test_data_2[sell$autorun_data$Metadata[,1]==ss[ind],k])$p.value,error=function(e) NA)
+        tt[ind,k]=tryCatch(shapiro.test(t_test_data_2[sell$autorun_data$Metadata[,2]==ss[ind],k])$p.value,error=function(e) NA)
       }
       
     }
@@ -1021,9 +1021,9 @@ observeEvent(input$autorun, {
     for (k in 1:dim(t_test_data_2)[2]) {
       # if (!any(is.na(t_test_data_2[,k]))) {
       if (!any(tt[,k]<0.05,na.rm=T)) {
-        p_value[k]=tryCatch(wilcox.test(t_test_data_2[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data_2[sell$autorun_data$Metadata[,1]==ss[2],k])$p.value,error=function(e) NA)
+        p_value[k]=tryCatch(wilcox.test(t_test_data_2[sell$autorun_data$Metadata[,2]==ss[1],k],t_test_data_2[sell$autorun_data$Metadata[,2]==ss[2],k])$p.value,error=function(e) NA)
       } else {
-        p_value[k]=tryCatch(t.test(t_test_data_2[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data_2[sell$autorun_data$Metadata[,1]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
+        p_value[k]=tryCatch(t.test(t_test_data_2[sell$autorun_data$Metadata[,2]==ss[1],k],t_test_data_2[sell$autorun_data$Metadata[,2]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
       }
       
       # }
@@ -1031,7 +1031,7 @@ observeEvent(input$autorun, {
     p_value_final=round(t(as.matrix(p.adjust(p_value,method="BH"))),3)
     ll=as.data.frame(sell$finaloutput$Area)
     colnames(ll)=paste(colnames(ll),'(p= ',p_value_final,')',sep='')
-    Xwit=cbind(ll,factor(sell$autorun_data$Metadata[,1]))
+    Xwit=cbind(ll,factor(sell$autorun_data$Metadata[,2]))
     ab=melt(Xwit)
     colnames(ab)=c('Metadata','Signal','Value')
     
@@ -1219,11 +1219,11 @@ observeEvent(input$autorun, {
     names(sell$select_options)=ROI_names
     t_test_data=sell$autorun_data$dataset
     
-    ss=unique(sell$autorun_data$Metadata[,1])
+    ss=unique(sell$autorun_data$Metadata[,2])
     tt=matrix(NA,length(ss),dim(t_test_data)[2])
     for (ind in seq_along(ss)) {
       for (k in 1.:dim(t_test_data)[2]) {
-        tt[ind,k]=tryCatch(shapiro.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[ind],k])$p.value,error=function(e) NA)
+        tt[ind,k]=tryCatch(shapiro.test(t_test_data[sell$autorun_data$Metadata[,2]==ss[ind],k])$p.value,error=function(e) NA)
       }
       
     }
@@ -1231,9 +1231,9 @@ observeEvent(input$autorun, {
     for (k in 1:dim(t_test_data)[2]) {
       # if (!any(is.na(t_test_data[,k]))) {
       if (!any(tt[,k]<0.05,na.rm=T)) {
-        p_value_bucketing[k]=tryCatch(suppressWarnings(wilcox.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,1]==ss[2],k]))$p.value,error=function(e) NA)
+        p_value_bucketing[k]=tryCatch(suppressWarnings(wilcox.test(t_test_data[sell$autorun_data$Metadata[,2]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,2]==ss[2],k]))$p.value,error=function(e) NA)
       } else {
-        p_value_bucketing[k]=tryCatch(t.test(t_test_data[sell$autorun_data$Metadata[,1]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,1]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
+        p_value_bucketing[k]=tryCatch(t.test(t_test_data[sell$autorun_data$Metadata[,2]==ss[1],k],t_test_data[sell$autorun_data$Metadata[,2]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
       }
       
       # }

@@ -21,6 +21,7 @@ autorun = function(autorun_data, finaloutput) {
     print(paste(import_excel_profile[1,1], import_excel_profile[1,2], sep = '-'))
     
     ROI_buckets = which.min(abs(as.numeric(import_excel_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(import_excel_profile[1, 2])-autorun_data$ppm))
+    if (ROI_buckets[1]>ROI_buckets[2]) ROI_buckets=rev(ROI_buckets)
     Xdata = autorun_data$ppm[ROI_buckets]
     
     #Preparation of necessary parameters
@@ -219,10 +220,7 @@ autorun = function(autorun_data, finaloutput) {
               "import_excel_profile.csv")
             # row.names = F
           )
-          write.table(Ydata,
-            file.path(plot_path[i], "Ydata.csv"),
-            # row.names = F,
-            col.names = F)
+          write.csv(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
           
           other_fit_parameters$signals_to_quantify=NULL
           
@@ -246,12 +244,12 @@ autorun = function(autorun_data, finaloutput) {
             file.path(plot_path[i],
               "signals_parameters.csv"))
           # col.names = F
-          write.table(Xdata,
-            file.path(plot_path[i], "Xdata.csv"))
+          write.csv(Xdata,file.path(plot_path[i], "Xdata.csv"),row.names = F,col.names = F)
+
           # row.names = F,
           # col.names = F))
-          write.table(Ydata,
-            file.path(plot_path[i], "Ydata.csv"))
+          write.csv(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
+
           write.csv(results_to_save,
             file.path(plot_path[i], "results_to_save.csv"),
             row.names = F)

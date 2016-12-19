@@ -18,7 +18,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     indexes=1:dim(autorun_data$dataset)[1]
   }
   for (spectrum_index in indexes) {
-    print(spectrum_index)
+    print(paste("Spectrum ",spectrum_index))
     ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
   
   Xdata= as.numeric(autorun_data$ppm[ROI_buckets])
@@ -295,7 +295,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
      
       finaloutput=save_roi_testing(blah,autorun_data, finaloutput)
       blah$finaloutput=finaloutput
-      png(filename=paste(plot_path,"Fit2.png",sep='/'), 
+      png(filename=paste(plot_path,"Fit.png",sep='/'), 
         type="cairo",
         units="in", 
         width=8, 

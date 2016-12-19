@@ -46,7 +46,7 @@ for (r in 1:length(results_to_save$signal_area_ratio)) {
   if (results_to_save$signal_area_ratio[r] < other_fit_parameters$signal_area_ratio_plot ||
       results_to_save$fitting_error[r] > other_fit_parameters$fitting_error_plot) {
 # ggsave(paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit.jpeg",sep='/'),plot = p,width = 10, height = 5)
-    png(filename=paste(plot_path[r],"Fit2.png",sep='/'), 
+    png(filename=paste(plot_path[r],"Fit.png",sep='/'), 
       type="cairo",
       units="in", 
       width=8, 
@@ -65,10 +65,8 @@ for (i in seq_along(plot_path)) {
       "import_excel_profile.csv")
     # row.names = F
   )
-  write.table(Ydata,
-    file.path(plot_path[i], "Ydata.csv"),
-    # row.names = F,
-    col.names = F)
+            write.csv(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
+
   
   other_fit_parameters$signals_to_quantify=NULL
   
@@ -92,12 +90,12 @@ for (i in seq_along(plot_path)) {
     file.path(plot_path[i],
       "signals_parameters.csv"))
   # col.names = F
-  write.table(Xdata,
-    file.path(plot_path[i], "Xdata.csv"))
+    write.csv(Xdata,file.path(plot_path[i], "Xdata.csv"),row.names = F,col.names = F)
+
   # row.names = F,
   # col.names = F))
-  write.table(Ydata,
-    file.path(plot_path[i], "Ydata.csv"))
+            write.csv(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
+
   write.csv(results_to_save,
     file.path(plot_path[i], "results_to_save.csv"),
     row.names = F)

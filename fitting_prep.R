@@ -70,7 +70,7 @@ fitting_prep = function(Xdata,
       0.005
     BGSigleftlimits = BGSigrightlimits + 0.01
 
-    peaks = peakdet(Ydata, 0.01)
+    peaks = peakdet(Ydata, other_fit_parameters$peakdet_minimum*max(1e-10,max(Ydata)))
     left = which(peaks$mintab$pos < ROIlength / 5)
     right = which(peaks$mintab$pos > 4 * ROIlength / 5)
     dummy = round(seq(1, ROIlength, length = 2 * BGSigNum - 1))

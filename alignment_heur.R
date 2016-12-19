@@ -1,4 +1,4 @@
-alignment=function(dataset,ppm) {
+alignment_heur=function(dataset,ppm) {
   print('Be patient. Gonna take a while. You should be writing, meanwhile.')
   
   # dataset<-dataset*0.2/median(dataset)
@@ -9,11 +9,11 @@ alignment=function(dataset,ppm) {
     SNR.Th = -1,
     verbose=FALSE
   );
-  # resFindRef<- findRef(peakList);
-  # refInd <- resFindRef$refInd;
-  mm=apply(dataset,2,median)
-  ll=apply(dataset,1,function(x)cor(x,mm,method='spearman'))
-  refInd=which.max(ll)
+  resFindRef<- findRef(peakList);
+  refInd <- resFindRef$refInd;
+  # mm=apply(dataset,2,median)
+  # ll=apply(dataset,1,function(x)cor(x,mm,method='spearman'))
+  # refInd=which.max(ll)
 
   # Set maxShift
   maxShift = 30;

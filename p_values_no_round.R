@@ -1,18 +1,27 @@
-p_values=function(dataset,metadata) {
+p_values_no_round=function(dataset,metadata) {
   
-
+  
 types=unique(unlist(metadata[,-1]))[which(unique(unlist(metadata[,-1]))>0)]
 types2=abs(unique(unlist(metadata[,-1]))[which(unique(unlist(metadata[,-1]))<0)])
 datasetlist=list()
+if (length(which(duplicated(metadata[,1])==T))==0.5*length(metadata[,1])) {
+  paireddata=T
+  print ('Paired data')
+  
+} else {
 paireddata=F
+print ('Unpaired data')
+
+}
+
+
 if (identical(types,types2)) {
   print ('Analysis of differences')
-paireddata=T
 for (i in seq_along(types)) {
 ind1=which(metadata[,-1] ==types[i])%%nrow(metadata)
 ind2=which(metadata[,-1] ==-types[i])%%nrow(metadata)
 ind1[ind1==0]=ind2[ind2==0]=nrow(metadata)
-datasetlist[[i]]=dataset[ind2,]-dataset[ind1,]
+datasetlist[[i]]=dataset[ind2,,drop=F]-dataset[ind1,,drop=F]
 if (all(metadata[ind1,1]==metadata[ind2,1])==F)   paireddata=F
 } 
 } else {
@@ -20,14 +29,10 @@ if (all(metadata[ind1,1]==metadata[ind2,1])==F)   paireddata=F
   for (i in seq_along(types)) {
   ind1=which(metadata[,-1] ==types[i])%%nrow(metadata)
   ind1[ind1==0]=nrow(metadata)
-  datasetlist[[i]]=dataset[ind1,]
+  datasetlist[[i]]=dataset[ind1,,drop=F]
   }
 }
-if (paireddata==F) {
-  print('Unpaired data')
-} else {
-  print('Paired data')
-}
+
 
 if (length(datasetlist)==2) {
 tt=matrix(NA,length(datasetlist),dim(dataset)[2])
@@ -42,7 +47,7 @@ for (k in 1:dim(dataset)[2]) {
   # if (!any(is.na(dataset[,k]))) {
   if (!any(tt[,k]<0.05,na.rm=T)) {
     
-    p_value[k]=suppressWarnings(wilcox.test(datasetlist[[1]][,k],datasetlist[[2]][,k],paired=paireddata)$p.value)
+    p_value[k]=tryCatch(wilcox.test(datasetlist[[1]][,k],datasetlist[[2]][,k],paired=paireddata)$p.value,error=function(e) NA)
   } else {
     p_value[k]=tryCatch(t.test(datasetlist[[1]][,k],datasetlist[[2]][,k],paired=paireddata,var.equal=F)$p.value,error=function(e) NA)
   }
@@ -86,7 +91,7 @@ for (k in 1:dim(dataset)[2]) {
     
 }
 p_value_final=rep(1,length(p_value))
-p_value_final[which(!is.na(p_value))]=round(t(as.matrix(p.adjust(p_value[which(!is.na(p_value))],method="none"))),3)
+p_value_final[which(!is.na(p_value))]=round(t(as.matrix(p.adjust(p_value[which(!is.na(p_value))],method="none"))),20)
 names(p_value_final)=colnames(dataset)
 return(p_value_final)
 }

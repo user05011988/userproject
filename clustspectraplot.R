@@ -38,7 +38,7 @@ plotdata2=melt(plotdata,id = "Xdata")
 
 
 no=apply(imported_data$dataset,2,median)
-asd=peakdet(no,max(0,quantile(no,0.6)))
+asd=peakdet(no,max(1e-10,quantile(no,0.6)))
 hoh=c()
 for (i in 1:length(asd$maxtab$pos)) {
   ff=c(which(asd$mintab$pos<asd$maxtab$pos[i])[length(which(asd$mintab$pos<asd$maxtab$pos[i]))],which(asd$mintab$pos>asd$maxtab$pos[i])[1])

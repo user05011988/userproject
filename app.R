@@ -1,5 +1,5 @@
 variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = savedreactivedata = env =self = private = .values = ymax= ymin = label.row = x= y=c=t=value=variable=signals=private=self =.=integration_parameters = x= width=height=NULL # Setting the variables to NULL 
-library("lazyeval")
+if (!suppressPackageStartupMessages(require("lazyeval"))) install.packages("lazyeval")
 
 f_eval(~ 1 + 2 + 3)
 
@@ -41,11 +41,10 @@ ui <- fluidPage(
 
         ),
         mainPanel(
-          uiOutput('varselect'),
-          uiOutput('varselect2'),
-          uiOutput('align_button'),
-          uiOutput('peak_analysis'),
-          
+          div(style="display:inline-block",uiOutput('varselect')),
+          div(style="display:inline-block",uiOutput('varselect2')),
+          div(style="display:inline-block",uiOutput('align_button')),
+          div(style="display:inline-block",uiOutput('peak_analysis')),
           fluidRow(column(width = 12, h4("You can watch how the signals have been quantified in the spectrum model and, at the same time, an univariate analysis of every bin in the spectrum, according to the metadata given by the user.The idea is that you can analyze other parts of the spectrum with significant differences and add a ROI profile through the 'Profiles' tab."))),
           # uiOutput('autorun_plot_2'),
           plotlyOutput("autorun_plot")
@@ -67,56 +66,46 @@ ui <- fluidPage(
           fluidRow(column(width = 12, h4("Select ROI"))),
           selectInput("select",label=NULL,choices=""),
           fluidRow(column(width = 12, h4("Select spectrum"))),
-          DT::dataTableOutput('x1')
-          
+          div(dataTableOutput('x1'), style = "font-size:80%"),
+          width=3
         ),
         
         
         mainPanel(
-          fluidRow(column(width = 12, h4("You can watch the spectra here"))),
-          plotlyOutput("plot"),
-          fluidRow(column(width = 12, h4("You can watch the uploaded 2D file here"))),
-          
-          plotlyOutput("jres_plot"),
+          plotlyOutput("plot",height = "250px"),
+          div(d3tfOutput('mtcars3',width = "100%", height = "auto"), style = "font-size:80%"),
           
           fluidRow(column(width = 12, h4("You can edit the ROI Profile and quantify it"))),
           
-          D3TableFilter::d3tfOutput('ROIdata',width = "100%", height = "auto"),
+          div(d3tfOutput('ROIdata',width = "100%", height = "auto"), style = "font-size:80%"),
+          fluidRow(column(width = 12, h4("Here you can see the signals in the HMDB Repository located at the same zone of the spectrum, selected by biofluid"))),
+          
+              div(dataTableOutput("repository"), style = "font-size:80%"),
+           
           fluidRow(column(width = 12, h4("You can directly edit the signals parameters if you are not satisfied with the calculated parameters."))),
           actionButton("direct_edition", label = "Direct edition"),
           
-          D3TableFilter::d3tfOutput('directedition_edit',width = "100%", height = "auto"),
-          fluidRow(column(width = 12, h4("You have here some indicators of quality of the quantification"))),
+          div(d3tfOutput('directedition_edit',width = "100%", height = "auto"), style = "font-size:80%"),
           
-          D3TableFilter::d3tfOutput('mtcars3',width = "100%", height = "auto"),
-          fluidRow(column(width = 12, h4("Here you can see the signals in the HMDB Repository located at the same zone of the spectrum, selected by biofluid"))),
-          fluidRow(
-            column(width = 12,
-              DT::dataTableOutput("repository")
-            ))
+          
+          fluidRow(column(width = 12, h4("You can watch the uploaded 2D file here"))),
+          
+          plotlyOutput("jres_plot",height='250px')
           
           )
         )
     ),
     tabPanel("Quantification Validation",
       fluidRow(column(width = 12, h4("Here you have the fitting error for every quantification. Press one cell to analyze the quantification. Don't click where there are no values"))),
-      selectInput("select_validation",label=NULL,choices=c('Fitting error'=1,'Signal to area ratio'=2,'Shift'=3,'Width'=4,'Outliers'=5,'Relative Intensity'=6),selected=1),
-      fluidRow(
-        column(width = 12,
-          DT::dataTableOutput("fit_selection")
-        )
-        
-      )
+      selectInput("select_validation",label=NULL,choices=c('Fitting error'=1,'Signal to area ratio'=2,'Shift'=3,'Width'=4,'Outliers'=5,'Relative Intensity'=6),selected=NULL),
+     
+          div(dataTableOutput("fit_selection"), style = "font-size:80%")
       
     ),
     tabPanel("ROI Profiles", 
       fluidRow(column(width = 12, h4("Here you can add ROI profiles"))),
-      fluidRow(
-        column(width = 12,
-          D3TableFilter::d3tfOutput('new_roi_profile',width = "100%", height = "auto")
-        )
-        
-      ),
+      
+          div(d3tfOutput('new_roi_profile',width = "100%", height = "auto"), style = "font-size:80%"),
       fluidRow(
         column(width = 12,
           selectInput("roirows",label=NULL,choices=1:10,selected=1)
@@ -131,10 +120,7 @@ ui <- fluidPage(
         )), 
           
       fluidRow(column(width = 12, h4("Here you have the current ROI profiles"))),
-      fluidRow(
-        column(width = 12,
-          DT::dataTableOutput("roi_profiles")
-        ))
+      div(dataTableOutput("roi_profiles"), style = "font-size:80%")
       
     ),
     
@@ -163,7 +149,7 @@ server = function(input, output,session) {
   
   reactivequantdata <- reactiveValues(method2=NULL, method1 = NULL,stop3=0)
   
-  reactiveprogramdata <- reactiveValues(ROIdata=NULL,ind=NULL,beginning=F,dataset=NULL,finaloutput=NULL,autorun_data=NULL,p_value_final=NULL,ROI_data=NULL,info=c(),ROI_separator=NULL,bucketing=NULL,select_options=NULL,new_roi_profile=NULL,p=NULL,bgColScales=NULL)
+  reactiveprogramdata <- reactiveValues(ROIdata=NULL,ind=NULL,beginning=F,dataset=NULL,finaloutput=NULL,autorun_data=NULL,p_value_final=NULL,ROI_data=NULL,info=c(),ROI_separator=NULL,bucketing=NULL,select_options=NULL,new_roi_profile=NULL,p=NULL,bgColScales=NULL,autorun_plot=NULL)
   
   observeEvent(input$roirows, {
     reactiveprogramdata$new_roi_profile= as.data.frame(matrix(NA,as.numeric(input$roirows),11))
@@ -190,18 +176,19 @@ server = function(input, output,session) {
     replaceData(proxy, reactiveprogramdata$ROI_data)
   })
   output$repository = DT::renderDataTable(
-    
-    reactiveprogramdata$repository[which(reactiveprogramdata$repository[,5]>reactiveROItestingdata$ROIpar[1,2]&reactiveprogramdata$repository[,5]<reactiveROItestingdata$ROIpar[1,1]),] , server = T)
+    reactiveprogramdata$repository[which(reactiveprogramdata$repository[,3]>reactiveROItestingdata$ROIpar[1,2]&reactiveprogramdata$repository[,3]<reactiveROItestingdata$ROIpar[1,1]),] , server = T)
   proxy2 = dataTableProxy('repository')
   observe({
-    replaceData(proxy2,  reactiveprogramdata$repository[which(reactiveprogramdata$repository[,5]>reactiveROItestingdata$ROIpar[1,2]&reactiveprogramdata$repository[,5]<reactiveROItestingdata$ROIpar[1,1]),] )
+    replaceData(proxy2,  reactiveprogramdata$repository[which(reactiveprogramdata$repository[,3]>reactiveROItestingdata$ROIpar[1,2]&reactiveprogramdata$repository[,3]<reactiveROItestingdata$ROIpar[1,1]),] )
   })
   
   observeEvent(input$saveroi, {
     write.csv(reactiveprogramdata$ROI_data,reactiveprogramdata$autorun_data$profile_folder_path,row.names=F)
-    print("Saving environment!")
+    print("Saving Profile!")
+    b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
+    
     savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
-    save(savedreactivedata, file = reactiveprogramdata$inFile2$datapath, envir = environment())
+    save(savedreactivedata, file = b, envir = environment())
     
     print("Done!")
   })
@@ -314,8 +301,6 @@ server = function(input, output,session) {
   })
   
   output$directedition_edit <- renderD3tf({
-    print(reactiveROItestingdata$signpar)
-    print(ncol(reactiveROItestingdata$signpar))
     tableProps <- list(
       btn_reset = TRUE,
       sort = TRUE,
@@ -404,11 +389,17 @@ server = function(input, output,session) {
         })
         
 
-  output$autorun_plot <- renderPlotly({
-    
-    p=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
-    p
-  })
+      output$autorun_plot <- renderPlotly({
+        if (reactiveprogramdata$beginning==F) return()
+        if (is.null(reactiveprogramdata$autorun_plot)) {
+          pl=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
+          pl
+        } else {
+        pl=reactiveprogramdata$autorun_plot
+        pl=pl %>% add_trace(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
+        pl
+        }
+      })
   observeEvent(input$action, {
     is_autorun='N'
     if(length(reactiveprogramdata$info)==0) reactiveprogramdata$ind=input$x1_rows_selected
@@ -453,15 +444,14 @@ server = function(input, output,session) {
     }
    
     path=paste(reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Experiments[reactiveprogramdata$info$row],reactiveprogramdata$autorun_data$signals_names[reactiveprogramdata$info$col],sep='/')
-    Xdata=try(as.numeric(
-      suppressWarnings(import(file.path(path,'Xdata.csv'))[,-1])),silent=T)
+    Xdata=try(as.numeric(as.matrix(
+      suppressWarnings(import(file.path(path,'Xdata.csv'))))),silent=T)
     if (class(Xdata)=="try-error") {
          print('Choose valid quantification')
          return(NULL)
     }
    
-    Ydata=as.numeric(suppressWarnings(import(file.path(path,'Ydata.csv')))[,-1])
-
+    Ydata=as.numeric(as.matrix(suppressWarnings(import(file.path(path,'Ydata.csv')))))
     dummy=suppressWarnings(import(file.path(path,'plot_data.csv')))
     plot_data=as.matrix(dummy[,-1])
     other_fit_parameters=as.list(suppressWarnings(import(file.path(path,'other_fit_parameters.csv')))[1,])
@@ -513,11 +503,10 @@ server = function(input, output,session) {
   })
  
   observeEvent(input$autorun_model, {
-    output$autorun_plot <- renderPlotly({
-      p=autorun_model_spectrum(reactiveprogramdata$autorun_data)
-      p=p %>% add_trace(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
-      p
-    })
+    # output$autorun_plot <- renderPlotly({
+    reactiveprogramdata$autorun_plot=autorun_model_spectrum(reactiveprogramdata$autorun_data)
+    
+    # })
   })
   
   observeEvent(input$alignment, {
@@ -528,9 +517,9 @@ server = function(input, output,session) {
       if (is.null(reactiveprogramdata$alignment_check)) {
         print('Before analysing peaks, I have to align them. Then Ill analyze them')
         dummy=alignment(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$ppm)
-        peak_analysis(dummy,reactiveprogramdata$autorun_data$ppm,reactiveprogramdata$autorun_data$freq,reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Metadata[,1],reactiveprogramdata$repository)
+        peak_analysis(dummy,reactiveprogramdata$autorun_data$ppm,reactiveprogramdata$autorun_data$freq,reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Metadata,reactiveprogramdata$repository)
       } else {
-      peak_analysis(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$ppm,reactiveprogramdata$autorun_data$freq,reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Metadata[,1],reactiveprogramdata$repository)
+      peak_analysis(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$ppm,reactiveprogramdata$autorun_data$freq,reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Metadata,reactiveprogramdata$repository)
       }
         })
   
@@ -582,10 +571,11 @@ observeEvent(input$autorun, {
     }
    
     reactiveprogramdata$finaloutput=save_roi_testing(reactivequantdata$method1,reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput) 
+    b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
     
-    print("Saving environment")
+    print("Saving Quantification")
     savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
-    save(savedreactivedata, file = reactiveprogramdata$inFile2$datapath, envir = environment())
+    save(savedreactivedata, file = b, envir = environment())
     print("Done!")
 
     
@@ -599,9 +589,11 @@ observeEvent(input$autorun, {
     }
     reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[ind, 1]:reactiveprogramdata$ROI_separator[ind, 2],]=reactiveROItestingdata$ROIpar
     write.csv(reactiveprogramdata$ROI_data,reactiveprogramdata$autorun_data$profile_folder_path,row.names=F)
-    print("Saving environment")
+    print("Saving Profile")
     savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
-    save(savedreactivedata, reactiveprogramdata$inFile2$datapath, envir = environment())
+    b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
+    
+    save(savedreactivedata, file = b, envir = environment())
     print("Done!")
     
     
@@ -668,12 +660,13 @@ observeEvent(input$autorun, {
   
 
   output$plot <- renderPlotly({
+    if (reactiveprogramdata$beginning==F | is.null(input$x1_rows_selected)) return()
     if (reactivequantdata$stop3==0&length(reactiveprogramdata$info)==0|reactivequantdata$stop3==0&length(input$x1_rows_selected)>1) {
       ROI_limits=c(which.min(abs(reactiveprogramdata$autorun_data$ppm-reactiveprogramdata$ROIdata[1,1])),which.min(abs(reactiveprogramdata$autorun_data$ppm-reactiveprogramdata$ROIdata[1,2])))
       
       plotdata = data.frame(Xdata=reactiveprogramdata$autorun_data$ppm, t(rbind(reactiveprogramdata$autorun_data$dataset,colMeans(reactiveprogramdata$autorun_data$dataset),apply(reactiveprogramdata$autorun_data$dataset,2,median))[input$x1_rows_selected,,drop=F]))
-      plotdata <- melt(plotdata, id = "Xdata")
-      plot_ly(data=plotdata,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines') %>% layout(xaxis = list(range = c(round(reactiveprogramdata$ROIdata[1,1],6), round(reactiveprogramdata$ROIdata[1,2],6))),yaxis = list(range = c(0, max(reactiveprogramdata$autorun_data$dataset[input$x1_rows_selected,ROI_limits[1]:ROI_limits[2]]))) )
+      plotdata2 <- melt(plotdata, id = "Xdata")
+  plot_ly(data=plotdata2,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines') %>% layout(xaxis = list(range = c(round(reactiveprogramdata$ROIdata[1,1],6), round(reactiveprogramdata$ROIdata[1,2],6)),title='ppm'),yaxis = list(range = c(0, max(plotdata[ROI_limits[1]:ROI_limits[2],2])),title='Intensity') )
     } else {
 
      print(reactivequantdata$method1$p)
@@ -683,18 +676,39 @@ observeEvent(input$autorun, {
 
 
   observeEvent(input$select_validation, {
-    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$other_fit_parameters,input$select_validation,reactiveprogramdata$autorun_data$profile_folder_path)
-  output$fit_selection = DT::renderDataTable({ dat <- datatable(round(validation_data$alarmmatrix,4),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(validation_data$alarmmatrix), backgroundColor = styleInterval(validation_data$brks, validation_data$clrs))
-  return(dat)
+    if (reactiveprogramdata$beginning==F) return()
+    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$other_fit_parameters,input$select_validation,reactiveprogramdata$autorun_data$profile_folder_path,reactiveprogramdata$autorun_data$Metadata[,2])
+  output$fit_selection = DT::renderDataTable({ datatable(round(validation_data$alarmmatrix,4),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(validation_data$alarmmatrix), backgroundColor = styleInterval(validation_data$brks, validation_data$clrs))
+  }
+    # ,options = list(
+    #   autoWidth = T,
+    #   columnDefs = list(list(width = '50px', targets = c(1, 3,4))))
+    
+    )
   })
+  output$varselect <- renderUI({
+    if(reactiveprogramdata$beginning==F){return()}
+    actionButton('autorun', 'Autorun all spectra')
   })
-  
+  output$varselect2 <- renderUI({
+    if(reactiveprogramdata$beginning==F){return()}
+    actionButton('autorun_model', 'Autorun model spectrum')
+  })
+  output$align_button <- renderUI({
+    if(reactiveprogramdata$beginning==F){return()}
+    actionButton('alignment', 'Alignment of signals')
+  })
+  output$peak_analysis <- renderUI({
+    if(reactiveprogramdata$beginning==F){return()}
+    actionButton('peak_analysis', 'Peak analysis')
+  })
   output$plot_p_value_2 <- renderPlotly({
-    p_value_final=p_values(reactiveprogramdata$finaloutput$Area,reactiveprogramdata$autorun_data$Metadata[,1])
+    ss=which(reactiveprogramdata$ROI_data[,7]>0)
+    p_value_final=p_values(reactiveprogramdata$finaloutput$Area[,ss],reactiveprogramdata$autorun_data$Metadata)
       
-    boxplotdata=as.data.frame(reactiveprogramdata$finaloutput$Area)
+    boxplotdata=as.data.frame(reactiveprogramdata$finaloutput$Area[,ss])
     colnames(boxplotdata)=paste(colnames(boxplotdata),'(p= ',p_value_final,')',sep='')
-    boxplotdata=cbind(boxplotdata,factor(reactiveprogramdata$autorun_data$Metadata[,1]))
+    boxplotdata=cbind(boxplotdata,factor(reactiveprogramdata$autorun_data$Metadata[,2]))
     boxplotdata=melt(boxplotdata)
     colnames(boxplotdata)=c('Metadata','Signal','Value')
     
@@ -761,7 +775,7 @@ observeEvent(input$autorun, {
     if (is.null(reactiveprogramdata$inFile))
       return(NULL)
     
-    reactiveprogramdata$inFile2 <- list(datapath=paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/'))
+    
     
     imported_data = import_data(reactiveprogramdata$inFile$datapath)
     
@@ -783,7 +797,8 @@ observeEvent(input$autorun, {
     colnames(dummy) = imported_data$signals_names
     reactiveprogramdata$finaloutput$Area = reactiveprogramdata$finaloutput$signal_area_ratio = reactiveprogramdata$finaloutput$fitting_error =
       reactiveprogramdata$finaloutput$shift = reactiveprogramdata$finaloutput$intensity = reactiveprogramdata$finaloutput$width = dummy
-
+    updateSelectInput(session, "select_validation",selected = 1)
+    
         write.csv(
       as.data.frame(imported_data$params),
       file.path(imported_data$export_path, 'initial_params.csv'),
@@ -821,7 +836,7 @@ observeEvent(input$autorun, {
       Metadata=imported_data$Metadata
     )
     rm(imported_data)
-    
+    reactiveprogramdata$inFile2 <- list(datapath=paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/'))
     reactiveprogramdata$beginning =T
     
     mm=matrix(NA,2,dim(reactiveprogramdata$autorun_data$Metadata)[2])
@@ -842,25 +857,10 @@ observeEvent(input$autorun, {
     names(reactiveprogramdata$select_options)=ROI_names
     updateSelectInput(session, "select",choices = reactiveprogramdata$select_options,selected = 1)
 
-    p_value_bucketing=as.vector(p_values(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$Metadata[,1]))
+    p_value_bucketing=as.vector(p_values(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$Metadata))
     p_value_bucketing[is.na(p_value_bucketing)]=1
     plotdata = data.frame(Xdata=reactiveprogramdata$autorun_data$ppm, p_value_bucketing)
-    output$varselect <- renderUI({
-      if(is.null(plotdata)){return()}
-      actionButton('autorun', 'Autorun all spectra')
-    })
-    output$varselect2 <- renderUI({
-      if(is.null(plotdata)){return()}
-      actionButton('autorun_model', 'Autorun model spectrum')
-    })
-    output$align_button <- renderUI({
-      if(is.null(plotdata)){return()}
-      actionButton('alignment', 'Alignment of signals')
-    })
-    output$peak_analysis <- renderUI({
-      if(is.null(plotdata)){return()}
-      actionButton('peak_analysis', 'Peak analysis')
-    })
+    
     
     quartile_spectrum = as.numeric(apply(reactiveprogramdata$autorun_data$dataset, 2, function(x)
       quantile(x, 0.75,na.rm=T)))
@@ -882,6 +882,7 @@ observeEvent(input$autorun, {
     if (is.null(reactiveprogramdata$inFile2))
       return(NULL)
     load(reactiveprogramdata$inFile2$datapath)
+    
     plo=names(sapply(savedreactivedata, names))
     for (i in 1:length(plo)) {
       reactiveprogramdata[[plo[i]]]=savedreactivedata[plo[i]]
@@ -915,33 +916,33 @@ observeEvent(input$autorun, {
     #   plotlyOutput("autorun_plot")      
     # })
     
-    output$autorun_plot <- renderPlotly({
-      
-      p=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
-      p
-    })
+    # output$autorun_plot <- renderPlotly({
+    #   
+    #   p=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
+    #   p
+    # })
     
     if (reactiveprogramdata$jres_path!='')
       output$jres_plot <- try(renderPlotly({
         pp=fhs(reactiveprogramdata$jres_path)
         pp
       }))
-    output$varselect2 <- renderUI({
-      if(is.null(p)){return()}
-      actionButton('autorun_model', 'Autorun model spectrum again')
-      
-    })
-    output$varselect <- renderUI({
-      if(is.null(p)){return()}
-      actionButton('autorun', 'Autorun all spectra')
-      
-    })
-    output$align_button <- renderUI({
-      actionButton('alignment', 'Alignment of signals')
-    })
-    output$peak_analysis <- renderUI({
-      actionButton('peak_analysis', 'Peak analysis')
-    })
+    # output$varselect2 <- renderUI({
+    #   if(is.null(p)){return()}
+    #   actionButton('autorun_model', 'Autorun model spectrum')
+    #   
+    # })
+    # output$varselect <- renderUI({
+    #   if(is.null(p)){return()}
+    #   actionButton('autorun', 'Autorun all spectra')
+    #   
+    # })
+    # output$align_button <- renderUI({
+    #   actionButton('alignment', 'Alignment of signals')
+    # })
+    # output$peak_analysis <- renderUI({
+    #   actionButton('peak_analysis', 'Peak analysis')
+    # })
      
     updateSelectInput(session, "select",
       choices = reactiveprogramdata$select_options,selected = 1
@@ -954,11 +955,13 @@ observeEvent(input$autorun, {
     updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
   })
   
- 
+  updateSelectInput(session, "select_validation",selected = 1)
+  
   observeEvent(input$save_objs, {
-  print("Saving objects!")
+  print("Saving session!")
+    b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
   savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
-  save(savedreactivedata, file = reactiveprogramdata$inFile2$datapath, envir = environment())
+  save(savedreactivedata, file = b, envir = environment())
   print("Done!")
 })
   

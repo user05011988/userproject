@@ -19,7 +19,7 @@ compiler::enableJIT(3)
 # parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer.csv"
 # parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository.csv"
 # 
-# parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository_added_signals.csv"
+parameters_path = "C:/Bruker/TopSpin3.2/data/MTBLS1/data analysis/Parameters_sencer_repository_added_signals.csv"
 
 #import of data (dataset in csv format or Bruker nmr folder)
 imported_data = import_data(parameters_path)
@@ -104,11 +104,11 @@ select_options=1:length(ROI_names)
 names(select_options)=ROI_names
 t_test_data=autorun_data$dataset
 
-ss=unique(autorun_data$Metadata[,1])
+ss=unique(autorun_data$Metadata[,2])
 tt=matrix(NA,length(ss),dim(t_test_data)[2])
 for (ind in seq_along(ss)) {
   for (k in 1.:dim(t_test_data)[2]) {
-    tt[ind,k]=tryCatch(shapiro.test(t_test_data[autorun_data$Metadata[,1]==ss[ind],k])$p.value,error=function(e) NA)
+    tt[ind,k]=tryCatch(shapiro.test(t_test_data[autorun_data$Metadata[,2]==ss[ind],k])$p.value,error=function(e) NA)
   }
   
 }
@@ -116,9 +116,9 @@ p_value_bucketing=rep(NA,dim(t_test_data)[2])
 for (k in 1:dim(t_test_data)[2]) {
   # if (!any(is.na(t_test_data[,k]))) {
     if (!any(tt[,k]<0.05,na.rm=T)) {
-      p_value_bucketing[k]=tryCatch(wilcox.test(t_test_data[autorun_data$Metadata[,1]==ss[1],k],t_test_data[autorun_data$Metadata[,1]==ss[2],k])$p.value,error=function(e) NA)
+      p_value_bucketing[k]=tryCatch(wilcox.test(t_test_data[autorun_data$Metadata[,2]==ss[1],k],t_test_data[autorun_data$Metadata[,2]==ss[2],k])$p.value,error=function(e) NA)
     } else {
-      p_value_bucketing[k]=tryCatch(t.test(t_test_data[autorun_data$Metadata[,1]==ss[1],k],t_test_data[autorun_data$Metadata[,1]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
+      p_value_bucketing[k]=tryCatch(t.test(t_test_data[autorun_data$Metadata[,2]==ss[1],k],t_test_data[autorun_data$Metadata[,2]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
     }
     
   # }
@@ -170,7 +170,7 @@ t_test_data_2[finaloutput$signal_area_ratio<other_fit_parameters$signal_area_rat
 
 ll=as.data.frame(t_test_data_2)
 rownames(ll)=paste(rownames(ll),p_value_final)
-Xwit=cbind(ll,factor(autorun_data$Metadata[,1]))
+Xwit=cbind(ll,factor(autorun_data$Metadata[,2]))
 # rownames(Xwit)=NULL
 ab=melt(Xwit)
 colnames(ab)=c('Metadata','Signal','Value')
@@ -183,11 +183,11 @@ for (j in 1:length(ss)) {
   # ind=which(autorun_data$Metadata==ss[j])
   # sell$outlier_table[ind[sell$finaloutput$Area[autorun_data$Metadata==ss[j],i] %in%  outliers],i]=1
 }
-ss=unique(autorun_data$Metadata[,1])
+ss=unique(autorun_data$Metadata[,2])
 tt=matrix(NA,length(ss),dim(t_test_data_2)[2])
 for (ind in seq_along(ss)) {
   for (k in 1:dim(t_test_data_2)[2]) {
-    tt[ind,k]=tryCatch(shapiro.test(t_test_data_2[autorun_data$Metadata[,1]==ss[ind],k])$p.value,error=function(e) NA)
+    tt[ind,k]=tryCatch(shapiro.test(t_test_data_2[autorun_data$Metadata[,2]==ss[ind],k])$p.value,error=function(e) NA)
   }
   
 }
@@ -195,9 +195,9 @@ p_value=rep(NA,dim(t_test_data_2)[2])
 for (k in 1:dim(t_test_data_2)[2]) {
   # if (!any(is.na(t_test_data_2[,k]))) {
   if (!any(tt[,k]<0.05,na.rm=T)) {
-    p_value[k]=tryCatch(wilcox.test(t_test_data_2[autorun_data$Metadata[,1]==ss[1],k],t_test_data_2[autorun_data$Metadata[,1]==ss[2],k])$p.value,error=function(e) NA)
+    p_value[k]=tryCatch(wilcox.test(t_test_data_2[autorun_data$Metadata[,2]==ss[1],k],t_test_data_2[autorun_data$Metadata[,2]==ss[2],k])$p.value,error=function(e) NA)
   } else {
-    p_value[k]=tryCatch(t.test(t_test_data_2[autorun_data$Metadata[,1]==ss[1],k],t_test_data_2[autorun_data$Metadata[,1]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
+    p_value[k]=tryCatch(t.test(t_test_data_2[autorun_data$Metadata[,2]==ss[1],k],t_test_data_2[autorun_data$Metadata[,2]==ss[2],k],var.equal=F)$p.value,error=function(e) NA)
   }
   
   # }
