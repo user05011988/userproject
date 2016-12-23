@@ -80,7 +80,7 @@ autorun = function(autorun_data, finaloutput) {
           Ydata)
         #Generation of output variables specific of every quantification
         
-        write.csv(
+        write.table(
           integration_parameters,
           file.path(plot_path,
             "integration_parameters.csv"),
@@ -220,7 +220,7 @@ autorun = function(autorun_data, finaloutput) {
               "import_excel_profile.csv")
             # row.names = F
           )
-          write.csv(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
+          write.table(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
           
           other_fit_parameters$signals_to_quantify=NULL
           
@@ -244,13 +244,13 @@ autorun = function(autorun_data, finaloutput) {
             file.path(plot_path[i],
               "signals_parameters.csv"))
           # col.names = F
-          write.csv(Xdata,file.path(plot_path[i], "Xdata.csv"),row.names = F,col.names = F)
+          write.table(Xdata,file.path(plot_path[i], "Xdata.csv"),row.names = F,col.names = F)
 
           # row.names = F,
           # col.names = F))
-          write.csv(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
+          write.table(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
 
-          write.csv(results_to_save,
+          write.table(results_to_save,
             file.path(plot_path[i], "results_to_save.csv"),
             row.names = F)
           

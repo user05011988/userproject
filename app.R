@@ -96,8 +96,8 @@ ui <- fluidPage(
         )
     ),
     tabPanel("Quantification Validation",
-      fluidRow(column(width = 12, h4("Here you have the fitting error for every quantification. Press one cell to analyze the quantification. Don't click where there are no values"))),
-      selectInput("select_validation",label=NULL,choices=c('Fitting error'=1,'Signal to area ratio'=2,'Shift'=3,'Width'=4,'Outliers'=5,'Relative Intensity'=6),selected=NULL),
+      fluidRow(column(width = 12, h4("Here you have the correlation for every quantification. Press one cell to analyze the quantification. Don't click where there are no values"))),
+      selectInput("select_validation",label=NULL,choices=c('Correlation'=1,'Signal to area ratio'=2,'Shift'=3,'Width'=4,'Outliers'=5,'Relative Intensity'=6),selected=NULL),
      
           div(dataTableOutput("fit_selection"), style = "font-size:80%")
       
@@ -215,7 +215,7 @@ server = function(input, output,session) {
     colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     reactiveROItestingdata$qualitypar <- rbind(rep(NA,3),rep(NA,3))
 
-    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting error','signal/total area ratio')
+    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total area ratio')
     
     output$ROIdata <- renderD3tf({
       
@@ -369,7 +369,7 @@ server = function(input, output,session) {
             reactivequantdata$method2=signals_int(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput,reactiveprogramdata$ind,reactiveROItestingdata$signpar,reactiveROItestingdata$ROIpar) 
 
           reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method2$results_to_save$Area,reactivequantdata$method2$results_to_save$fitting_error,reactivequantdata$method2$results_to_save$signal_area_ratio)
-          colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting error','signal/total area ratio')
+          colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total area ratio')
           
           reactivequantdata$method1$signals_parameters=reactivequantdata$method2$signals_parameters
           reactivequantdata$method1$results_to_save=reactivequantdata$method2$results_to_save
@@ -389,17 +389,29 @@ server = function(input, output,session) {
         })
         
 
+      # output$autorun_plot <- renderPlotly({
+      #   if (reactiveprogramdata$beginning==F) return()
+      #   if (is.null(reactiveprogramdata$autorun_plot)) {
+      #     pl=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
+      #     pl
+      #   } else {
+      #   pl=reactiveprogramdata$autorun_plot
+      #   pl=pl %>% add_trace(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
+      #   pl
+      #   }
+      # })
+      
       output$autorun_plot <- renderPlotly({
+        # print(reactiveprogramdata$autorun_plot)
         if (reactiveprogramdata$beginning==F) return()
-        if (is.null(reactiveprogramdata$autorun_plot)) {
-          pl=plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
-          pl
-        } else {
-        pl=reactiveprogramdata$autorun_plot
-        pl=pl %>% add_trace(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
-        pl
-        }
+        # if (is.null(reactiveprogramdata$autorun_plot)) {
+        plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
+        # } else {
+        # reactiveprogramdata$autorun_plot %>% add_trace(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
+        
+        # }
       })
+      
   observeEvent(input$action, {
     is_autorun='N'
     if(length(reactiveprogramdata$info)==0) reactiveprogramdata$ind=input$x1_rows_selected
@@ -409,10 +421,10 @@ server = function(input, output,session) {
     }
     reactivequantdata$method1 <- interface_quant(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput, reactiveprogramdata$ind,reactiveROItestingdata$ROIpar,is_autorun) 
     reactivequantdata$stop3=1
-    reactiveprogramdata$alignment_check=1
+    # reactiveprogramdata$alignment_check=1
     
     reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method1$results_to_save$Area,reactivequantdata$method1$results_to_save$fitting_error,reactivequantdata$method1$results_to_save$signal_area_ratio)
-    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting error','signal/total area ratio')
+    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','Correlation','Signal/total area ratio')
     
     if (!is.null(reactivequantdata$method1$signals_parameters)) {
       reactiveprogramdata$bgColScales = c(rep("", dim(reactivequantdata$method1$signals_parameters)[1]), rep("info", dim(reactivequantdata$method1$signals_parameters_2)[1]-dim(reactivequantdata$method1$signals_parameters)[1]))
@@ -450,8 +462,10 @@ server = function(input, output,session) {
          print('Choose valid quantification')
          return(NULL)
     }
-   
+   print(Xdata)
     Ydata=as.numeric(as.matrix(suppressWarnings(import(file.path(path,'Ydata.csv')))))
+    print(Ydata)
+    print(reactiveprogramdata$info)
     dummy=suppressWarnings(import(file.path(path,'plot_data.csv')))
     plot_data=as.matrix(dummy[,-1])
     other_fit_parameters=as.list(suppressWarnings(import(file.path(path,'other_fit_parameters.csv')))[1,])
@@ -486,7 +500,7 @@ server = function(input, output,session) {
     ind=which(reactiveprogramdata$ROI_separator[,2]-reactiveprogramdata$info$col>=0)[1]
     ind=(reactiveprogramdata$ROI_separator[ind, 1]:reactiveprogramdata$ROI_separator[ind, 2])
     reactiveROItestingdata$qualitypar=cbind(reactiveprogramdata$finaloutput$Area[reactiveprogramdata$info$row,ind],reactiveprogramdata$finaloutput$fitting_error[reactiveprogramdata$info$row,ind],reactiveprogramdata$finaloutput$signal_area_ratio[reactiveprogramdata$info$row,ind])
-    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting error','signal/total area ratio')
+    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total area ratio')
 
     updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
 
@@ -677,7 +691,7 @@ observeEvent(input$autorun, {
 
   observeEvent(input$select_validation, {
     if (reactiveprogramdata$beginning==F) return()
-    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$other_fit_parameters,input$select_validation,reactiveprogramdata$autorun_data$profile_folder_path,reactiveprogramdata$autorun_data$Metadata[,2])
+    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$other_fit_parameters,input$select_validation,reactiveprogramdata$autorun_data$profile_folder_path,reactiveprogramdata$autorun_data$Metadata)
   output$fit_selection = DT::renderDataTable({ datatable(round(validation_data$alarmmatrix,4),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(validation_data$alarmmatrix), backgroundColor = styleInterval(validation_data$brks, validation_data$clrs))
   }
     # ,options = list(
@@ -764,7 +778,7 @@ observeEvent(input$autorun, {
     reactiveROItestingdata$signpar <- rbind(rep(NA,7),rep(NA,7))
     colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     reactiveROItestingdata$qualitypar <- rbind(rep(NA,3),rep(NA,3))
-    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting error','signal/total area ratio')
+    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total area ratio')
     
     
   })
