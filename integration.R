@@ -6,7 +6,7 @@ integration = function(integration_parameters, Xdata, Ydata) {
   #preallocation of output
   output = list(
     signal_area_ratio = NA,
-    fitting_error = NA,
+    correlation = NA,
     Area = NA,
     shift = NA,
     intensity = NA
@@ -40,27 +40,20 @@ integration = function(integration_parameters, Xdata, Ydata) {
   output$signal_area_ratio = tryCatch((sum(integrated_signal[p1:p2]) / sum(Ydata[p1:p2])) *
     100,error = function(e) NaN, silent=T)
   print(output$signal_area_ratio)
-  output$fitting_error = NaN
+  output$correlation = NaN
   output$width = NaN
 
   peaks = peakdet(integrated_signal, 0.2*max(0.000001,max(integrated_signal)))
   output$shift = mean(Xdata[peaks$maxtab$pos])
 
   #plot
-  png(filename=paste(integration_parameters$plot_path,"Fit.png",sep='/'),
-    type="cairo",
-    units="in",
-    width=8,
-    height=4,
-    pointsize=12,
-    res=96)
   plotdata = data.frame(Xdata, signal = integrated_signal)
   plotdata2 = data.frame(Xdata, Ydata)
   plotdata3 <- melt(plotdata2, id = "Xdata")
   plotdata3$variable = rep('Original Spectrum', length(Ydata))
     plotdata4 = data.frame(Xdata, integrated_signal)
   plotdata5 = melt(plotdata4, id = "Xdata")
-  p=ggplot() +
+  plots=ggplot() +
     geom_line(data = plotdata3,
               aes(
                 x = Xdata,
@@ -68,13 +61,6 @@ integration = function(integration_parameters, Xdata, Ydata) {
                 colour = variable,
                 group = variable
               )) +
-    # geom_line(data = plotdata5,
-    #           aes(
-    #             x = Xdata,
-    #             y = value,
-    #             colour = 'subfraccions',
-    #             group = variable
-    #           )) +
     geom_area(data = plotdata,
               aes(
                 x = Xdata,
@@ -83,9 +69,7 @@ integration = function(integration_parameters, Xdata, Ydata) {
                 fill = 'Quantified Signal'
               )) +
     scale_x_reverse()
-  print(p)
-  dev.off()
-
-
-  return(output)
+  
+  dummy=list(output=output,plots=plots)
+  return(dummy)
 }

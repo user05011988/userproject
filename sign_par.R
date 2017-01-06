@@ -6,10 +6,10 @@ sign_par = function(autorun_data, finaloutput,spectrum_index,ROI_profile) {
   ROI_buckets=which(round(autorun_data$ppm,6)==round(input$num1,6)):which(round(autorun_data$ppm,6)==round(input$num2,6))
   Xdata= as.numeric(autorun_data$ppm[ROI_buckets])
     Ydata = as.numeric(autorun_data$dataset[spectrum_index, ROI_buckets])
-    other_fit_parameters = fitting_variables()
-    other_fit_parameters$freq = autorun_data$freq
-    other_fit_parameters$ROI_buckets = ROI_buckets
-    other_fit_parameters$buck_step = autorun_data$buck_step
+    program_parameters=autorun_data$program_parameters
+    program_parameters$freq = autorun_data$freq
+    program_parameters$ROI_buckets = ROI_buckets
+    program_parameters$buck_step = autorun_data$buck_step
     # experiment_name = autorun_data$Experiments[[spectrum_index]]
     # plot_path = file.path(autorun_data$export_path,
     #                       experiment_name,
@@ -69,13 +69,13 @@ sign_par = function(autorun_data, finaloutput,spectrum_index,ROI_profile) {
 
       #Other parameters necessary for the fitting independent of the type of signal
 
-      other_fit_parameters$clean_fit = clean_fit
+      program_parameters$clean_fit = clean_fit
 
       #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
       FeaturesMatrix = fitting_prep(Xdata,
                                     scaledYdata,
                                     initial_fit_parameters,
-                                    other_fit_parameters)
+                                    program_parameters)
 
       signals_parameters=(FeaturesMatrix[1:dim(initial_fit_parameters)[1],seq(1,9,2)]+FeaturesMatrix[1:dim(initial_fit_parameters)[1],seq(2,10,2)])/2
       #Calculation of the parameters that will achieve the best fitting

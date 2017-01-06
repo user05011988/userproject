@@ -1,47 +1,34 @@
 fitting_variables = function() {
 
-  other_fit_parameters=list() 
-  
-  #Parameters of automatic ROI edition
-  other_fit_parameters$automatic_roi_edition='N'
-  other_fit_parameters$automatic_shift_distance=0.01
+  program_parameters=list() 
   
   #Parameters of preparation of signals' parameters to optimize
-  other_fit_parameters$BGdensity=50
-other_fit_parameters$widthtolerance=0.2
-other_fit_parameters$gaussian=0
-other_fit_parameters$j_coupling_variation=0.2
-other_fit_parameters$BG_gaussian_percentage=0
-other_fit_parameters$BG_width=12
-other_fit_parameters$BG_width_tolerance=0.25
+  program_parameters$BGdensity=50 #Density of signals to prepare abaseline below the signals to fit
+program_parameters$widthtolerance=0.2 #Allowed Variability of halfwidth
+program_parameters$gaussian=0 #Allowed Variability of gaussian percentage
+program_parameters$j_coupling_variation=0.2 #Allowed Variability of j-coupling
+program_parameters$BG_gaussian_percentage=0 #Allowed gaussian percentage of baseline signals
+program_parameters$BG_width=12 #Halfwidth of baseline signals
+program_parameters$BG_width_tolerance=0.25 #Allowed Variability of halfwidth of baseline signals
 
 #Parameters related to the fitting loop
-other_fit_parameters$errorprov=5
-other_fit_parameters$fitting_maxiter=NA
+program_parameters$errorprov=3 #Percentage limit of fitting error on the ROI. If a lower percentage is reached, the solution is considered optimized and the optimization ends
+program_parameters$fitting_maxiter=NA #The number of maximum iterations of optimization can be specified
 
-#Parameters related to the lsq algorithm
-other_fit_parameters$nls_lm_maxiter=200
-other_fit_parameters$ftol=1e-6
-other_fit_parameters$ptol=1e-6
-other_fit_parameters$factor=0.01
+#Parameters related to the nls algorithm. Read documentation of nls.lm package for details.
+program_parameters$nls_lm_maxiter=200
+program_parameters$ftol=1e-6
+program_parameters$ptol=1e-6
+program_parameters$factor=0.01
 
 #Parameters related to the addition of other signals post fitting
-other_fit_parameters$additional_signal_ppm_distance=0.002
-other_fit_parameters$signals_to_add = 2
-other_fit_parameters$fitting_maxiterrep = 2
-other_fit_parameters$additional_signal_improvement=0.75
-other_fit_parameters$additional_signal_percentage_limit=5
-other_fit_parameters$peakdet_minimum=0.01
-
-#Parameters related to the output of plots
-other_fit_parameters$fitting_error_plot=0.01
-other_fit_parameters$signal_area_ratio_plot=0.01
-
-#Parameters related to criteria to detect dangerous quantifications
-other_fit_parameters$rlm_limit=3
-other_fit_parameters$fitting_error_limit=5
-other_fit_parameters$signal_area_ratio_limit=10
+program_parameters$additional_signal_ppm_distance=0.002 #Allowed distance for added peaks
+program_parameters$signals_to_add = 2 #Allowed distance for added peaks to the ROI
+program_parameters$fitting_maxiterrep = 2 #Allowed tries to add peaks
+program_parameters$additional_signal_improvement=0.75 #Improvement of ROI by adding peaks. If previous addition did not achieve less than 75% of fitting error, process of addition of peaks is stopped
+program_parameters$additional_signal_percentage_limit=3 #If fititng erorr is less tha nthis percentage, addition of peaks is not performed
+program_parameters$peakdet_minimum=0.01 #Limit to find a peak as relevant enough to add it.
 
 
-return(other_fit_parameters)
+return(program_parameters)
 }

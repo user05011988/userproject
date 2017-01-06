@@ -1,5 +1,5 @@
 validation = function(finaloutput,
-                                 other_fit_parameters) {
+                                 program_parameters) {
 
   #Created by Daniel Cañueto 13/09/2016
   #Finding of suspicious quantifications through difference with predicted shift, signal to total area ratio, fitting error, and difference with expected relative intensity
@@ -48,13 +48,13 @@ validation = function(finaloutput,
   
   
 #Analysis of which samples have too much fitting error
-fitting_error_alarmmatrix=matrix(0,dim(finaloutput$fitting_error)[1],dim(finaloutput$fitting_error[,ind])[2])
-fitting_error_alarmmatrix[finaloutput$fitting_error[,ind]<other_fit_parameters$fitting_error_limit]=1
+fitting_error_alarmmatrix=matrix(0,dim(finaloutput$correlation)[1],dim(finaloutput$correlation[,ind])[2])
+fitting_error_alarmmatrix[finaloutput$correlation[,ind]<program_parameters$fitting_error_limit]=1
 
 
 #Analysis of which samples have too scant signal respective to the total area where the signal is located
 signal_area_ratio_alarmmatrix=matrix(0,dim(finaloutput$signal_area_ratio)[1],dim(finaloutput$signal_area_ratio[,ind])[2])
-signal_area_ratio_alarmmatrix[finaloutput$signal_area_ratio[,ind]>other_fit_parameters$signal_area_ratio_limit]=1
+signal_area_ratio_alarmmatrix[finaloutput$signal_area_ratio[,ind]>program_parameters$signal_area_ratio_limit]=1
 
 alarmmatrix=fo+fo2+signal_area_ratio_alarmmatrix+fitting_error_alarmmatrix
 colnames(alarmmatrix)=colnames(fo)
@@ -89,7 +89,7 @@ rownames(alarmmatrix)=rownames(fo)
 # 
 #   intensity_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$intensity[,ind2[ii]]
 # 
-#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[ii]]-intensity_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
+#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[ii]]-intensity_prediction)>program_parameters$rlm_limit*rlm_model$scale)
 #   intensity_alarmmatrix[intensity_suspicioussamples,c(ind[ii],ind2[ii])]=1
 # 
 # 

@@ -1,0 +1,37 @@
+ROI_left,ROI_right,Q.Mode,Metabolite,Q.Signal,Shift,Shift.tolerance,Halfwidth,Multiplicity,J.coupling,Roof.effect,Relative.intensity
+4.08,4.03,Baseline Fitting,Creatinine,1,4.06,0.006,1.4,1,0,0,1
+4.08,4.03,Baseline Fitting,U4_052,1,4.042,0.004,1.6,3,2,0,1
+2.74,2.64,Baseline Fitting,Citrate,1,2.685,0.025,1.4,2,15.36,0.2,1
+2.74,2.64,Baseline Fitting,Dimethylamine,1,2.728,0.004,1,1,0,0,1
+0.04,-0.04,Clean Sum,TSP,1,0,0.002,0.8,1,0,0,1
+1.12,1.06,Baseline Fitting,Methylsuccinate,1,1.107,0.005,1.2,2,6.3,0,1
+1.12,1.06,Baseline Fitting,Isobutyrate,1,1.075,0.003,1.2,2,6.5,0,1
+2.37,2.33,Baseline Fitting,p-Cresol sulfate,1,2.347,0.003,2,1,0,0,1
+2.58,2.51,Baseline Fitting,Citrate,2,2.545,0.015,1.4,2,15.16,-0.2,1
+7.665,7.615,Clean Fitting,Hippurate,1,7.64,0.006,1.6,3,7.47,0.82,1
+1.51,1.455,Baseline Fitting,Alanine,1,1.483,0.006,1.2,2,7.14,0,1
+3.585,3.545,Baseline Fitting,Glycine,1,3.566,0.004,1.2,1,0,0,1
+3.065,3.03,Clean Fitting,Creatinine,2,3.048,0.005,1.2,1,0,0,1
+3.065,3.03,Clean Fitting,Creatine,1,3.04,0.002,1.2,1,0,0,1
+7.86,7.8,Clean Fitting,Hippurate,2,7.833,0.006,1.6,2,8.2,0.16,2
+1.372,1.32,Baseline Fitting,Alpha-Hydroxyisobutyric acid,1,1.36,0.004,1.4,1,0,0,1
+1.372,1.32,Baseline Fitting,Lactate-Threonine,1,1.334,0.004,1.4,2,7,0,1
+2.821,2.76,Baseline Fitting,U2_79,1,2.785,0.005,1.4,1,0,0,1
+3.15,3.09,Baseline Fitting,cis-Aconitate,1,3.123,0.004,1.4,1,0,0,1
+3.15,3.09,Baseline Fitting,Proline Betaine,1,3.112,0.004,1.4,1,0,0,1
+3.3,3.22,Baseline Fitting,Betaine,1,3.27,0.003,1.4,1,0,0,1
+3.3,3.22,Baseline Fitting,Trimethylamine N-oxide,1,3.277,0.004,1.4,1,0,0,1
+3.3,3.22,Baseline Fitting,Taurine,0,3.288,0.003,1.4,3,6.57,0.4,1
+6.695,6.63,Baseline Fitting,U6_646,1,6.646,0.002,1.4,3,5.5,0,1
+6.695,6.63,Baseline Fitting,2-Py,1,6.67,0.006,1.4,2,9.8,0,1
+7.725,7.675,Baseline Fitting,U7_685,1,7.685,0.007,1.4,1,0,0,1
+7.725,7.675,Baseline Fitting,3-Indoxylsulfate,1,7.707,0.004,1.4,2,7.96,0,1
+8.355,8.32,Baseline Fitting,2-Py,2,8.338,0.012,1.4,2,2,0,1
+8.477,8.453,Baseline Fitting,Formate,1,8.464,0.004,1.4,1,0,0,1
+8.82,8.77,Baseline Fitting,Trigonelline,1,8.792,0.006,2,2,6.5,0,1
+8.865,8.825,Baseline Fitting,Trigonelline,2,8.845,0.004,2,2,6.5,0,1
+8.93,8.88,Baseline Fitting,1-Methylnicotinamide,1,8.905,0.005,2,2,8.2,0,1
+9,8.95,Baseline Fitting,1-Methylnicotinamide,2,8.973,0.006,2,2,6.14,0,1
+1.287,1.257,Baseline Fitting,3-Hydroxyisovalerate,1,1.272,0.003,1.4,1,0,0,1
+NA,NA,,Hippurate,0,7.554,0.005,1.6,3,7.9,-0.13,2
+NA,NA,,Hippurate,0,3.969,0.004,1.6,2,6.046,0.04,3.6

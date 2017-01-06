@@ -1,4 +1,4 @@
-fittingloop_bg = function(FeaturesMatrix, Xdata, Ydata, other_fit_parameters) {
+fittingloop_bg = function(FeaturesMatrix, Xdata, Ydata, program_parameters) {
   
   residFun <-
     function(par, observed, xx,multiplicities,roof_effect,freq)
@@ -27,12 +27,12 @@ fittingloop_bg = function(FeaturesMatrix, Xdata, Ydata, other_fit_parameters) {
         roof_effect=roof_effect,
         lower = lb,
         upper = ub,
-        freq=other_fit_parameters$freq,
+        freq=program_parameters$freq,
         control = nls.lm.control(
-          factor = other_fit_parameters$factor,
-          maxiter = other_fit_parameters$nls_lm_maxiter,
-          ftol = other_fit_parameters$ftol,
-          ptol = other_fit_parameters$ptol
+          factor = program_parameters$factor,
+          maxiter = program_parameters$nls_lm_maxiter,
+          ftol = program_parameters$ftol,
+          ptol = program_parameters$ptol
         )
 
       )

@@ -18,7 +18,20 @@ fittingloop = function(FeaturesMatrix,
   #TO DO: another revision of algorithm alternatives
 
 
-  
+  #Depending on the complexity of the ROI, more or less iterations are performed
+  if (is.numeric(program_parameters$fitting_maxiter)) {
+    fitting_maxiter = program_parameters$fitting_maxiter
+  } else {
+    if (dim(FeaturesMatrix)[1] > 8 |
+        any(FeaturesMatrix[, 4] - FeaturesMatrix[, 3] > 0.01)) {
+      fitting_maxiter = 10
+    } else if ((dim(FeaturesMatrix)[1] > 5 &&
+        dim(FeaturesMatrix)[1] < 9)) {
+      fitting_maxiter = 7
+    } else {
+      fitting_maxiter = 4
+    }
+  }
   #Necessary information to incorporate additional singals if necessary
   signals_to_quantify = which(FeaturesMatrix[, 11] != 0)
   range_ind = round(
@@ -42,28 +55,16 @@ fittingloop = function(FeaturesMatrix,
   # If at the last fitting the improvement was lesser than 25% respective to the previous fitting,
   # iterrep becomes equal to fitting_maxiterrep and the loop is stooped
   while (iterrep < fitting_maxiterrep) {
-    
-    #Depending on the complexity of the ROI, more or less iterations are performed
-    if (is.numeric(program_parameters$fitting_maxiter)) {
-      fitting_maxiter = program_parameters$fitting_maxiter
-    } else {
-      if (dim(FeaturesMatrix)[1] > 8 |
-          any(FeaturesMatrix[, 4] - FeaturesMatrix[, 3] > 0.01)) {
-        fitting_maxiter = 20
-      } else if ((dim(FeaturesMatrix)[1] > 5 &&
-          dim(FeaturesMatrix)[1] < 9)) {
-        fitting_maxiter = 14
-      } else {
-        fitting_maxiter = 8
-      }
-    }
     # print(iterrep)
     iter = 0
     errorprov = 3000
     error1 = 3000
     worsterror = 0
-    dummy = error2
-  
+
+
+    # bounds = list(ub = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
+    #                                                         2) - 2), lb = matrix(0, dim(FeaturesMatrix)[1], (dim(FeaturesMatrix)[2] /
+    #                                                                                                            2) - 2))
 
     multiplicities=FeaturesMatrix[,11]
     roof_effect=FeaturesMatrix[,12]
@@ -92,9 +93,8 @@ fittingloop = function(FeaturesMatrix,
       s0[which(seq_along(s0)%%5==2)]=lb[which(seq_along(s0)%%5==2)] + (ub[which(seq_along(s0)%%5==2)] - lb[which(seq_along(s0)%%5==2)]) * runif(1,min=aaa,max=bbb)
 
       if (iter<2) {
-      # lol = peakdet(Ydata, program_parameters$peakdet_minimum*0.1*max(1e-10,max(Ydata)),Xdata)
-        lol = peakdet(c(Ydata[1],diff(Ydata)), program_parameters$peakdet_minimum*0.1*max(1e-10,max(Ydata)),Xdata)
-        
+      lol = peakdet(Ydata, program_parameters$peakdet_minimum*0.1*max(1e-10,max(Ydata)),Xdata)
+
       peaks=lol$maxtab$pos[sort(lol$maxtab$val,decreasing=T,index.return=T)$ix[1:sum(multiplicities[signals_to_quantify])]]
       peaks_compare=rowMeans(FeaturesMatrix[signals_to_quantify,3:4,drop=F])
 
@@ -134,17 +134,41 @@ fittingloop = function(FeaturesMatrix,
           )
           
         )
-      
+      print((sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -
+          min(Ydata)))
       # #Procedure to calculate the fititng error in all the ROI
       #An adapted MSE error is calculated, and the parameters of the optimization with less MSE are stored
       
         paramprov=coef(nls.out)
+        lb[which(seq_along(lb)%%5!=3)]=paramprov[which(seq_along(lb)%%5!=3)]
+        ub[which(seq_along(lb)%%5!=3)]=paramprov[which(seq_along(lb)%%5!=3)] 
+        s0 = lb + (ub - lb) * runif(length(ub))
         
+        
+        nls.out <-
+          nls.lm(
+            par = s0,
+            fn = residFun,
+            observed = Ydata,
+            xx = Xdata,
+            multiplicities=multiplicities,
+            roof_effect=roof_effect,
+            freq=program_parameters$freq,
+            lower = lb,
+            upper = ub,
+            control = nls.lm.control(
+              factor = program_parameters$factor,
+              maxiter = program_parameters$nls_lm_maxiter,
+              ftol = program_parameters$ftol,
+              ptol = program_parameters$ptol
+            )
+            
+          )
         iter = iter + 1
         
         errorprov = (sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -
             min(Ydata))
-        # print(errorprov)
+        print(errorprov)
         if (is.nan(errorprov) || is.na(errorprov))
           errorprov = error1
         
@@ -159,7 +183,15 @@ fittingloop = function(FeaturesMatrix,
 
 
 
-
+      #
+      # if (exists('nls.out')) {
+      #   s0=paramprov+ (ub-lb)*0.2*matrix(runif(dim(lb)[1] * dim(lb)[2],min=-1,max=1), dim(lb)[1], dim(lb)[2])
+      #   s0[(s0-lb)<0]=lb[(s0-lb)<0]
+      #   s0[(ub-s0)<0]=ub[(ub-s0)<0]
+      #
+      #   }
+      #
+      # print(ple)
 
       nls.out <-
         nls.lm(
@@ -196,20 +228,24 @@ fittingloop = function(FeaturesMatrix,
       } else if (errorprov > worsterror) {
         worsterror = errorprov
       }
+      # if (dim(FeaturesMatrix)[1]>8) try_error=0
     }}
     print(iter)
-    signals_parameters = paramprov
-    
-    #Correction of width and j-coupling
+    if (iterrep>0) print(paramprov)
+
+    if (iter>=2) {
     iter = 0
-    error2=error1
-    errorprov = error1=3000
-    #Only width and j-coupling will have different lower und upper bounds. 
-    change_indexes=which(seq_along(lb)%%5!=3 & seq_along(lb)%%5!=0)
-    lb[change_indexes]=ub[change_indexes]=paramprov[change_indexes]
-    #With ony one iteration is enough
+    errorprov = 3000
+    error1 = 3000
+    lb[which(seq_along(lb)%%5!=3)]=paramprov[which(seq_along(lb)%%5!=3)]
+    ub[which(seq_along(lb)%%5!=3)]=paramprov[which(seq_along(lb)%%5!=3)]
+
+
     while (iter < 1) {
+
       s0 = lb + (ub - lb) * runif(length(ub))
+
+
       nls.out <-
         nls.lm(
           par = s0,
@@ -229,42 +265,53 @@ fittingloop = function(FeaturesMatrix,
           )
 
         )
+
       iter = iter + 1
+
       # #Procedure to calculate the fititng error in all the ROI
       #An adapted MSE error is calculated, and the parameters of the optimization with less MSE are stored
       errorprov = (sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -
           min(Ydata))
-      if (is.nan(errorprov) || is.na(errorprov)) errorprov = error1
+      if (is.nan(errorprov) || is.na(errorprov))
+        errorprov = error1
+
       if (errorprov < error1) {
         error1 = errorprov
         paramprov=coef(nls.out)
+
       } else if (errorprov > worsterror) {
         worsterror = errorprov
       }
+      # if (dim(FeaturesMatrix)[1]>8) try_error=0
     }
+}
 
-    #If width and j-coup change improves fitting
+
+    dummy = error2
+
+
+    #If the incorporation of additional signals has improved the fitting the parameters are updated
     if (error1 < error2) {
       error2 = error1
+      # error = errorprov
+
       signals_parameters = paramprov
+
+
+      # print(errorprov)
+      # print(signals_parameters[4,])
+
     }
-    print('--')
-    
-    print(error2)
-    
+    # print(error2)
     #If the fitting seems to be still clearly improvable through the addition of signals
     if (error2 < (program_parameters$additional_signal_improvement * dummy) &
-        (error2 > program_parameters$additional_signal_percentage_limit)&length(lol$maxtab$pos)>sum(multiplicities[signals_to_quantify])) {
+        (error1 > program_parameters$additional_signal_percentage_limit)&length(peaks)>sum(multiplicities[signals_to_quantify])) {
       print('Trying to improve initial fit adding peaks')
-      
-      #I find peaks on the residuals
-      # lol = peakdet(nls.out$fvec, program_parameters$peakdet_minimum*max(1e-10,max(Ydata)))
-      lol = peakdet(c(nls.out$fvec[1],diff(nls.out$fvec)), program_parameters$peakdet_minimum*max(1e-10,max(Ydata)))
-      
+      # print(iterrep)
+      #Finding of signals in the vector of the difference between the fitted and the original ROI
+      lol = peakdet(nls.out$fvec, program_parameters$peakdet_minimum*max(1e-10,max(Ydata)))
       if (is.null(lol$maxtab) == F) {
         #Preparation of information of where signals of interest are located
-        dummy=multiplicities[signals_to_quantify]%%2
-        dummy[dummy==0]=2
         lolll = matrix(
           paramprov,
           nrow = length(FeaturesMatrix[, 11]),
@@ -278,7 +325,7 @@ fittingloop = function(FeaturesMatrix,
             ncol = length(Xdata),
             byrow = TRUE
           ) - matrix(
-            lolll[signals_to_quantify, 2] - (lolll[signals_to_quantify, 5]/dummy  )/program_parameters$freq,
+            lolll[signals_to_quantify, 2] - lolll[signals_to_quantify, 5],
             nrow = length(signals_to_quantify),
             ncol = length(Xdata)
           )
@@ -289,14 +336,14 @@ fittingloop = function(FeaturesMatrix,
             ncol = length(Xdata),
             byrow = TRUE
           ) - matrix(
-            lolll[signals_to_quantify, 2] + (lolll[signals_to_quantify, 5]/dummy)/program_parameters$freq,
+            lolll[signals_to_quantify, 2] + lolll[signals_to_quantify, 5],
             nrow = length(signals_to_quantify),
             ncol = length(Xdata)
           )
         ))
         points_to_avoid = apply(points_to_avoid, 1, which.min)
         seq_range = c()
-        for (i in (-range_ind):range_ind)
+        for (i in-range_ind:range_ind)
           seq_range = append(seq_range, points_to_avoid - i)
 
         #Finding of posible additional signals to incorporate if there are not in zones where the signals o interest are located

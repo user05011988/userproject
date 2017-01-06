@@ -1,5 +1,5 @@
 validation = function(finaloutput,
-                                 other_fit_parameters,validation_type,profile_folder_path,metadata) {
+                                 program_parameters,validation_type,profile_folder_path,metadata) {
 
   #Created by Daniel Ca?ueto 13/09/2016
   #Finding of suspicious quantifications through difference with predicted shift, signal to total area ratio, fitting error, and difference with expected relative intensity
@@ -14,7 +14,7 @@ validation = function(finaloutput,
   #correlation matrix of shift of signals and finding for every signal the signal that has best ability to predict shift
   #Analysis of which samples have too much fitting error
   if (validation_type==1) {
-  alarmmatrix=finaloutput$fitting_error
+  alarmmatrix=finaloutput$correlation
   brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
   clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
@@ -38,7 +38,8 @@ validation = function(finaloutput,
     tro2=suppressWarnings(predict(nanana, interval='prediction'))
   alarmmatrix[!j,i]=apply(rbind(finaloutput$shift[!j,i]-tro1[,1],finaloutput$shift[!j,i]-tro2[,1]),2,min)}
 
-  brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  # brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  brks <-seq(.05, .5, length.out=19)
   clrs <- round(c(seq(40, 255, length.out = (length(brks) + 1)/2),seq(255, 40, length.out = (length(brks) + 1)/2)), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
   } else if (validation_type==4) { 
@@ -52,7 +53,8 @@ validation = function(finaloutput,
     tro=suppressWarnings(predict(nanana, interval='prediction'))
     alarmmatrix[i,ind][!is.na(finaloutput$width[i,ind])]=finaloutput$width[i,ind][!is.na(finaloutput$width[i,ind])]-tro[,1]
   }
-  brks <- quantile(abs(alarmmatrix), probs = seq(.05, .95, .05), na.rm = TRUE)
+  # brks <- quantile(abs(alarmmatrix), probs = seq(.05, .95, .05), na.rm = TRUE)
+  brks <-seq(.05, .5, length.out=19)
   clrs <- round(c(seq(40, 255, length.out = (length(brks) + 1)/2),seq(255, 40, length.out = (length(brks) + 1)/2)), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
   } else if (validation_type==5) { 
@@ -60,7 +62,6 @@ validation = function(finaloutput,
   
   alarmmatrix=matrix(NA,dim(finaloutput$Area)[1],dim(finaloutput$Area)[2])
   ss=unique(metadata[,2])
-  print(ss)
   alarmmatrix=matrix(NA,dim(finaloutput$width)[1],dim(finaloutput$width)[2])
   colnames(alarmmatrix)=colnames(finaloutput$Area)
   rownames(alarmmatrix)=rownames(finaloutput$Area)
@@ -103,7 +104,7 @@ validation = function(finaloutput,
       b=which(ma[,1]==ma[i,1])
       ccv=relative_intensity[which(relative_intensity[,7]>0)[b],12]
       ccvv=finaloutput$intensity[,b]
-      ccvvv=finaloutput$fitting_error[,b]
+      ccvvv=finaloutput$correlation[,b]
       for (j in 1:nrow(ccvvv)) {
         aa=ccvv[j,]*ccv[which.min(ccvvv[j,])]/ccvv[j,which.min(ccvvv[j,])] - ccv
         alarmmatrix[j,b]=aa
@@ -151,7 +152,7 @@ validation = function(finaloutput,
 # 
 #   intensity_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$intensity[,ind2[i]]
 # 
-#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[i]]-intensity_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
+#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[i]]-intensity_prediction)>program_parameters$rlm_limit*rlm_model$scale)
 #   intensity_alarmmatrix[intensity_suspicioussamples,c(ind[i],ind2[i])]=1
 # 
 # 

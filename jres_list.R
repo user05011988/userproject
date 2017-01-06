@@ -2,7 +2,7 @@
 data2=data
 data2[,c(which(Xdata>9),which(Xdata<0.5))]=0
 data2[c(1,2,3,126,127,128),]=0
-no=peakdet(colSums(data),other_fit_parameters$peakdet_minimum*max(1e-10,max(data)))
+no=peakdet(colSums(data),program_parameters$peakdet_minimum*max(1e-10,max(data)))
 Xdata=seq(storedpars$OFFSET[1],storedpars$OFFSET[1]-storedpars$SW[1],length.out=storedpars$SI[1])
 Ydata=seq(storedpars$OFFSET[2],storedpars$OFFSET[2]-storedpars$SW[2],length.out=storedpars$SI[2])
 

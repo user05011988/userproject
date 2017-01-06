@@ -32,9 +32,15 @@ import_data = function(parameters_path) {
   #                            header = F,
   #                            stringsAsFactors = F)[, 1]
   # signals_names = as.list(signals_names[signals_names != ''])
+  biofluid=import_profile[14, 2]
   profile_folder_path = as.character(import_profile[6, 2])
 
-  ROI_data=read.csv(profile_folder_path)
+  ROI_data=try(read.csv(profile_folder_path),silent=T)
+  if (class(ROI_data)=='try-error') {
+if  (biofluid=='Urine'){ ROI_data=read.csv('Urine_library.csv') } else if (biofluid=='Blood') { ROI_data=read.csv('Blood_library.csv') } else {
+  ROI_data=read.csv('Urine_library.csv')
+  print('Loading urine library. Please prepare a library adapted to your dataset.')
+}}
   signals_names=ROI_data[which(!is.na(ROI_data[, 1])),4]
   signals_codes = 1:length(signals_names)
 
@@ -45,8 +51,10 @@ import_data = function(parameters_path) {
 #Other necessary variables
   freq = as.numeric(as.character(import_profile[11, 2]))
   
-  biofluid=import_profile[14, 2]
   jres_path=as.character(import_profile[15, 2])
+  program_parameters=try(read.csv(as.character(import_profile[16, 2])),silent=T)
+  if (class(program_parameters)=='try-error') program_parameters=fitting_variables()
+    
   
   repository=as.data.frame(rio::import(as.character(import_profile[12, 2])))
   der=which(colnames(repository)==biofluid)
@@ -214,10 +222,10 @@ import_data = function(parameters_path) {
     ll=c(intersect(which(imported_data$ppm>5.6),which(imported_data$ppm<6.1)),intersect(which(imported_data$ppm>4.6),which(imported_data$ppm<4.9)),intersect(which(imported_data$ppm>-0.5),which(imported_data$ppm<0.5)))
     dummy[,ll]=0
     for (i in 1:length(param)) {
-      s=plele(param[i],dummy,vardata3);
-    
-    
-    tra[i]=median(s$lol2[apply(imported_data$dataset,2,function(x) median(x,na.rm=T))>median(imported_data$dataset,na.rm=T)],na.rm=T);
+      s=tryCatch({plele(param[i],dummy,vardata3)},error=function(e) NaN)
+      
+      
+      tra[i]=tryCatch({median(s$lol2[apply(imported_data$dataset,2,function(x) median(x,na.rm=T))>median(imported_data$dataset,na.rm=T)],na.rm=T)},error=function(e) NaN)
     }
     s=plele(param[which.min(tra)],dummy,vardata3);
     imported_data$dataset=imported_data$dataset/s$pqndatanoscale
@@ -245,6 +253,7 @@ import_data = function(parameters_path) {
   imported_data$Metadata=Metadata
   imported_data$repository=repository
   imported_data$jres_path=jres_path
+  imported_data$program_parameters=program_parameters
   
   return(imported_data)
 

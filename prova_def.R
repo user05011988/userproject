@@ -481,12 +481,12 @@ server = function(input, output,session) {
           if ((proc.time()-ptm)[1]<1) {
             v$meh=signals_int(sell$autorun_data, sell$finaloutput,sell$ind,revals2$mtcars,revals$mtcars) 
 
-          revals3$mtcars=cbind(v$meh$results_to_save$Area,v$meh$results_to_save$fitting_error,v$meh$results_to_save$signal_area_ratio)
+          revals3$mtcars=cbind(v$meh$results_to_save$Area,v$meh$results_to_save$correlation,v$meh$results_to_save$signal_area_ratio)
           colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
           
           v$blah$signals_parameters=v$meh$signals_parameters
           v$blah$results_to_save=v$meh$results_to_save
-          v$blah$other_fit_parameters=v$meh$other_fit_parameters
+          v$blah$program_parameters=v$meh$program_parameters
           v$blah$p=v$meh$p
           v$blah$p2=v$meh$p2
           
@@ -532,7 +532,7 @@ print(input$mynavlist)
     v$stop3=1
     sell$ss=1
     
-    revals3$mtcars=cbind(v$blah$results_to_save$Area,v$blah$results_to_save$fitting_error,v$blah$results_to_save$signal_area_ratio)
+    revals3$mtcars=cbind(v$blah$results_to_save$Area,v$blah$results_to_save$correlation,v$blah$results_to_save$signal_area_ratio)
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
     # fo=(dim(v$blah$signals_parameters)[1]+1):dim(v$blah$signals_parameters_2)[1]
     
@@ -580,9 +580,9 @@ print(input$mynavlist)
 
     dummy=import(file.path(path,'plot_data.csv'))
     plot_data=as.matrix(dummy[,-1])
-    other_fit_parameters=as.list(import(file.path(path,'other_fit_parameters.csv'))[1,])
+    program_parameters=as.list(import(file.path(path,'program_parameters.csv'))[1,])
     ROI_profile=import(file.path(path,'import_excel_profile.csv'))[,-1,drop=F]
-    other_fit_parameters$signals_to_quantify=ROI_profile[,7]
+    program_parameters$signals_to_quantify=ROI_profile[,7]
     plotdata2 = data.frame(Xdata=Xdata,
       Ydata=Ydata,
       plot_data[3, ] ,
@@ -618,7 +618,7 @@ print(input$mynavlist)
     revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
     revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
 
-    revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$fitting_error[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
+    revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$correlation[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
 
     updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
@@ -653,9 +653,9 @@ print(input$mynavlist)
     Ydata=as.numeric(import(file.path(path,'Ydata.csv'))[,-1])
     dummy=import(file.path(path,'plot_data.csv'))
     plot_data=as.matrix(dummy[,-1])
-    other_fit_parameters=as.list(import(file.path(path,'other_fit_parameters.csv'))[1,])
+    program_parameters=as.list(import(file.path(path,'program_parameters.csv'))[1,])
     ROI_profile=import(file.path(path,'import_excel_profile.csv'))[,-1,drop=F]
-    other_fit_parameters$signals_to_quantify=ROI_profile[,7]
+    program_parameters$signals_to_quantify=ROI_profile[,7]
     
     plotdata2 = data.frame(Xdata=Xdata,
       Ydata=Ydata,
@@ -693,7 +693,7 @@ print(input$mynavlist)
     revals4$mtcars[,6]=sell$flo2[sell$info$row,ind,1]
     
     revals4$mtcars[,11]=sell$flo[sell$info$row,ind,3]-sell$flo[sell$info$row,ind,1]
-    revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$fitting_error[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
+    revals3$mtcars=cbind(sell$finaloutput$Area[sell$info$row,ind],sell$finaloutput$correlation[sell$info$row,ind],sell$finaloutput$signal_area_ratio[sell$info$row,ind])
     colnames(revals3$mtcars)=c('Quantification','fitting error','signal/total area ratio')
     updateTabsetPanel(session, "mynavlist",selected = "ROI Testing")
     
@@ -727,7 +727,7 @@ observeEvent(input$autorun, {
   # sell$outlier_table=as.data.frame(sell$outlier_table)
   # 
   # colnames(sell$outlier_table)=colnames(t_test_data_2)
-  # rownames(sell$outlier_table)=rownames(sell$finaloutput$fitting_error)
+  # rownames(sell$outlier_table)=rownames(sell$finaloutput$correlation)
   # 
   # 
   # for (j in 1:length(ss)) {
@@ -748,7 +748,7 @@ observeEvent(input$autorun, {
   colnames(mm)=colnames(sell$autorun_data$Metadata)
   spectra=cbind(as.matrix(rownames(sell$dataset)),rbind(sell$autorun_data$Metadata,mm))
   colnames(spectra)=c('spectrum','Metadata')
-  sell$brks <- quantile(sell$finaloutput$fitting_error, probs = seq(.05, .95, .05), na.rm = TRUE)
+  sell$brks <- quantile(sell$finaloutput$correlation, probs = seq(.05, .95, .05), na.rm = TRUE)
   sell$clrs <- round(seq(255, 40, length.out = length(sell$brks) + 1), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
   sell$brks3 <- quantile(sell$corr_area_matrix, probs = seq(.05, .95, .05), na.rm = TRUE)
@@ -982,7 +982,7 @@ observeEvent(input$autorun, {
 
   
   output$quant_selection = DT::renderDataTable({ 
-    dummy=validation(sell$finaloutput,sell$other_fit_parameters)
+    dummy=validation(sell$finaloutput,sell$program_parameters)
     
     sell$flo=dummy$flo
     sell$flo2=dummy$flo2
@@ -992,11 +992,11 @@ observeEvent(input$autorun, {
   return(dat)
   })
   
-  output$fit_selection = DT::renderDataTable({ dat <- datatable(round(sell$finaloutput$fitting_error,2),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(sell$finaloutput$fitting_error), backgroundColor = styleInterval(sell$brks, sell$clrs))
+  output$fit_selection = DT::renderDataTable({ dat <- datatable(round(sell$finaloutput$correlation,2),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(sell$finaloutput$correlation), backgroundColor = styleInterval(sell$brks, sell$clrs))
   return(dat)
   })
   
-  output$corr_area_matrix = DT::renderDataTable({ dat <- datatable(round(sell$corr_area_matrix,3)) %>% formatStyle(colnames(sell$finaloutput$fitting_error), backgroundColor = styleInterval(sell$brks3, sell$clrs3))
+  output$corr_area_matrix = DT::renderDataTable({ dat <- datatable(round(sell$corr_area_matrix,3)) %>% formatStyle(colnames(sell$finaloutput$correlation), backgroundColor = styleInterval(sell$brks3, sell$clrs3))
   return(dat)
   })
   
@@ -1158,7 +1158,7 @@ observeEvent(input$autorun, {
     imported_data$signals_names=paste(imported_data$signals_names,sell$ROI_data[1:dim(dummy)[2],7],sep='_')
     rownames(dummy) = imported_data$Experiments
     colnames(dummy) = imported_data$signals_names
-    sell$finaloutput$Area = sell$finaloutput$signal_area_ratio = sell$finaloutput$fitting_error =
+    sell$finaloutput$Area = sell$finaloutput$signal_area_ratio = sell$finaloutput$correlation =
       sell$finaloutput$shift = sell$finaloutput$intensity = sell$finaloutput$width = dummy
     
     #creation of several outputs with data of interest before beginnig the quantification
@@ -1203,7 +1203,7 @@ observeEvent(input$autorun, {
     
     
     # sell$p=autorun_model_spectrum(sell$autorun_data)
-    other_fit_parameters = fitting_variables()
+    program_parameters = fitting_variables()
     
     
     sell$ROI_data = read.csv(sell$autorun_data$profile_folder_path, stringsAsFactors = F)

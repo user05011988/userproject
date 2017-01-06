@@ -1,5 +1,5 @@
 validation = function(finaloutput,
-                                 other_fit_parameters,validation_type,profile_folder_path,metadata) {
+                                 program_parameters,validation_type,profile_folder_path,metadata) {
 
   #Created by Daniel Ca?ueto 13/09/2016
   #Finding of suspicious quantifications through difference with predicted shift, signal to total area ratio, fitting error, and difference with expected relative intensity
@@ -14,7 +14,7 @@ validation = function(finaloutput,
   #correlation matrix of shift of signals and finding for every signal the signal that has best ability to predict shift
   #Analysis of which samples have too much fitting error
   if (validation_type==1) {
-  alarmmatrix=matrix(as.numeric(finaloutput$fitting_error),nrow(finaloutput$fitting_error),ncol(finaloutput$fitting_error))
+  alarmmatrix=matrix(as.numeric(finaloutput$correlation),nrow(finaloutput$correlation),ncol(finaloutput$correlation))
   brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
   clrs <- round(seq(255, 40, length.out = length(brks) + 1), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
@@ -102,7 +102,7 @@ validation = function(finaloutput,
       b=which(ma[,1]==ma[i,1])
       ccv=relative_intensity[which(relative_intensity[,7]>0)[b],12]
       ccvv=finaloutput$intensity[,b]
-      ccvvv=finaloutput$fitting_error[,b]
+      ccvvv=finaloutput$correlation[,b]
       for (j in 1:nrow(ccvvv)) {
         aa=ccvv[j,]*ccv[which.min(ccvvv[j,])]/ccvv[j,which.min(ccvvv[j,])] - ccv
         alarmmatrix[j,b]=aa
@@ -150,7 +150,7 @@ validation = function(finaloutput,
 #
 #   intensity_prediction=as.numeric(rlm_model$coefficients[1])+as.numeric(rlm_model$coefficients[2])*finaloutput$intensity[,ind2[i]]
 #
-#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[i]]-intensity_prediction)>other_fit_parameters$rlm_limit*rlm_model$scale)
+#   intensity_suspicioussamples=which(abs(finaloutput$intensity[,ind[i]]-intensity_prediction)>program_parameters$rlm_limit*rlm_model$scale)
 #   intensity_alarmmatrix[intensity_suspicioussamples,c(ind[i],ind2[i])]=1
 #
 #

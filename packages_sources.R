@@ -81,6 +81,8 @@ source("findMid.R")
   source("plele.R")
   source("interface_integration.R")
   source("p_values.R")
+  source("write_info.R")
+  
   
   recurAlign=cmpfun(recurAlign)
   alignSp=cmpfun(alignSp)
@@ -93,7 +95,7 @@ source("findMid.R")
   comparePeaks=cmpfun(comparePeaks)
   zeroPad=cmpfun(zeroPad)
   getCorellation=cmpfun(getCorellation)
-  
+  write_info=cmpfun(write_info)
   
   fhs=cmpfun(fhs)
   clustspectraplot=cmpfun(clustspectraplot)

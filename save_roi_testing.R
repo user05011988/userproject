@@ -1,145 +1,55 @@
-save_roi_testing=function(blah,autorun_data,finaloutput) {
-  p=blah$p2
-  # blah$finaloutput=finaloutput
-  results_to_save=blah$results_to_save
-  spectrum_index=blah$spectrum_index
-  signals_codes=blah$signals_codes
-  fitting_type=blah$fitting_type
-  plot_path=blah$plot_path
-# list2env(blah,.GlobalEnv)
-if (fitting_type == "Clean Sum" ||
-    fitting_type == "Baseline Sum") {
+save_roi_testing=function(blah,autorun_data,finaloutput,useful_data) {
+  
+if (blah$fitting_type == "Clean Sum" ||
+    blah$fitting_type == "Baseline Sum") {
   
   
-  integration_parameters=blah$integration_parameters
-  
-ggsave(
-  file.path(integration_parameters$plot_path, 'Fit.jpeg'),plot = p,
-  width = 10,
-  height = 5
-)
-write.csv(
-  integration_parameters,
-  file.path(plot_path,
-    "integration_parameters.csv"),
-  row.names = F
-)
+  useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$integration_parameters=blah$integration_parameters
+  useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot=blah$p2
 
-} else if (fitting_type == "Clean Fitting" || fitting_type ==
+
+
+} else if (blah$fitting_type == "Clean Fitting" || blah$fitting_type ==
     "Baseline Fitting") {
-  signals_parameters=blah$signals_parameters
-  other_fit_parameters=blah$other_fit_parameters
+ 
   
-  results_to_save=blah$results_to_save
-  ROI_profile=blah$import_excel_profile
-  # other_fit_parameters$signals_to_quantify=ROI_profile[,7]
-
-  Ydata=blah$Ydata
-  fitted_signals=blah$fitted_signals
-  plot_data=blah$plot_data
-  FeaturesMatrix=blah$FeaturesMatrix
-  signals_parameters=blah$signals_parameters
-  Xdata=blah$Xdata
-for (r in 1:length(results_to_save$signal_area_ratio)) {
-  #There is only creation of plot if the conditions specified in the Parameters file are accomplished
+  print(blah$spectrum_index)
+  print(blah$signals_codes)
+  print(length(blah$p2))
+  blah$program_parameters$signals_to_quantify=NULL
+  for (i in seq_along(blah$p2))  useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot=blah$p2[[i]]
   
-  if (results_to_save$signal_area_ratio[r] < other_fit_parameters$signal_area_ratio_plot ||
-      results_to_save$fitting_error[r] > other_fit_parameters$fitting_error_plot) {
-# ggsave(paste(plot_path[other_fit_parameters$signals_to_quantify[r]],"Fit.jpeg",sep='/'),plot = p,width = 10, height = 5)
-    png(filename=paste(plot_path[r],"Fit.png",sep='/'), 
-      type="cairo",
-      units="in", 
-      width=8, 
-      height=4, 
-      pointsize=12, 
-      res=96)
-    print(p)
-    dev.off()
-    
+  for (i in seq_along(blah$signals_codes)) {
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$import_excel_profile=blah$ROI_profile
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$program_parameters=blah$program_parameters
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$fitted_signals=blah$fitted_signals
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot_data=blah$plot_data
+    # useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$FeaturesMatrix=blah$FeaturesMatrix
+    # useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$signals_parameters=blah$signals_parameters
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Xdata=blah$Xdata
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Ydata=blah$Ydata
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$results_to_save=blah$results_to_save
   }
-}
-for (i in seq_along(plot_path)) {
-  write.csv(
-    ROI_profile,
-    file.path(plot_path[i],
-      "import_excel_profile.csv")
-    # row.names = F
-  )
-            write.csv(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
-
   
-  other_fit_parameters$signals_to_quantify=NULL
   
-  write.csv(
-    other_fit_parameters,
-    file.path(plot_path[i],
-      "other_fit_parameters.csv"),
-    # row.names = F
-  )
-  write.table(fitted_signals,
-    file.path(plot_path[i], "fitted_signals.csv"))
-  # row.names = F,
-  # col.names = F))
-  write.table(plot_data,
-    file.path(plot_path[i], "plot_data.csv"))
-  # col.names = F)
-  write.csv(FeaturesMatrix,
-    file.path(plot_path[i], "FeaturesMatrix.csv"))
-  # row.names = F)
-  write.table(t(signals_parameters),
-    file.path(plot_path[i],
-      "signals_parameters.csv"))
-  # col.names = F
-    write.csv(Xdata,file.path(plot_path[i], "Xdata.csv"),row.names = F,col.names = F)
 
-  # row.names = F,
-  # col.names = F))
-            write.csv(Ydata,file.path(plot_path[i], "Ydata.csv"),row.names = F,col.names = F)
-
-  write.csv(results_to_save,
-    file.path(plot_path[i], "results_to_save.csv"),
-    row.names = F)
-  
-}
 }
 
 
 
   finaloutput = save_output(
-      spectrum_index,
-      signals_codes,
-      results_to_save,
+      blah$spectrum_index,
+      blah$signals_codes,
+      blah$results_to_save,
       autorun_data$buck_step,
       finaloutput
     )
 
-    write.csv(finaloutput$Area,
-      file.path(autorun_data$export_path,
-        "Area.csv"))
-    write.csv(finaloutput$shift,
-      file.path(autorun_data$export_path,
-        "shift.csv"))
-    write.csv(finaloutput$width,
-      file.path(autorun_data$export_path,
-        "width.csv"))
-    write.csv(
-      finaloutput$signal_area_ratio,
-      file.path(autorun_data$export_path,
-        "signal_area_ratio.csv")
-    )
-    write.csv(
-      finaloutput$fitting_error,
-      file.path(autorun_data$export_path,
-        "fitting_error.csv")
-    )
-    write.csv(
-      finaloutput$intensity,
-      file.path(autorun_data$export_path,
-        "intensity.csv")
-    )
+  tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
+    print('Not possible to overwrite a csv file open with Microsoft Excel')
+  })
 
-    # row.names = F,
-    # col.names = F))
-    return(finaloutput)
+    dummy=list(finaloutput=finaloutput,useful_data=useful_data)
+    return(dummy)
     
   }

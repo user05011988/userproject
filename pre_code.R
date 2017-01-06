@@ -41,7 +41,7 @@ ROI_data = read.csv(imported_data$profile_folder_path, stringsAsFactors = F)
 imported_data$signals_names=paste(imported_data$signals_names,ROI_data[1:dim(dummy)[2],7],sep='_')
 rownames(dummy) = imported_data$Experiments
 colnames(dummy) = imported_data$signals_names
-finaloutput$Area = finaloutput$signal_area_ratio = finaloutput$fitting_error =
+finaloutput$Area = finaloutput$signal_area_ratio = finaloutput$correlation =
   finaloutput$shift = finaloutput$intensity = finaloutput$width = dummy
 
 #creation of several outputs with data of interest before beginnig the quantification
@@ -90,7 +90,7 @@ autorun_data = list(
 finaloutput = autorun(autorun_data, finaloutput)
 
 
-other_fit_parameters = fitting_variables()
+program_parameters = fitting_variables()
 
 
 ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
@@ -165,8 +165,8 @@ p <- layout(p,
 p
 
 t_test_data_2=finaloutput$Area
-t_test_data_2[finaloutput$fitting_error>other_fit_parameters$fitting_error_limit]=NA
-t_test_data_2[finaloutput$signal_area_ratio<other_fit_parameters$signal_area_ratio_limit]=NA
+t_test_data_2[finaloutput$correlation>program_parameters$fitting_error_limit]=NA
+t_test_data_2[finaloutput$signal_area_ratio<program_parameters$signal_area_ratio_limit]=NA
 
 ll=as.data.frame(t_test_data_2)
 rownames(ll)=paste(rownames(ll),p_value_final)
@@ -176,7 +176,7 @@ ab=melt(Xwit)
 colnames(ab)=c('Metadata','Signal','Value')
 outlier_table=matrix(0,dim(ll)[1],dim(ll)[2])
 colnames(outlier_table)=colnames(t_test_data_2)
-rownames(outlier_table)=rownames(finaloutput$fitting_error)
+rownames(outlier_table)=rownames(finaloutput$correlation)
 
 for (j in 1:length(ss)) {
   outlier_table[autorun_data$Metadata==ss[j],][sapply(ll[autorun_data$Metadata==ss[j],]), function(x)x %in% boxplot.stats(x)$out)]=1

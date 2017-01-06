@@ -5,7 +5,7 @@ output_generator = function(signals_to_quantify,
                             signals_parameters,multiplicities) {
 
   #Created by Daniel Cañueto 30/08/2016
-  #Creation of quantification variables (Area, fitting_error,shift,signal_area_ratio)
+  #Creation of quantification variables (Area, correlation,shift,signal_area_ratio)
   #and of necessary variables to make a plot of the quantification
   fitted_signals[is.na(fitted_signals)]=0
 
@@ -22,7 +22,7 @@ output_generator = function(signals_to_quantify,
   output_data$fitted_sum = output_data$signals_sum + output_data$baseline_sum
 
   for (i2 in signals_to_quantify) {
-    #fitting_error and signal_area_ratio are calculated from the subregion of the ROI
+    #correlation and signal_area_ratio are calculated from the subregion of the ROI
     # where 90% of the area of the signal is located, calculated throgh cumulative sum.
     # See documentation for details about meaning and calculation of these two parameters
 
@@ -41,7 +41,7 @@ output_generator = function(signals_to_quantify,
                                              ) * 100))
     aa=cor(subregion_spectrum, subregion_fitted)
     if (is.na(aa)) aa=0
-    output_data$fitting_error = append(output_data$fitting_error,aa
+    output_data$correlation = append(output_data$correlation,aa
                                        # mean(((subregion_spectrum - subregion_fitted) ^ 2
                                        # ) / subregion_spectrum ^ 2) * 100)
       )
