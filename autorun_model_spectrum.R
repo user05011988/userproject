@@ -5,7 +5,8 @@ autorun_model_spectrum = function(autorun_data) {
     #Preparation of necessary variables and folders to store figures and information of the fitting
   # if (is_autorun=='N') {indexes=input$x1_select
   
-  ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
+  # ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
+  ROI_data=autorun_data$ROI_data
   dummy = which(is.na(ROI_data[, 1]))
   if (length(dummy)==0) dummy=dim(ROI_data)[1]+1
     lal=which(duplicated(ROI_data[-dummy,1:2])==F)

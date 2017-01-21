@@ -6,7 +6,9 @@ autorun = function(autorun_data, finaloutput,useful_data) {
   
   
   # Loading of ROIs parameters
-  ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
+  # ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
+  ROI_data=autorun_data$ROI_data
+  
   dummy = which(is.na(ROI_data[, 1]))
   if (length(dummy)==0) dummy=dim(ROI_data)[1]+1
   lal=which(duplicated(ROI_data[-dummy,1:2])==F)
@@ -16,10 +18,10 @@ autorun = function(autorun_data, finaloutput,useful_data) {
     
     
     #Loading of every ROI parameters
-    import_excel_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
-    print(paste(import_excel_profile[1,1], import_excel_profile[1,2], sep = '-'))
+    ROI_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
+    print(paste(ROI_profile[1,1], ROI_profile[1,2], sep = '-'))
     
-    ROI_buckets = which.min(abs(as.numeric(import_excel_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(import_excel_profile[1, 2])-autorun_data$ppm))
+    ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
     if (ROI_buckets[1]>ROI_buckets[2]) ROI_buckets=rev(ROI_buckets)
     Xdata = autorun_data$ppm[ROI_buckets]
     
@@ -34,15 +36,15 @@ autorun = function(autorun_data, finaloutput,useful_data) {
     
     # bf=apcluster(negDistMat(r=2),dd[be,])
     
-    fitting_type = as.character(import_excel_profile[1, 3])
-    signals_to_quantify = which(import_excel_profile[, 5] >= 1)
+    fitting_type = as.character(ROI_profile[1, 3])
+    signals_to_quantify = which(ROI_profile[, 5] >= 1)
   
     signals_codes = replicate(length(signals_to_quantify), NA)
     signals_names = replicate(length(signals_to_quantify), NA)
     j = 1
     for (i in signals_to_quantify) {
-      k = which(autorun_data$signals_names == paste(import_excel_profile[i,
-        4],import_excel_profile[i,5],sep='_'))
+      k = which(autorun_data$signals_names == paste(ROI_profile[i,
+        4],ROI_profile[i,5],sep='_'))
       
       signals_codes[j] = autorun_data$signals_codes[k]
       signals_names[j] = as.character(autorun_data$signals_names[k])
@@ -73,9 +75,12 @@ autorun = function(autorun_data, finaloutput,useful_data) {
           
           Ydata)
         #Generation of output variables specific of every quantification
-        results_to_save=dummy$output
-        useful_data[[spectrum_index]][[signals_codes[i]]]$plot=dummy$plots
-        
+        useful_data[[spectrum_index]][[signals_codes]]$ROI_profile=ROI_profile
+        useful_data[[spectrum_index]][[signals_codes]]$integration_parameters=integration_parameters
+        useful_data[[spectrum_index]][[signals_codes]]$plot_data=dummy$plot_data
+        useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
+        useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
+        useful_data[[spectrum_index]][[signals_codes]]$results_to_save=dummy$results_to_save
         #If the quantification is through fitting with or without baseline
       } else if (fitting_type == "Clean Fitting" || fitting_type ==
           "Baseline Fitting") {
@@ -88,7 +93,7 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         #Adaptation of the info of the parameters into a single matrix and preparation (if necessary) of the background signals that will conform the baseline
         FeaturesMatrix = fitting_prep(Xdata,
           Ydata,
-          import_excel_profile[, 5:11,drop=F],
+          ROI_profile[, 5:11,drop=F],
           program_parameters)
         
         #Calculation of the parameters that will achieve the best fitting
@@ -156,29 +161,29 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         rownames(plot_data) = c("signals_sum",
           "baseline_sum",
           "fitted_sum",
-          as.character(paste(import_excel_profile[,4],import_excel_profile[,5],sep='_')),rep('additional signal',dim(plot_data)[1]-length(import_excel_profile[,4])-3))
+          as.character(paste(ROI_profile[,4],ROI_profile[,5],sep='_')),rep('additional signal',dim(plot_data)[1]-length(ROI_profile[,4])-3))
         
         program_parameters$signals_to_quantify=signals_to_quantify
-        plots=plotgenerator(
-          results_to_save,
-          plot_data,
-          Xdata,
-          Ydata,
-          fitted_signals,
-          program_parameters,
-          signals_names,
-          experiment_name,
-          is_roi_testing
-        )
-        
+        # plots=plotgenerator(
+        #   results_to_save,
+        #   plot_data,
+        #   Xdata,
+        #   Ydata,
+        #   fitted_signals,
+        #   program_parameters,
+        #   signals_names,
+        #   experiment_name,
+        #   is_roi_testing
+        # )
+        # 
         #Generation of output variables specific of every quantification
       
 
           program_parameters$signals_to_quantify=NULL
 
           for (i in seq_along(signals_codes)) {
-          useful_data[[spectrum_index]][[signals_codes[i]]]$plot=plots[[i]]
-          useful_data[[spectrum_index]][[signals_codes[i]]]$import_excel_profile=import_excel_profile
+          # useful_data[[spectrum_index]][[signals_codes[i]]]$plot=plots[[i]]
+          useful_data[[spectrum_index]][[signals_codes[i]]]$ROI_profile=ROI_profile
           useful_data[[spectrum_index]][[signals_codes[i]]]$program_parameters=program_parameters
           useful_data[[spectrum_index]][[signals_codes[i]]]$fitted_signals=fitted_signals
           useful_data[[spectrum_index]][[signals_codes[i]]]$plot_data=plot_data

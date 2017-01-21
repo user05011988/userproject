@@ -3,12 +3,12 @@ fitting_variables = function() {
   program_parameters=list() 
   
   #Parameters of preparation of signals' parameters to optimize
-  program_parameters$BGdensity=50 #Density of signals to prepare abaseline below the signals to fit
+  program_parameters$BGdensity=30 #Density of signals to prepare abaseline below the signals to fit
 program_parameters$widthtolerance=0.2 #Allowed Variability of halfwidth
 program_parameters$gaussian=0 #Allowed Variability of gaussian percentage
 program_parameters$j_coupling_variation=0.2 #Allowed Variability of j-coupling
 program_parameters$BG_gaussian_percentage=0 #Allowed gaussian percentage of baseline signals
-program_parameters$BG_width=12 #Halfwidth of baseline signals
+program_parameters$BG_width=8 #Halfwidth of baseline signals
 program_parameters$BG_width_tolerance=0.25 #Allowed Variability of halfwidth of baseline signals
 
 #Parameters related to the fitting loop
@@ -24,7 +24,7 @@ program_parameters$factor=0.01
 #Parameters related to the addition of other signals post fitting
 program_parameters$additional_signal_ppm_distance=0.002 #Allowed distance for added peaks
 program_parameters$signals_to_add = 2 #Allowed distance for added peaks to the ROI
-program_parameters$fitting_maxiterrep = 2 #Allowed tries to add peaks
+program_parameters$fitting_maxiterrep = 1 #Allowed tries to add peaks
 program_parameters$additional_signal_improvement=0.75 #Improvement of ROI by adding peaks. If previous addition did not achieve less than 75% of fitting error, process of addition of peaks is stopped
 program_parameters$additional_signal_percentage_limit=3 #If fititng erorr is less tha nthis percentage, addition of peaks is not performed
 program_parameters$peakdet_minimum=0.01 #Limit to find a peak as relevant enough to add it.

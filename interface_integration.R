@@ -3,8 +3,8 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   #Integration of ROI
 
 
-  #preallocation of output
-  output = list(
+  #preallocation of results_to_save
+  results_to_save = list(
     signal_area_ratio = NA,
     correlation = NA,
     Area = NA,
@@ -22,23 +22,23 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   integrated_signal = Ydata - baseline
   integrated_signal[integrated_signal<0]=0
 
-  #preparation of output
-  output$Area = sum(integrated_signal)
-  output$intensity = max(integrated_signal)
+  #preparation of results_to_save
+  results_to_save$Area = sum(integrated_signal)
+  results_to_save$intensity = max(integrated_signal)
 
   cumulative_area = cumsum(integrated_signal) / sum(integrated_signal)
   # p1 = which.min(abs(cumulative_area - 0.05))
   # p2 = which.min(abs(cumulative_area - 0.95))
   p1 = which(cumulative_area< 0.05)[length(which(cumulative_area< 0.05))]
   p2 = which(cumulative_area > 0.95)[1]
-  output$signal_area_ratio = tryCatch((sum(integrated_signal[p1:p2]) / sum(Ydata[p1:p2])) *
+  results_to_save$signal_area_ratio = tryCatch((sum(integrated_signal[p1:p2]) / sum(Ydata[p1:p2])) *
       100,error = function(e) NaN, silent=T)
-  print(output$signal_area_ratio)
-  output$correlation = NaN
-  output$width = NaN
+  print(results_to_save$signal_area_ratio)
+  results_to_save$correlation = NaN
+  results_to_save$width = NaN
 
   peaks = peakdet(integrated_signal, 0.2*max(1e-10,max(integrated_signal)))
-  output$shift = mean(Xdata[peaks$maxtab$pos])
+  results_to_save$shift = mean(Xdata[peaks$maxtab$pos])
 
   #plot
   plotdata = data.frame(Xdata, signal = integrated_signal)
@@ -47,27 +47,28 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   plotdata3$variable = rep('Original Spectrum', length(Ydata))
   plotdata4 = data.frame(Xdata, integrated_signal)
   plotdata5 = melt(plotdata4, id = "Xdata")
-  p2=ggplot() +
-    geom_line(data = plotdata3,
-      aes(
-        x = Xdata,
-        y = value,
-        colour = variable,
-        group = variable
-      )) +
-
-    geom_area(data = plotdata,
-      aes(
-        x = Xdata,
-        y = signal,
-        position = 'fill',
-        fill = 'Quantified Signal'
-      )) +
-    scale_x_reverse()
+  # p2=ggplot() +
+  #   geom_line(data = plotdata3,
+  #     aes(
+  #       x = Xdata,
+  #       y = value,
+  #       colour = variable,
+  #       group = variable
+  #     )) +
+  # 
+  #   geom_area(data = plotdata,
+  #     aes(
+  #       x = Xdata,
+  #       y = signal,
+  #       position = 'fill',
+  #       fill = 'Quantified Signal'
+  #     )) +
+  #   scale_x_reverse()
   p=plot_ly(plotdata,x = ~Xdata, y = ~signal, type = 'scatter', color= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL) %>%
     layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
       yaxis = list(range=c(0,max(Ydata)),title = 'Intensity'))
-  fa=list(results_to_save=output,p=p,p2=p2)
-
-  return(fa)
+  plot_data=rbind(integrated_signal,baseline,integrated_signal+baseline,integrated_signal)
+  dummy=list(results_to_save=results_to_save,p=p,plot_data=plot_data)
+  
+  return(dummy)
 }

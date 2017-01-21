@@ -120,13 +120,14 @@ for (i in 1:dim(correlated_signals_indexes)[1]) {
 }
 secure_multiplets=unique(secure_multiplets)
 ab2=unlist(unique(secure_multiplets))
+if (length(secure_multiplets)>0) {
 for (i in 1:length(secure_multiplets)) {
   secure_multiplets[[i]]=which(colnames(threshold_corr_matrix) %in% names(secure_multiplets[[i]])==T)
   names(secure_multiplets[[i]])=colnames(threshold_corr_matrix)[secure_multiplets[[i]]]
-}
+}}
 
 clustering_corr_matrix=corr_matrix[which(colSums(threshold_corr_matrix)>1),which(colSums(threshold_corr_matrix)>1)]
-clustering_corr_matrix=clustering_corr_matrix[-ab2,-ab2]
+if (length(ab2)>0) clustering_corr_matrix=clustering_corr_matrix[-ab2,-ab2]
 clustering_quality_indicator=matrix(NA,3,9)
 for (i in seq(0.1,0.9,0.1)) {
   for (j in 1:3) {
@@ -239,12 +240,12 @@ colnames(ROI_profile_suggestion)=c('ROI_left','ROI_right','Q.Mode','Signal','Pos
 suggested_metabolites=matrix(NA,dim(ROI_profile_suggestion)[1],5)
 colnames(suggested_metabolites)=paste('Suggested Metabolite',1:5)
 for (i in 1:dim(suggested_metabolites)[1]) {
-  a=which(abs(repository[,5]-ROI_profile_suggestion[i,5])<0.05)
+  a=which(abs(repository[,3]-ROI_profile_suggestion[i,5])<0.05)
   b=which(as.numeric(repository[a,7])==ROI_profile_suggestion[i,8])
-  d=a[sort(abs(repository[a,5]-ROI_profile_suggestion[i,5]),index.return=T)$ix[1:5]]
+  d=a[sort(abs(repository[a,3]-ROI_profile_suggestion[i,5]),index.return=T)$ix[1:5]]
   e=c(setdiff(a[b],d),d)
   e=unique(e)[1:5]
-  suggested_metabolites[i,]=paste(repository[e,1],' (', round(abs(repository[e,5]-ROI_profile_suggestion[i,5])[1:5],3),')',sep='')
+  suggested_metabolites[i,]=paste(repository[e,1],' (', round(abs(repository[e,3]-ROI_profile_suggestion[i,5])[1:5],3),')',sep='')
 }
 
 # suggested_metabolites[i,]=paste(repository[!is.na(repository[,5]),][sort(abs(repository[,5]-ROI_profile_suggestion[i,5]),index.return=T)$ix[1:5],1],' (', round(sort(abs(repository[,5]-ROI_profile_suggestion[i,5]),index.return=T)$x[1:5],3),')',sep='')
@@ -253,6 +254,6 @@ ROI_profile_suggestion=cbind(ROI_profile_suggestion,suggested_metabolites)
 write.csv(ROI_profile_suggestion,paste(export_path,'ROI_profile_suggestion.csv',sep='/'),row.names = F)
 write.csv(peak_quantification,paste(export_path,'peak_quantification.csv',sep='/'),row.names = F)
 print('Done! Look on your export folder, you should have a new csv with ROI profiles suggestions and a new CSV with quantifications of integrated peaks.')
-dumy=list(signals_intensity=signals_intensity,signals_width=signals_width,signals_position=signals_position,spectra_lag=spectra_lag)
-return(dumy)
+# dumy=list(signals_intensity=signals_intensity,signals_width=signals_width,signals_position=signals_position,spectra_lag=spectra_lag)
+# return(dumy)
 }

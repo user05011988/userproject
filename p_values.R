@@ -12,7 +12,7 @@ for (i in seq_along(types)) {
 ind1=which(metadata[,-1] ==types[i])%%nrow(metadata)
 ind2=which(metadata[,-1] ==-types[i])%%nrow(metadata)
 ind1[ind1==0]=ind2[ind2==0]=nrow(metadata)
-datasetlist[[i]]=dataset[ind2,]-dataset[ind1,]
+datasetlist[[i]]=dataset[ind2,,drop=F]-dataset[ind1,,drop=F]
 if (all(metadata[ind1,1]==metadata[ind2,1])==F)   paireddata=F
 } 
 } else {
@@ -20,7 +20,7 @@ if (all(metadata[ind1,1]==metadata[ind2,1])==F)   paireddata=F
   for (i in seq_along(types)) {
   ind1=which(metadata[,-1] ==types[i])%%nrow(metadata)
   ind1[ind1==0]=nrow(metadata)
-  datasetlist[[i]]=dataset[ind1,]
+  datasetlist[[i]]=dataset[ind1,,drop=F]
   }
 }
 if (paireddata==F) {

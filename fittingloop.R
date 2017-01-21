@@ -18,7 +18,7 @@ fittingloop = function(FeaturesMatrix,
   #TO DO: another revision of algorithm alternatives
 
 
-  
+  signals_parameters=rep(0,length(as.vector(t(FeaturesMatrix[, seq(1, 9, 2), drop = F]))))
   #Necessary information to incorporate additional singals if necessary
   signals_to_quantify = which(FeaturesMatrix[, 11] != 0)
   range_ind = round(
@@ -251,9 +251,10 @@ fittingloop = function(FeaturesMatrix,
     print('--')
     
     print(error2)
+    iterrep = iterrep + 1
     
     #If the fitting seems to be still clearly improvable through the addition of signals
-    if (error2 < (program_parameters$additional_signal_improvement * dummy) &
+    if (iterrep < fitting_maxiterrep& error2 < (program_parameters$additional_signal_improvement * dummy) &
         (error2 > program_parameters$additional_signal_percentage_limit)&length(lol$maxtab$pos)>sum(multiplicities[signals_to_quantify])) {
       print('Trying to improve initial fit adding peaks')
       
@@ -330,7 +331,6 @@ fittingloop = function(FeaturesMatrix,
         FeaturesMatrix = rbind(FeaturesMatrix, dummy)
         multiplicities=c(FeaturesMatrix[,11],rep(1,dim(lol3)[1]))
         roof_effect=c(FeaturesMatrix[,12],rep(0,dim(lol3)[1]))
-        iterrep = iterrep + 1
       }
     } else {
       iterrep = fitting_maxiterrep

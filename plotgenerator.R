@@ -54,7 +54,7 @@ plotgenerator = function(results_to_save,
             aes(
               x = Xdata,
               y = signals,
-              position = 'fill',
+              # position = 'fill',
               fill = 'Quantified Signal'
             )
           ) +

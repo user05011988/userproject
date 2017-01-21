@@ -4,8 +4,8 @@ if (blah$fitting_type == "Clean Sum" ||
     blah$fitting_type == "Baseline Sum") {
   
   
-  useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$integration_parameters=blah$integration_parameters
-  useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot=blah$p2
+  useful_data[[blah$spectrum_index]][[blah$signals_codes]]$integration_parameters=blah$integration_parameters
+  useful_data[[blah$spectrum_index]][[blah$signals_codes]]$plot=blah$p2
 
 
 
@@ -13,19 +13,14 @@ if (blah$fitting_type == "Clean Sum" ||
     "Baseline Fitting") {
  
   
-  print(blah$spectrum_index)
-  print(blah$signals_codes)
-  print(length(blah$p2))
-  blah$program_parameters$signals_to_quantify=NULL
-  for (i in seq_along(blah$p2))  useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot=blah$p2[[i]]
   
+  blah$program_parameters$signals_to_quantify=NULL
+
   for (i in seq_along(blah$signals_codes)) {
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$import_excel_profile=blah$ROI_profile
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$ROI_profile=blah$ROI_profile
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$program_parameters=blah$program_parameters
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$fitted_signals=blah$fitted_signals
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot_data=blah$plot_data
-    # useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$FeaturesMatrix=blah$FeaturesMatrix
-    # useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$signals_parameters=blah$signals_parameters
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Xdata=blah$Xdata
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Ydata=blah$Ydata
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$results_to_save=blah$results_to_save
@@ -34,7 +29,6 @@ if (blah$fitting_type == "Clean Sum" ||
   
 
 }
-
 
 
   finaloutput = save_output(

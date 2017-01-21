@@ -1,6 +1,8 @@
-interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun) {
+interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,useful_data) {
   blah=list()
-  ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
+  # ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
+  ROI_data=autorun_data$ROI_data
+  
   dummy = ROI_data[which(is.na(ROI_data[, 1])),]
   dummy2= list()
   for (i in 1:dim(ROI_profile)[1]) {
@@ -51,19 +53,35 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
       clean_fit = ifelse(fitting_type == "Clean Sum", "Y", "N")
       integration_parameters = data.frame(is_roi_testing,
                                           clean_fit)
-      fa = interface_integration(integration_parameters, Xdata,
+      dummy = interface_integration(integration_parameters, Xdata,
 
                                     Ydata)
       
-      results_to_save=fa$results_to_save
-      p=fa$p
-      blah$p2=fa$p2
-      
+      results_to_save=dummy$results_to_save
+      p=dummy$p
+      plot_data=dummy$plot_data
       
       blah$integration_parameters=integration_parameters
       #Generation of output variables specific of every quantification
-
-     
+      if (is_autorun=='Y') {
+        useful_data[[spectrum_index]][[signals_codes]]$ROI_profile=ROI_profile
+        useful_data[[spectrum_index]][[signals_codes]]$integration_parameters=integration_parameters
+        useful_data[[spectrum_index]][[signals_codes]]$plot_data=dummy$plot_data
+        useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
+        useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
+        useful_data[[spectrum_index]][[signals_codes]]$results_to_save=dummy$results_to_save
+        
+        finaloutput = save_output(
+          spectrum_index,
+          signals_codes,
+          results_to_save,
+          autorun_data$buck_step,
+          finaloutput
+        )
+        tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
+          print('Not possible to overwrite a csv file open with Microsoft Excel')
+        })
+      }
 
       #If the quantification is through fitting with or without baseline
     } else if (fitting_type == "Clean Fitting" || fitting_type ==
@@ -97,31 +115,38 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
         'gaussian',
         'J_coupling'
       ) 
-      dummy2= list()
-      for (i in 1:dim(ROI_profile)[1]) {
-        dummy = ROI_data[which(ROI_data[, 5] != ROI_profile[i, 5]),]
-        dummy=dummy[which(duplicated(rbind(ROI_profile,dummy))[(dim(ROI_profile)[1]+1):(dim(ROI_profile)[1]+dim(dummy)[1])]==F),]
-        if (length(which(dummy[,4] == ROI_profile[i,4]))>0) {
-          dummy2[[length(dummy2)+1]]=which(dummy[,4] == ROI_profile[i,4])
-          for (j in 1:length(dummy2[[i]])) {
-           
-            
-            cc= signals_parameters_2[(5*i-4):(5*i)]
-
-            cc[5]=dummy[dummy2[[i]][j],][9]
-            cc[1]=dummy[dummy2[[i]][j],][12]*cc[1]
-            cc[2]=as.numeric(dummy[dummy2[[i]][j],][5])+(as.numeric(cc[2])-as.numeric(ROI_profile[i,6]))
-            signals_parameters_2=c(signals_parameters_2,cc)
-            multiplicities_2=c(multiplicities_2,dummy[dummy2[[i]][j],][8])
-            roof_effect_2=c(roof_effect_2,dummy[dummy2[[i]][j],][10])
-          }   
-        }
-      }
-      
+      # dummy2= list()
+      # for (i in 1:dim(ROI_profile)[1]) {
+      #   dummy = ROI_data[which(ROI_data[, 5] != ROI_profile[i, 5]),]
+      #   dummy=dummy[which(duplicated(rbind(ROI_profile,dummy))[(dim(ROI_profile)[1]+1):(dim(ROI_profile)[1]+dim(dummy)[1])]==F),]
+      #   if (length(which(dummy[,4] == ROI_profile[i,4]))>0) {
+      #     print("a")
+      #     dummy2[[length(dummy2)+1]]=which(dummy[,4] == ROI_profile[i,4])
+      #     for (j in 1:length(dummy2[[i]])) {
+      #      
+      #       print("b")
+      #       
+      #       cc= signals_parameters_2[(5*i-4):(5*i)]
+      # 
+      #       cc[5]=dummy[dummy2[[i]][j],][9]
+      #       cc[1]=dummy[dummy2[[i]][j],][12]*cc[1]
+      #       cc[2]=as.numeric(dummy[dummy2[[i]][j],][5])+(as.numeric(cc[2])-as.numeric(ROI_profile[i,6]))
+      #       signals_parameters_2=c(signals_parameters_2,cc)
+      #       print("c")
+      #       
+      #       multiplicities_2=c(multiplicities_2,dummy[dummy2[[i]][j],][8])
+      #       roof_effect_2=c(roof_effect_2,dummy[dummy2[[i]][j],][10])
+      #     }   
+      #   }
+      # }
+      # 
       Xdata_2=autorun_data$ppm
-      signals_parameters_2=unlist(signals_parameters_2)
-      multiplicities_2=unlist(multiplicities_2)
-      roof_effect_2=unlist(roof_effect_2)
+      # signals_parameters_2=unlist(signals_parameters_2)
+      # multiplicities_2=unlist(multiplicities_2)
+      # roof_effect_2=unlist(roof_effect_2)
+      signals_parameters_2=unlist(signals_parameters)
+      multiplicities_2=unlist(multiplicities)
+      roof_effect_2=unlist(roof_effect)
 
       fitted_signals = fitting_optimization(signals_parameters_2,
                                          Xdata_2,multiplicities_2,roof_effect_2,Ydata,program_parameters$freq)
@@ -168,17 +193,17 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
         output_data$signals
       )
       
-      p2=plotgenerator(
-        results_to_save,
-        plot_data[,ROI_buckets],
-        Xdata,
-        Ydata,
-        fitted_signals[,ROI_buckets],
-        program_parameters,
-        signals_names,
-        experiment_name,
-        is_roi_testing
-      )
+      # p2=plotgenerator(
+      #   results_to_save,
+      #   plot_data[,ROI_buckets],
+      #   Xdata,
+      #   Ydata,
+      #   fitted_signals[,ROI_buckets],
+      #   program_parameters,
+      #   signals_names,
+      #   experiment_name,
+      #   is_roi_testing
+      # )
       
       
       plotdata2 = data.frame(Xdata=Xdata_2,
@@ -209,26 +234,57 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun)
     blah$signals_parameters=signals_parameters
     blah$program_parameters=program_parameters
     blah$results_to_save=results_to_save
-    blah$import_excel_profile=ROI_profile
+    blah$ROI_profile=ROI_profile
     blah$Ydata=Ydata
     blah$fitted_signals=fitted_signals[,ROI_buckets]
     blah$plot_data=plot_data[,ROI_buckets]
     blah$FeaturesMatrix=FeaturesMatrix
     blah$signals_parameters=signals_parameters
     blah$signals_parameters_2=signals_parameters_2
-    
     blah$Xdata=Xdata
+    if (is_autorun=='Y') {
+      for (i in seq_along(blah$signals_codes)) {
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$ROI_profile=ROI_profile
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$program_parameters=program_parameters
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$fitted_signals=fitted_signals[,ROI_buckets]
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot_data=plot_data[,ROI_buckets]
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$FeaturesMatrix=blah$FeaturesMatrix
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$signals_parameters=blah$signals_parameters
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Xdata=Xdata
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Ydata=Ydata
+        useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$results_to_save=results_to_save
+      }
+      finaloutput = save_output(
+        spectrum_index,
+        signals_codes,
+        results_to_save,
+        autorun_data$buck_step,
+        finaloutput
+      )
+      tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
+        print('Not possible to overwrite a csv file open with Microsoft Excel')
+      })
+      blah$finaloutput=finaloutput
+      
     }
+    
+    }
+    print("d")
+    
+    
     blah$p=p
-    blah$p2=p2
+    # blah$p2=p2
     blah$results_to_save=results_to_save
     blah$spectrum_index=spectrum_index
     blah$signals_codes=signals_codes
     blah$fitting_type=fitting_type
+    
+    
+   
     # blah$finaloutput=finaloutput
     
   }
-    
+   blah$useful_data=useful_data
 
     # blah$autorun_data=autorun_data
   return(blah)

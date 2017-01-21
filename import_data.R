@@ -35,13 +35,14 @@ import_data = function(parameters_path) {
   biofluid=import_profile[14, 2]
   profile_folder_path = as.character(import_profile[6, 2])
 
-  ROI_data=try(read.csv(profile_folder_path),silent=T)
+  ROI_data=try(read.csv(profile_folder_path, stringsAsFactors = F),silent=T)
   if (class(ROI_data)=='try-error') {
-if  (biofluid=='Urine'){ ROI_data=read.csv('Urine_library.csv') } else if (biofluid=='Blood') { ROI_data=read.csv('Blood_library.csv') } else {
-  ROI_data=read.csv('Urine_library.csv')
+if  (biofluid=='Urine'){ ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Urine_library.csv', stringsAsFactors = F) } else if (biofluid=='Blood') { ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Blood_library.csv', stringsAsFactors = F) } else {
+  ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Urine_library.csv', stringsAsFactors = F)
   print('Loading urine library. Please prepare a library adapted to your dataset.')
 }}
-  signals_names=ROI_data[which(!is.na(ROI_data[, 1])),4]
+  signals_names=paste(ROI_data[which(!is.na(ROI_data[, 1])),4],ROI_data[which(!is.na(ROI_data[, 1])),5],sep='_')
+  
   signals_codes = 1:length(signals_names)
 
 
@@ -248,12 +249,13 @@ if  (biofluid=='Urine'){ ROI_data=read.csv('Urine_library.csv') } else if (biofl
   imported_data$signals_names = signals_names
   imported_data$signals_codes = signals_codes
   imported_data$Experiments = setdiff(Experiments, imported_data$not_loaded_experiments)
-  imported_data$export_path = export_path
+  imported_data$ROI_data = ROI_data
   imported_data$freq = freq
   imported_data$Metadata=Metadata
   imported_data$repository=repository
   imported_data$jres_path=jres_path
   imported_data$program_parameters=program_parameters
+  imported_data$export_path=export_path
   
   return(imported_data)
 
