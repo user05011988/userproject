@@ -3,7 +3,7 @@ fitting_variables = function() {
   program_parameters=list() 
   
   #Parameters of preparation of signals' parameters to optimize
-  program_parameters$BGdensity=30 #Density of signals to prepare abaseline below the signals to fit
+  program_parameters$BGdensity=70 #Density of signals to prepare abaseline below the signals to fit
 program_parameters$widthtolerance=0.2 #Allowed Variability of halfwidth
 program_parameters$gaussian=0 #Allowed Variability of gaussian percentage
 program_parameters$j_coupling_variation=0.2 #Allowed Variability of j-coupling

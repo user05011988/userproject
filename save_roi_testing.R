@@ -39,9 +39,9 @@ if (blah$fitting_type == "Clean Sum" ||
       finaloutput
     )
 
-  tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
-    print('Not possible to overwrite a csv file open with Microsoft Excel')
-  })
+  # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
+  #   print('Not possible to overwrite a csv file open with Microsoft Excel')
+  # })
 
     dummy=list(finaloutput=finaloutput,useful_data=useful_data)
     return(dummy)

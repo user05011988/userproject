@@ -1,5 +1,5 @@
 validation = function(finaloutput,
-                                 program_parameters,validation_type,profile_folder_path,metadata) {
+                                 program_parameters,validation_type,ROI_data,metadata) {
 
   #Created by Daniel Ca?ueto 13/09/2016
   #Finding of suspicious quantifications through difference with predicted shift, signal to total area ratio, fitting error, and difference with expected relative intensity
@@ -85,7 +85,7 @@ validation = function(finaloutput,
   {paste0("rgb(255,", ., ",", ., ")")}
   } else if (validation_type==6) { 
     
-    relative_intensity = read.csv(profile_folder_path, stringsAsFactors = F)
+    relative_intensity = ROI_data[,12]
     
     alarmmatrix=matrix(NA,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
     

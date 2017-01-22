@@ -182,7 +182,7 @@ server = function(input, output,session) {
   
   observeEvent(input$saveroi, {
     tryCatch({write.csv(reactiveprogramdata$ROI_data,reactiveprogramdata$autorun_data$profile_folder_path,row.names=F)}, error = function(err) {
-      print('Not possible to overwrite a csv file open with Microsoft Excel')
+      print('Not possible to overwrite the original csv file')
     })
     # print("Saving Profile!")
     # b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
@@ -434,10 +434,10 @@ server = function(input, output,session) {
    
     
     Xdata=try(reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$Xdata,silent=T)
-    if (class(Xdata)=="try-error") {
-         print('Choose valid quantification')
-         return(NULL)
-    }
+    # if (class(Xdata)=="try-error") {
+    #      print('Choose valid quantification')
+    #      return(NULL)
+    # }
     Ydata=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$Ydata
     plot_data=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$plot_data
     # program_parameters=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$program_parameters
@@ -461,9 +461,7 @@ server = function(input, output,session) {
     plotdata5 = melt(plotdata4, id = "Xdata")
     r=which(paste(ROI_profile[,4],ROI_profile[,5],sep='_')==reactiveprogramdata$autorun_data$signals_names[reactiveprogramdata$info$col])
     plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
-    reactivequantdata$method1$p=plot_ly(plotdata,x = ~Xdata, y = ~signals, type = 'scatter', name= reactiveprogramdata$autorun_data$signals_names[reactiveprogramdata$info$col],mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>% add_trace(data=plotdata5,x=~Xdata,y=~value,color=~'Surrounding signals',type='scatter',mode='lines',fill=NULL)  %>%
-      layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
-        yaxis = list(title = 'Intensity'))
+    reactivequantdata$method1$p=plot_ly(plotdata5,x = ~Xdata, y = ~value, name=~'Surrounding signals',type='scatter',mode='lines',fill='tozeroy',fillcolor='rgb(127, 166, 238)') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>% add_trace(data=plotdata,x = ~Xdata, y = ~signals, type = 'scatter', color= reactiveprogramdata$autorun_data$signals_names[reactiveprogramdata$info$col],mode = 'lines', fill = 'tozeroy',fillcolor='rgb(60, 60, 60)')  %>%layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'), yaxis = list(title = 'Intensity'))
 
     # }
     reactiveROItestingdata$ROIpar=ROI_profile
@@ -581,7 +579,7 @@ observeEvent(input$autorun, {
     }
     reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[ind, 1]:reactiveprogramdata$ROI_separator[ind, 2],]=reactiveROItestingdata$ROIpar
     tryCatch({write.csv(reactiveprogramdata$ROI_data,reactiveprogramdata$autorun_data$profile_folder_path,row.names=F)}, error = function(err) {
-      print('Not possible to overwrite a csv file open with Microsoft Excel')
+      print('Not possible to overwrite the original csv file')
     })
     # print("Saving Profile")
     # savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
@@ -671,7 +669,7 @@ observeEvent(input$autorun, {
 
   observeEvent(input$select_validation, {
     if (reactiveprogramdata$beginning==F) return()
-    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$program_parameters,input$select_validation,reactiveprogramdata$autorun_data$profile_folder_path,reactiveprogramdata$autorun_data$Metadata)
+    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$program_parameters,input$select_validation,reactiveprogramdata$ROIdata,reactiveprogramdata$autorun_data$Metadata)
   output$fit_selection = DT::renderDataTable({ datatable(round(validation_data$alarmmatrix,4),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(validation_data$alarmmatrix), backgroundColor = styleInterval(validation_data$brks, validation_data$clrs))
   }
     # ,options = list(
@@ -775,8 +773,7 @@ observeEvent(input$autorun, {
     dummy = matrix(NaN,
       dim(imported_data$dataset)[1],
       length(imported_data$signals_names))
-    # reactiveprogramdata$ROI_data = read.csv(imported_data$profile_folder_path, stringsAsFactors = F)
-    # imported_data$signals_names=paste(imported_data$signals_names,reactiveprogramdata$ROI_data[1:dim(dummy)[2],5],sep='_')
+   
     reactiveprogramdata$ROI_data = imported_data$ROI_data
     rownames(dummy) = imported_data$Experiments
     colnames(dummy) = imported_data$signals_names

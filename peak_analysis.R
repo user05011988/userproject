@@ -251,8 +251,8 @@ for (i in 1:dim(suggested_metabolites)[1]) {
 # suggested_metabolites[i,]=paste(repository[!is.na(repository[,5]),][sort(abs(repository[,5]-ROI_profile_suggestion[i,5]),index.return=T)$ix[1:5],1],' (', round(sort(abs(repository[,5]-ROI_profile_suggestion[i,5]),index.return=T)$x[1:5],3),')',sep='')
 ROI_profile_suggestion=cbind(ROI_profile_suggestion,suggested_metabolites)
 
-write.csv(ROI_profile_suggestion,paste(export_path,'ROI_profile_suggestion.csv',sep='/'),row.names = F)
-write.csv(peak_quantification,paste(export_path,'peak_quantification.csv',sep='/'),row.names = F)
+try(write.csv(ROI_profile_suggestion,paste(export_path,'ROI_profile_suggestion.csv',sep='/'),row.names = F),silent=T)
+try(write.csv(peak_quantification,paste(export_path,'peak_quantification.csv',sep='/'),row.names = F),silent=T)
 print('Done! Look on your export folder, you should have a new csv with ROI profiles suggestions and a new CSV with quantifications of integrated peaks.')
 # dumy=list(signals_intensity=signals_intensity,signals_width=signals_width,signals_position=signals_position,spectra_lag=spectra_lag)
 # return(dumy)

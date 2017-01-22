@@ -5,9 +5,9 @@ remove_quant=function(info,autorun_data,finaloutput) {
 
 finaloutput$Area[ind1,ind2]=finaloutput$shift[ind1,ind2]=finaloutput$Area[ind1,ind2]=finaloutput$width[ind1,ind2]=finaloutput$signal_area_ratio[ind1,ind2]=finaloutput$correlation[ind1,ind2]=finaloutput$intensity[ind1,ind2]=NA
 
-tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
-  print('Not possible to overwrite a csv file open with Microsoft Excel')
-})
+# tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
+#   print('Not possible to overwrite a csv file open with Microsoft Excel')
+# })
 
 return(finaloutput)
 }

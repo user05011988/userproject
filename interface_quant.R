@@ -1,6 +1,5 @@
 interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,useful_data) {
   blah=list()
-  # ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
   ROI_data=autorun_data$ROI_data
   
   dummy = ROI_data[which(is.na(ROI_data[, 1])),]
@@ -69,7 +68,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
         useful_data[[spectrum_index]][[signals_codes]]$plot_data=dummy$plot_data
         useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
         useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
-        useful_data[[spectrum_index]][[signals_codes]]$results_to_save=dummy$results_to_save
+        useful_data[[spectrum_index]][[signals_codes]]$results_to_save=results_to_save
         
         finaloutput = save_output(
           spectrum_index,
@@ -78,9 +77,9 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
           autorun_data$buck_step,
           finaloutput
         )
-        tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
-          print('Not possible to overwrite a csv file open with Microsoft Excel')
-        })
+        # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
+        #   print('Not possible to overwrite a csv file open with Microsoft Excel')
+        # })
       }
 
       #If the quantification is through fitting with or without baseline
@@ -193,18 +192,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
         output_data$signals
       )
       
-      # p2=plotgenerator(
-      #   results_to_save,
-      #   plot_data[,ROI_buckets],
-      #   Xdata,
-      #   Ydata,
-      #   fitted_signals[,ROI_buckets],
-      #   program_parameters,
-      #   signals_names,
-      #   experiment_name,
-      #   is_roi_testing
-      # )
-      
+     
       
       plotdata2 = data.frame(Xdata=Xdata_2,
         Ydata=Ydata_2,
@@ -216,15 +204,20 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
         rep('Generated Spectrum', length(Ydata_2)),
         rep('Generated Background', length(Ydata_2))
       )
-      plotdata4 = data.frame(Xdata=Xdata_2, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
-      plotdata5 = melt(plotdata4, id = "Xdata")
+      # plotdata4 = data.frame(Xdata=Xdata_2, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
+      # plotdata5 = melt(plotdata4, id = "Xdata")
 
-
+colors=c('red','blue','black','brown','cyan','green','yellow')
+      # plotdata = data.frame(Xdata=Xdata_2, signals = plot_data[1, ] )
+      p=plot_ly(plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL) %>% layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'), yaxis = list(range=c(0,max(Ydata)),title = 'Intensity'))
+        for (i in 4:nrow(plot_data)) {
+          plotdata5 =  data.frame(Xdata=Xdata_2, variable=rownames(plot_data)[i] ,value=plot_data[i,])
       
-      plotdata = data.frame(Xdata=Xdata_2, signals = plot_data[1, ] )
-      p=plot_ly(plotdata,x = ~Xdata, y = ~signals, type = 'scatter', color= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>%
-        layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
-          yaxis = list(range=c(0,max(Ydata)),title = 'Intensity'))
+        p=p %>%add_trace(data=plotdata5,x=~Xdata,y=~value,name=~variable,type='scatter',mode='lines',fill='tozeroy',fillcolor=colors[i-3])   
+}
+      
+    
+        
       
    
 
@@ -261,9 +254,9 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
         autorun_data$buck_step,
         finaloutput
       )
-      tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
-        print('Not possible to overwrite a csv file open with Microsoft Excel')
-      })
+      # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
+      #   print('Not possible to overwrite a csv file open with Microsoft Excel')
+      # })
       blah$finaloutput=finaloutput
       
     }

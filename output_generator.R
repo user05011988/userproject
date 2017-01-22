@@ -39,8 +39,9 @@ output_generator = function(signals_to_quantify,
                                              ((
                                                abs(sum(subregion_spectrum) - sum(subregion_signals)) / sum(subregion_spectrum)
                                              ) * 100))
-    aa=cor(subregion_spectrum, subregion_fitted)
-    if (is.na(aa)) aa=0
+    # aa=cor(subregion_spectrum, subregion_fitted)
+    aa=summary(lm(subregion_spectrum~subregion_fitted))$sigma/max(subregion_spectrum)
+    # if (is.na(aa)) aa=0
     output_data$correlation = append(output_data$correlation,aa
                                        # mean(((subregion_spectrum - subregion_fitted) ^ 2
                                        # ) / subregion_spectrum ^ 2) * 100)

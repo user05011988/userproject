@@ -10,36 +10,7 @@ sign_par = function(autorun_data, finaloutput,spectrum_index,ROI_profile) {
     program_parameters$freq = autorun_data$freq
     program_parameters$ROI_buckets = ROI_buckets
     program_parameters$buck_step = autorun_data$buck_step
-    # experiment_name = autorun_data$Experiments[[spectrum_index]]
-    # plot_path = file.path(autorun_data$export_path,
-    #                       experiment_name,
-    #                       signals_names)
-    # for (i in seq_along(plot_path))
-    #   if (!dir.exists(plot_path[i]))
-    #     dir.create(plot_path[i])
-
-    #If the quantification is through integration with or without baseline
-    # if (fitting_type == "Clean Sum" ||
-    #     fitting_type == "Baseline Sum") {
-    #   is_roi_testing = "N"
-    #   clean_fit = ifelse(fitting_type == "Clean Sum", "Y", "N")
-    #   integration_parameters = data.frame(plot_path, is_roi_testing,
-    #                                       clean_fit)
-    #   results_to_save = integration(integration_parameters, Xdata,
-    # 
-    #                                 Ydata)
-    #   #Generation of output variables specific of every quantification
-    # 
-    #   write.csv(
-    #     integration_parameters,
-    #     file.path(plot_path[i],
-    #               "integration_parameters.csv"),
-    #     row.names = F
-    #   )
-
-      #If the quantification is through fitting with or without baseline
-    # } else if (fitting_type == "Clean Fitting" || fitting_type ==
-    #            "Baseline Fitting") {
+    
       is_roi_testing = "N"
       clean_fit='N'
       signals_names=autorun_data$signals_names[1:2]

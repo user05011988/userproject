@@ -6,7 +6,6 @@ autorun = function(autorun_data, finaloutput,useful_data) {
   
   
   # Loading of ROIs parameters
-  # ROI_data = read.csv(autorun_data$profile_folder_path, stringsAsFactors = F)
   ROI_data=autorun_data$ROI_data
   
   dummy = which(is.na(ROI_data[, 1]))
@@ -74,13 +73,14 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         dummy = integration(integration_parameters, Xdata,
           
           Ydata)
+        results_to_save=dummy$results_to_save
         #Generation of output variables specific of every quantification
         useful_data[[spectrum_index]][[signals_codes]]$ROI_profile=ROI_profile
         useful_data[[spectrum_index]][[signals_codes]]$integration_parameters=integration_parameters
         useful_data[[spectrum_index]][[signals_codes]]$plot_data=dummy$plot_data
         useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
         useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
-        useful_data[[spectrum_index]][[signals_codes]]$results_to_save=dummy$results_to_save
+        useful_data[[spectrum_index]][[signals_codes]]$results_to_save=results_to_save
         #If the quantification is through fitting with or without baseline
       } else if (fitting_type == "Clean Fitting" || fitting_type ==
           "Baseline Fitting") {
@@ -207,9 +207,9 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         finaloutput
       )
       
-      tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
-        print('Not possible to overwrite a csv file open with Microsoft Excel')
-      })
+      # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
+      #   print('Not possible to overwrite a csv file open with Microsoft Excel')
+      # })
       
     }
     

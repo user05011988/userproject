@@ -36,11 +36,11 @@ import_data = function(parameters_path) {
   profile_folder_path = as.character(import_profile[6, 2])
 
   ROI_data=try(read.csv(profile_folder_path, stringsAsFactors = F),silent=T)
-  if (class(ROI_data)=='try-error') {
-if  (biofluid=='Urine'){ ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Urine_library.csv', stringsAsFactors = F) } else if (biofluid=='Blood') { ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Blood_library.csv', stringsAsFactors = F) } else {
-  ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Urine_library.csv', stringsAsFactors = F)
-  print('Loading urine library. Please prepare a library adapted to your dataset.')
-}}
+  # if (class(ROI_data)=='try-error') {
+# if  (biofluid=='Urine'){ ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Urine_library.csv', stringsAsFactors = F) } else if (biofluid=='Blood') { ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Blood_library.csv', stringsAsFactors = F) } else {
+  # ROI_data=read.csv('C:/Users/user/Documents/Dolphin/R/Urine_library.csv', stringsAsFactors = F)
+  # print('Loading urine library. Please prepare a library adapted to your dataset.')
+# }}
   signals_names=paste(ROI_data[which(!is.na(ROI_data[, 1])),4],ROI_data[which(!is.na(ROI_data[, 1])),5],sep='_')
   
   signals_codes = 1:length(signals_names)
