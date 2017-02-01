@@ -19,25 +19,27 @@ if (blah$fitting_type == "Clean Sum" ||
   for (i in seq_along(blah$signals_codes)) {
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$ROI_profile=blah$ROI_profile
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$program_parameters=blah$program_parameters
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$fitted_signals=blah$fitted_signals
+    # useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$fitted_signals=blah$fitted_signals
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot_data=blah$plot_data
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Xdata=blah$Xdata
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Ydata=blah$Ydata
     useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$results_to_save=blah$results_to_save
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$signals_parameters=blah$signals_parameters
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$FeaturesMatrix=blah$FeaturesMatrix
+    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$error1=blah$error1
+    
+    
   }
-  
-  
+  finaloutput = save_output(
+    blah$spectrum_index,
+    blah$signals_codes,
+    blah$results_to_save,
+    autorun_data$buck_step,
+    finaloutput)
 
 }
 
 
-  finaloutput = save_output(
-      blah$spectrum_index,
-      blah$signals_codes,
-      blah$results_to_save,
-      autorun_data$buck_step,
-      finaloutput
-    )
 
   # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
   #   print('Not possible to overwrite a csv file open with Microsoft Excel')

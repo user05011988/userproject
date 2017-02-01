@@ -23,6 +23,7 @@ packages_sources = function() {
   if (!suppressPackageStartupMessages(require("heatmaply"))) install.packages("heatmaply")
   if (!suppressPackageStartupMessages(require("missForest"))) install.packages("missForest")
   if (!suppressPackageStartupMessages(require("mclust"))) install.packages("mclust")
+  if (!suppressPackageStartupMessages(require("shinyFiles"))) install.packages("shinyFiles")
   
   if (!suppressPackageStartupMessages(require("stringr"))) install.packages("stringr")
     if (!suppressPackageStartupMessages(require("mQTL.NMR"))) {

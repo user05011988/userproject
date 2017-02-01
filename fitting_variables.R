@@ -30,5 +30,10 @@ program_parameters$additional_signal_percentage_limit=3 #If fititng erorr is les
 program_parameters$peakdet_minimum=0.01 #Limit to find a peak as relevant enough to add it.
 
 
+#Parameters related to criteria to automatically discard quantifications during analysis
+program_parameters$automatic_removal='Y'
+program_parameters$fitting_error_analysis_limit=0.05
+program_parameters$signal_area_ratio_analysis_limit=10
+
 return(program_parameters)
 }

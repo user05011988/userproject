@@ -15,12 +15,14 @@ validation = function(finaloutput,
   #Analysis of which samples have too much fitting error
   if (validation_type==1) {
   alarmmatrix=finaloutput$correlation
-  brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
-  clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
+  # brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  brks <- seq(0.01,0.19,0.01)
+  clrs <- round(seq(255, 40, length.out = length(brks) + 1), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
 } else if (validation_type==2) { 
   alarmmatrix=finaloutput$signal_area_ratio
-  brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  # brks <- quantile(alarmmatrix, probs = seq(.05, .95, .05), na.rm = TRUE)
+  brks <- seq(0,0.3,length.out=19)
   clrs <- round(seq(40, 255, length.out = length(brks) + 1), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
 } else if (validation_type==3) { 

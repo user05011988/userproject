@@ -97,12 +97,13 @@ autorun = function(autorun_data, finaloutput,useful_data) {
           program_parameters)
         
         #Calculation of the parameters that will achieve the best fitting
-        signals_parameters = fittingloop(FeaturesMatrix,
+        dummy = fittingloop(FeaturesMatrix,
           Xdata,
           Ydata,
           program_parameters)
 
-        
+        signals_parameters=dummy$signals_parameters
+        error1=dummy$error1
         #Fitting of the signals
         multiplicities=c(FeaturesMatrix[,11],rep(1,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
         roof_effect=c(FeaturesMatrix[,12],rep(0,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
@@ -127,13 +128,15 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         signals_parameters=rbind(signals_parameters,multiplicities,roof_effect)
         
         #Generation of output data about the fitting and of the necessary variables for the generation ofa figure
-        output_data = output_generator(
+        dummy = output_generator(
           signals_to_quantify,
           fitted_signals,
           Ydata,
           Xdata,
           signals_parameters,multiplicities
         )
+        output_data=dummy$output_data
+        error1=dummy$error1
        
         output_data$intensity=signals_parameters[1, signals_to_quantify]
         output_data$width=signals_parameters[3, signals_to_quantify]
@@ -150,6 +153,8 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         
         #Adaptation of the quantification to de-scaled Ydata
         # results_to_save$Area = results_to_save$Area * max(Ydata)
+       
+        
         
         #Generation of the figure when the conditions specified in the Parameters file are accomplished
         plot_data = rbind(
@@ -180,13 +185,14 @@ autorun = function(autorun_data, finaloutput,useful_data) {
       
 
           program_parameters$signals_to_quantify=NULL
-
+          print(error1)
           for (i in seq_along(signals_codes)) {
           # useful_data[[spectrum_index]][[signals_codes[i]]]$plot=plots[[i]]
           useful_data[[spectrum_index]][[signals_codes[i]]]$ROI_profile=ROI_profile
           useful_data[[spectrum_index]][[signals_codes[i]]]$program_parameters=program_parameters
-          useful_data[[spectrum_index]][[signals_codes[i]]]$fitted_signals=fitted_signals
+          # useful_data[[spectrum_index]][[signals_codes[i]]]$fitted_signals=fitted_signals[,ROI_buckets]
           useful_data[[spectrum_index]][[signals_codes[i]]]$plot_data=plot_data
+          useful_data[[spectrum_index]][[signals_codes[i]]]$error1=error1
           useful_data[[spectrum_index]][[signals_codes[i]]]$FeaturesMatrix=FeaturesMatrix
           useful_data[[spectrum_index]][[signals_codes[i]]]$signals_parameters=signals_parameters
           useful_data[[spectrum_index]][[signals_codes[i]]]$Xdata=Xdata
@@ -206,7 +212,7 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         autorun_data$buck_step,
         finaloutput
       )
-      
+      print(dim(finaloutput$correlation))
       # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
       #   print('Not possible to overwrite a csv file open with Microsoft Excel')
       # })

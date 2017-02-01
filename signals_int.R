@@ -55,13 +55,15 @@ fitting_type=ROI_profile[1,3]
 
     # print(signals_parameters)
       #Generation of output data about the fitting and of the necessary variables for the generation ofa figure
-      output_data = output_generator(
+      dummy = output_generator(
         signals_to_quantify,
         fitted_signals,
         Ydata_2,
         Xdata_2,
         signals_parameters,multiplicities
       )
+      output_data=dummy$output_data
+      error1=dummy$error1
     # print(output_data)
       output_data$intensity=signals_parameters[1, signals_to_quantify]
       output_data$width=signals_parameters[3, signals_to_quantify]
@@ -177,7 +179,7 @@ fitting_type=ROI_profile[1,3]
     blah$finaloutput=finaloutput
     blah$results_to_save=results_to_save
     blah$FeaturesMatrix=FeaturesMatrix
-    blah$fitted_signals=fitted_signals[,ROI_buckets]
+    # blah$fitted_signals=fitted_signals[,ROI_buckets]
     
     blah$spectrum_index=spectrum_index
     blah$signals_codes=signals_codes

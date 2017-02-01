@@ -1,5 +1,5 @@
-write_info = function(export_path, finaloutput) {
-  
+write_info = function(export_path, finaloutput,ROI_data) {
+  dir.create(export_path)
 
 write.csv(finaloutput$Area,
   file.path(export_path,
@@ -24,5 +24,8 @@ write.csv(
   finaloutput$intensity,
   file.path(export_path,
     "intensity.csv")
+)
+tryCatch(write.csv(ROI_data,file.path(export_path,"ROI_profiles_used.csv")), error = function(err) 
+  print('Not possible to overwrite the original csv file')
 )
 }

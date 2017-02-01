@@ -337,6 +337,6 @@ fittingloop = function(FeaturesMatrix,
     }
 
   }
-
-  return(signals_parameters)
+  dummy=list(signals_parameters=signals_parameters,error1=error1)
+  return(dummy)
 }

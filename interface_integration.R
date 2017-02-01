@@ -64,7 +64,7 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   #       fill = 'Quantified Signal'
   #     )) +
   #   scale_x_reverse()
-  p=plot_ly(plotdata,x = ~Xdata, y = ~signal, type = 'scatter', color= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL) %>%
+  p=plot_ly(plotdata,x = ~Xdata, y = ~signal, type = 'scatter', color= 'Signal',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL) %>%
     layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
       yaxis = list(range=c(0,max(Ydata)),title = 'Intensity'))
   plot_data=rbind(integrated_signal,baseline,integrated_signal+baseline,integrated_signal)

@@ -68,7 +68,7 @@ import_data = function(parameters_path) {
   
   fa=repository[,der]
   
-  repository=repository[sort(fa,decreasing = T,index.return=T)$ix,]
+  repository=repository[sort(fa,decreasing = T,index.return=T)$ix,c(1:3,5:7,der)]
   
 
 
@@ -214,22 +214,15 @@ import_data = function(parameters_path) {
   
   imported_data$dataset[is.na(imported_data$dataset)]=min(abs(imported_data$dataset)[abs(imported_data$dataset)>0])
   if (pqn=='Y') {
-    tra=rep(NA,20)
-    vardata3=apply(imported_data$dataset,2,function(x) mad(x,na.rm=T)/median(x,na.rm=T))
-    ss=boxplot.stats(vardata3)$out
-    vardata3=vardata3[!(vardata3 %in% ss)]
-    param=seq(5,100,5)*max(vardata3,na.rm=T)/100
-    dummy=imported_data$dataset
-    ll=c(intersect(which(imported_data$ppm>5.6),which(imported_data$ppm<6.1)),intersect(which(imported_data$ppm>4.6),which(imported_data$ppm<4.9)),intersect(which(imported_data$ppm>-0.5),which(imported_data$ppm<0.5)))
-    dummy[,ll]=0
-    for (i in 1:length(param)) {
-      s=tryCatch({plele(param[i],dummy,vardata3)},error=function(e) NaN)
-      
-      
-      tra[i]=tryCatch({median(s$lol2[apply(imported_data$dataset,2,function(x) median(x,na.rm=T))>median(imported_data$dataset,na.rm=T)],na.rm=T)},error=function(e) NaN)
-    }
-    s=plele(param[which.min(tra)],dummy,vardata3);
-    imported_data$dataset=imported_data$dataset/s$pqndatanoscale
+    
+    treated=t(imported_data$dataset[,which(apply(imported_data$dataset,2,median)>median(apply(imported_data$dataset,2,median)))])
+    reference <- apply(treated,1,function(x)median(x,na.rm=T))
+    quotient <- treated/reference
+    quotient.median <- apply(quotient,2,function(x)median(x,na.rm=T))
+    imported_data$dataset <- imported_data$dataset/quotient.median
+    
+    
+    
   }
   imported_data$dataset=imported_data$dataset/quantile(imported_data$dataset,0.9,na.rm=T)
   
@@ -240,6 +233,7 @@ import_data = function(parameters_path) {
     imported_data$ppm=rev(imported_data$ppm)
     imported_data$dataset=t(apply(imported_data$dataset,1,rev))
   }
+  imported_data$dataset[is.na(imported_data$dataset)]=0
   #Storage of parameters needed to perform the fit in a single variable to return.
   
   imported_data$buck_step = params$buck_step

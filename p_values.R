@@ -42,7 +42,7 @@ for (k in 1:dim(dataset)[2]) {
   # if (!any(is.na(dataset[,k]))) {
   if (!any(tt[,k]<0.05,na.rm=T)) {
     
-    p_value[k]=suppressWarnings(wilcox.test(datasetlist[[1]][,k],datasetlist[[2]][,k],paired=paireddata)$p.value)
+    p_value[k]=tryCatch(wilcox.test(datasetlist[[1]][,k],datasetlist[[2]][,k],paired=paireddata)$p.value,error=function(e) NA)
   } else {
     p_value[k]=tryCatch(t.test(datasetlist[[1]][,k],datasetlist[[2]][,k],paired=paireddata,var.equal=F)$p.value,error=function(e) NA)
   }
@@ -52,23 +52,32 @@ for (k in 1:dim(dataset)[2]) {
 
 } else {
   
-  datasetlist=array(unlist(datasetlist), dim = c(nrow(datasetlist[[1]]), ncol(datasetlist[[1]]), length(datasetlist)))
+  # datasetlist=array(unlist(datasetlist), dim = c(nrow(datasetlist[[1]]), ncol(datasetlist[[1]]), length(datasetlist)))
+  # tt=rep(NA,dim(dataset)[2])
+  #   for (k in 1:dim(dataset)[2]) {
+  #     fa=tryCatch(bartlett.test(as.data.frame(datasetlist[,k,]))$p.value,error=function(e) NA)
+  #     fa2=tryCatch(fligner.test(as.data.frame(datasetlist[,k,]))$p.value,error=function(e) NA)
+  #     tt[k]=suppressWarnings(min(c(fa,fa2),na.rm=T))
+  #   }
   tt=rep(NA,dim(dataset)[2])
-    for (k in 1:dim(dataset)[2]) {
-      fa=tryCatch(bartlett.test(as.data.frame(datasetlist[,k,]))$p.value,error=function(e) NA)
-      fa2=tryCatch(fligner.test(as.data.frame(datasetlist[,k,]))$p.value,error=function(e) NA)
-      tt[k]=suppressWarnings(min(c(fa,fa2),na.rm=T))
-    }
+  for (k in 1:dim(dataset)[2]) {
+    # fa=tryCatch(bartlett.test(as.data.frame(datasetlist[,k,]))$p.value,error=function(e) NA)
+    
+    tt[k]=tryCatch(fligner.test(dataset[,k],metadata[,2])$p.value,error=function(e) 0)
+    #     tt[k]=suppressWarnings(min(c(fa,fa2),na.rm=T))
+  }
+  tt[is.na(tt)]=0
   p_value=rep(NA,dim(dataset)[2])
   for (k in 1:dim(dataset)[2]) {
     # if (!any(is.na(dataset[,k]))) {
     if (tt[k]<0.05) {
-      # p_value[k]=tryCatch(wilcox.test(datasetlist[[1]][,k],datasetlist[[2]][,k])$p.value,warning = function(w) { },error=function(e) NA)
-      if (paireddata==T) {
-        p_value[k]=withCallingHandlers({ friedman.test(datasetlist[,k,])$p.value}, warning = function(w) {})
-      } else {
-      p_value[k]=withCallingHandlers({ kruskal.test(as.data.frame(datasetlist[,k,]))$p.value}, warning = function(w) {})
-      }
+     
+      # if (paireddata==T) {
+      #   p_value[k]=withCallingHandlers({ friedman.test(datasetlist[,k,])$p.value}, warning = function(w) {})
+      # } else {
+      # p_value[k]=withCallingHandlers({ kruskal.test(as.data.frame(datasetlist[,k,]))$p.value}, warning = function(w) {})
+      p_value[k]=tryCatch(kruskal.test(dataset[,k] ~ metadata[,2])$p.value,error=function(e) NA)
+      # }
     } else {
       if (paireddata==T) {
         no=stack(as.data.frame(datasetlist[,k,]))
@@ -76,8 +85,10 @@ for (k in 1:dim(dataset)[2]) {
         p_value[k]=tryCatch(summary(aov(values ~ ind + Error(subject/ind), data=no))[[2]][[1]][1,5],error=function(e) NA)
         
       } else {
-      no=data.frame(y=as.vector(as.matrix(datasetlist[,k,])),group=sort(rep(1:dim(datasetlist)[3],dim(datasetlist)[1])))
-      p_value[k]=tryCatch(anova(lm(y ~ group,no))[1,5],error=function(e) NA)
+        p_value[k]=tryCatch(summary(aov(dataset[,k] ~ metadata[,2]))[[1]]$`Pr(>F)`[1],error=function(e) NA)
+      # no=data.frame(y=as.vector(as.matrix(datasetlist[,k,])),group=sort(rep(1:dim(datasetlist)[3],dim(datasetlist)[1])))
+      # p_value[k]=tryCatch(anova(lm(y ~ group,no))[1,5],error=function(e) NA)
+        
         }
     }
     

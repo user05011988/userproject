@@ -78,10 +78,11 @@ autorun_model_spectrum = function(autorun_data) {
                                     program_parameters)
 
       #Calculation of the parameters that will achieve the best fitting
-      signals_parameters = fittingloop(FeaturesMatrix,
+      dummy = fittingloop(FeaturesMatrix,
                                        Xdata,
                                        Ydata,
                                        program_parameters)
+      signals_parameters=dummy$signals_parameters
         
       #Fitting of the signals
       multiplicities=FeaturesMatrix[,11]
@@ -123,32 +124,30 @@ autorun_model_spectrum = function(autorun_data) {
       ) 
 
       Ydata = as.numeric(autorun_data$dataset[spectrum_index, ])
-      output_data = output_generator(
+      dummy = output_generator(
         signals_to_quantify,
         fitted_signals,
         Ydata,
         Xdata,
         signals_parameters,multiplicities
       )
+      output_data=dummy$output_data
 
       plotdata2$Ydata= plotdata2$Ydata+output_data$signals_sum
       plotdata3$Ydata= plotdata3$Ydata+output_data$fitted_sum
-     
+      
       
 }
    
     
     }
-
-  # p=plot_ly(plotdata2,x = ~Xdata, y = ~Ydata, type = 'scatter', name= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~Ydata,name='Fitted spectrum',fill=NULL)  %>% add_trace(data=plotdata,x=~Xdata,y=~Ydata,name='Original spectrum',fill=NULL)  %>%
-  #   layout(xaxis = list(range=c(max(autorun_data$ppm,na.rm=T),min(autorun_data$ppm,na.rm=T)),title = 'ppm'),
-  #     yaxis = list(title = 'Intensity'))
-  p=plot_ly(plotdata2,x = ~Xdata, y = ~Ydata, type = 'scatter', name= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~Ydata,name='Fitted spectrum',fill=NULL)  %>%
-    layout(xaxis = list(autorange = "reversed",title = 'ppm'),
-      yaxis = list(title = 'Intensity'))
-    
-    # blah$finaloutput=finaloutput
-
-    # blah$autorun_data=autorun_data
+  p_value_bucketing=as.vector(p_values(autorun_data$dataset,autorun_data$Metadata))
+  
+  dere=data.frame(ppm=rep(Xdata,3),variable=c(rep('Model spectrum',length(Xdata)),rep('Fitted spectrum',length(Xdata)),rep('p value',length(Xdata))),value=c(Ydata,plotdata3$Ydata,p_value_bucketing),id=c(rep(1,length(Xdata)*2),rep(2,length(Xdata))))
+  p=plot_ly(data=dere,x = ~ppm, y = ~value, color = ~variable, colors = "Dark2",
+    yaxis = ~paste0("y", id)) %>%
+    add_lines() %>% layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]))) %>%
+    subplot(nrows = 2, shareX = TRUE)
+  
   return(p)
 }

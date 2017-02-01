@@ -32,12 +32,14 @@ ui <- fluidPage(
           fileInput("file1", "Load the parameters file. It will automatically do an autorun of the ROI Profiles in the model spectrum. Then click Autorun if you wanna use these profiles for all spectra",
             accept = c("text/csv")
           ),
-          
-          # ,
-          fileInput("file2", "Load RData if you want to reanudate a previous version",
+          fileInput("file2", "Reanudate a saved session",
             accept = c("text/RData")),
-            actionButton("save_objs", "Save session")
-            
+          #   actionButton("save_objs", "Save session")
+          shinySaveButton("save", "Save session", "Save session as ...", filetype=list(RData="RData")),
+          fileInput("file3", "Combine data of other sessions",
+            accept = c("text/RData"))
+         
+          
 
         ),
         mainPanel(
@@ -101,26 +103,23 @@ ui <- fluidPage(
       
     ),
     tabPanel("ROI Profiles", 
-      fluidRow(column(width = 12, h4("Here you can add ROI profiles"))),
+      # fluidRow(column(width = 12, h4("Here you can add ROI profiles"))),
+      # 
+      #     div(d3tfOutput('new_roi_profile',width = "100%", height = "auto"), style = "font-size:80%"),
+      # fluidRow(
+      #   column(width = 12,
+      #     selectInput("roirows",label=NULL,choices=1:10,selected=1)
+      #   )),
+      # fluidRow(
+      #   column(width = 12,
+          actionButton("add_signal", label = "Add signal"),actionButton("remove_signal", label = "Remove signals"),actionButton("save_changes", label = "Save changes")
+        # ))
+  ,
+        
+      fluidRow(column(width = 12, h4("Here you have the ROI profiles")),
+      div(d3tfOutput('roi_profiles',width = "100%", height = "auto"), style = "font-size:80%")
       
-          div(d3tfOutput('new_roi_profile',width = "100%", height = "auto"), style = "font-size:80%"),
-      fluidRow(
-        column(width = 12,
-          selectInput("roirows",label=NULL,choices=1:10,selected=1)
-        )),
-      fluidRow(
-        column(width = 12,
-          actionButton("addroi", label = "Add ROI")
-        )),
-      fluidRow(
-        column(width = 12,
-          actionButton("saveroi", label = "Save ROI")
-        )), 
-          
-      fluidRow(column(width = 12, h4("Here you have the current ROI profiles"))),
-      div(dataTableOutput("roi_profiles"), style = "font-size:80%")
-      
-    ),
+    )),
     
     tabPanel("Uni and multivariate analysis", 
       fluidRow(column(width = 12, h4("Here you have boxplots for every quantified signal, with p values on the x axis"))),
@@ -147,32 +146,134 @@ server = function(input, output,session) {
   
   reactivequantdata <- reactiveValues(method2=NULL, method1 = NULL,stop3=0)
   
-  reactiveprogramdata <- reactiveValues(ROIdata=NULL,ind=NULL,beginning=F,dataset=NULL,finaloutput=NULL,useful_data=list(),autorun_data=NULL,p_value_final=NULL,ROI_data=NULL,info=c(),ROI_separator=NULL,bucketing=NULL,select_options=NULL,new_roi_profile=NULL,p=NULL,bgColScales=NULL,autorun_plot=NULL)
+  reactiveprogramdata <- reactiveValues(ROIdata_subset=NULL,ind=NULL,beginning=F,dataset=NULL,finaloutput=NULL,useful_data=list(),autorun_data=NULL,p_value_final=NULL,ROI_data=NULL,ROI_data_check=NULL,info=c(),ROI_separator=NULL,select_options=NULL,new_roi_profile=NULL,p=NULL,bgColScales=NULL,autorun_plot=NULL,ROI_names=NULL)
   
-  observeEvent(input$roirows, {
-    reactiveprogramdata$new_roi_profile= as.data.frame(matrix(NA,as.numeric(input$roirows),11))
-    colnames(reactiveprogramdata$new_roi_profile)=colnames(reactiveprogramdata$ROI_data)
+ 
+  observeEvent(input$add_signal, {
+    # reactiveprogramdata$ROI_data_check=rbind(reactiveprogramdata$ROI_data_check,apply(reactiveprogramdata$ROI_data_check,2,median))
+    reactiveprogramdata$ROI_data_check=rbind(reactiveprogramdata$ROI_data_check,rep(NA,ncol(reactiveprogramdata$ROI_data_check)))
     
   })
-  observeEvent(input$addroi, {
-    reactiveprogramdata$ROI_data=rbind(reactiveprogramdata$ROI_data,reactiveprogramdata$new_roi_profile)
-
+  observeEvent(input$remove_signal, {
+    reactiveprogramdata$ROI_data_check=reactiveprogramdata$ROI_data_check[-input$roi_profiles_select,]
+    resetInput(session, "roi_profiles_edit")
     
+  })
+  observeEvent(input$save_changes, {
+    reactiveprogramdata$ROI_data_check=reactiveprogramdata$ROI_data_check[sort(reactiveprogramdata$ROI_data_check[,1],index.return=T)$ix,]
+    new_correlation=new_intensity=new_signal_area_ratio=new_shift=new_width=new_Area=matrix(NA,nrow(reactiveprogramdata$finaloutput$signal_area_ratio),nrow(reactiveprogramdata$ROI_data_check),dimnames=list(reactiveprogramdata$autorun_data$Experiments,reactiveprogramdata$autorun_data$signals_names))
     
-    dummy = which(!is.na(reactiveprogramdata$ROI_data[, 1]))
-    reactiveprogramdata$ROI_separator = cbind(dummy, c(dummy[-1] - 1, dim(reactiveprogramdata$ROI_data)[1]))
+    new_signals_codes=new_signals_names=rep(NA,nrow(reactiveprogramdata$ROI_data_check))
+    new_useful_data=reactiveprogramdata$useful_data
+    for (i in 1:length(new_useful_data)) new_useful_data[[i]]=vector("list", nrow(reactiveprogramdata$ROI_data_check))
+    for (i in 1:nrow(reactiveprogramdata$ROI_data_check)) {
+      ind=which(reactiveprogramdata$ROI_data[,4]==reactiveprogramdata$ROI_data_check[i,4]&reactiveprogramdata$ROI_data[,5]==reactiveprogramdata$ROI_data_check[i,5])
+      if (length(ind)>0) {
+      new_correlation[,i]=reactiveprogramdata$finaloutput$correlation[,ind]
+      new_intensity[,i]=reactiveprogramdata$finaloutput$intensity[,ind]
+      new_signal_area_ratio[,i]=reactiveprogramdata$finaloutput$signal_area_ratio[,ind]
+      new_shift[,i]=reactiveprogramdata$finaloutput$shift[,ind]
+      new_width[,i]=reactiveprogramdata$finaloutput$width[,ind]
+      new_Area[,i]=reactiveprogramdata$finaloutput$Area[,ind]
+      new_signals_codes[i]=reactiveprogramdata$autorun_data$signals_codes[ind]
+      new_signals_names[i]=reactiveprogramdata$autorun_data$signals_names[ind]
+      for (j in 1:length(new_useful_data)) new_useful_data[[j]][[i]]=reactiveprogramdata$useful_data[[j]][[ind]]
+      }
+    }
+    reactiveprogramdata$finaloutput$correlation=new_correlation
+    reactiveprogramdata$finaloutput$intensity=new_intensity
+    reactiveprogramdata$finaloutput$signal_area_ratio=new_signal_area_ratio
+    reactiveprogramdata$finaloutput$shift=new_shift
+    reactiveprogramdata$finaloutput$width=new_width
+    reactiveprogramdata$finaloutput$Area=new_Area
+    reactiveprogramdata$autorun_data$signals_codes=new_signals_codes
+    reactiveprogramdata$autorun_data$signals_names=new_signals_names
+    reactiveprogramdata$useful_data=new_useful_data
+    reactiveprogramdata$ROI_data=reactiveprogramdata$ROI_data_check
+    
+    dummy = which(is.na(reactiveprogramdata$ROI_data[, 1]))
+    if (length(dummy)==0) dummy=dim(reactiveprogramdata$ROI_data)[1]+1
+    lal=which(duplicated(reactiveprogramdata$ROI_data[-dummy,1:2])==F)
+    reactiveprogramdata$ROI_separator = cbind(lal, c(lal[-1] - 1, dim(reactiveprogramdata$ROI_data[-dummy,])[1]))
     ROI_names=paste(reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[, 1],1],reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[, 1],2])
     reactiveprogramdata$select_options=1:length(ROI_names)
     names(reactiveprogramdata$select_options)=ROI_names
+    
+      })
+  output$roi_profiles <- renderD3tf({
+    tableProps <- list(
+      btn_reset = F
+      
+    )
+    
+    observe({
+    
+
+      edit <- input$roi_profiles_edit
+      if (!is.null(edit)) {
+      isolate({
+        id <- edit$id
+        row <- as.integer(edit$row)
+        col <- as.integer(edit$col)
+        val <- edit$val
+        
+        if(col == 0) {
+          # rownames
+          oldval <- rownames(reactiveprogramdata$ROI_data_check)[row]
+          # rownames can not start with a digit
+          if(grepl('^\\d', val)) {
+            rejectEdit(session, tbl = "roi_profiles", row = row, col = col,  id = id, value = oldval)
+            reactiveprogramdata$roi=0
+            
+            return(NULL)
+          }
+        } else if (col %in% c(1:2,5:11)){
+          # numeric columns
+          if(is.na(suppressWarnings(as.numeric(val)))) {
+            oldval <- reactiveprogramdata$ROI_data_check[row, col]
+            rejectEdit(session, tbl = "roi_profiles", row = row, col = col, id = id, value = oldval)
+           reactiveprogramdata$roi=0
+            return(NULL)
+          }
+        } else if (col %in% c(3,4)) {
+          if(is.na(suppressWarnings(val))) {
+            oldval <- reactiveprogramdata$ROI_data_check[row, col]
+            rejectEdit(session, tbl = "roi_profiles", row = row, col = col, id = id, value = oldval)
+            return(NULL)
+          }
+        }
+        
+        if (reactiveprogramdata$change==1){
+          reactiveprogramdata$change=0
+          reactiveprogramdata$stop=1          
+          disableEdit(session, "roi_profiles", c(1:11))
+          print('step2')
+        } else{ 
+          if(col == 0) {
+          } else if (col %in% c(1:2,5:11)) {
+            reactiveprogramdata$ROI_data_check[row, col] <- as.numeric(val)
+            reactiveprogramdata$roi=1
+            print('step')
+          } else if (col %in% c(3,4)) {
+            reactiveprogramdata$ROI_data_check[row, col] <- val
+          }
+          confirmEdit(session, tbl = "roi_profiles", row = row, col = col, id = id, value = val)
+        }
+      })
+      }
+    })
+    
+    d3tf(reactiveprogramdata$ROI_data_check,
+      tableProps = tableProps,
+      enableTf = F,
+      edit=TRUE,
+      selectableRows = "multi",
+      
+      tableStyle = "table table-bordered")
+    
   })
   
-  output$roi_profiles = DT::renderDataTable(
-    
-    reactiveprogramdata$ROI_data , server = T)
-  proxy = dataTableProxy('roi_profiles')
-  observe({
-    replaceData(proxy, reactiveprogramdata$ROI_data)
-  })
+  
   output$repository = DT::renderDataTable(
     reactiveprogramdata$repository[which(reactiveprogramdata$repository[,3]>reactiveROItestingdata$ROIpar[1,2]&reactiveprogramdata$repository[,3]<reactiveROItestingdata$ROIpar[1,1]),] , server = T)
   proxy2 = dataTableProxy('repository')
@@ -180,25 +281,14 @@ server = function(input, output,session) {
     replaceData(proxy2,  reactiveprogramdata$repository[which(reactiveprogramdata$repository[,3]>reactiveROItestingdata$ROIpar[1,2]&reactiveprogramdata$repository[,3]<reactiveROItestingdata$ROIpar[1,1]),] )
   })
   
-  observeEvent(input$saveroi, {
-    tryCatch({write.csv(reactiveprogramdata$ROI_data,reactiveprogramdata$autorun_data$profile_folder_path,row.names=F)}, error = function(err) {
-      print('Not possible to overwrite the original csv file')
-    })
-    # print("Saving Profile!")
-    # b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
-    # 
-    # savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
-    # save(savedreactivedata, file = b, envir = environment())
-    # 
-    # print("Done!")
-  })
-    
+  
     
   observeEvent(input$select, {
   
     if (reactiveprogramdata$beginning ==T) {
-    reactiveprogramdata$ROIdata=reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[as.numeric(input$select), 1]:reactiveprogramdata$ROI_separator[as.numeric(input$select), 2],]
+    reactiveprogramdata$ROIdata_subset=reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[as.numeric(input$select), 1]:reactiveprogramdata$ROI_separator[as.numeric(input$select), 2],]
     }
+    
     reactiveprogramdata$change=1
     reactiveprogramdata$stop=0
     reactiveprogramdata$change2=1
@@ -209,8 +299,8 @@ server = function(input, output,session) {
     
 
     resetInput(session, "ROIdata_edit")
-    resetInput(session, "mtcars2_edit")
-    reactiveROItestingdata$ROIpar <- reactiveprogramdata$ROIdata
+    resetInput(session, "directedition_edit")
+    reactiveROItestingdata$ROIpar <- reactiveprogramdata$ROIdata_subset
     reactiveROItestingdata$signpar <- rbind(rep(NA,7),rep(NA,7))
     colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     reactiveROItestingdata$qualitypar <- rbind(rep(NA,3),rep(NA,3))
@@ -223,13 +313,15 @@ server = function(input, output,session) {
         btn_reset = F,
         sort = TRUE,
         sort_config = list(
-          sort_types = c("String", rep("Number", ncol(reactiveprogramdata$ROIdata)))
+          sort_types = c("String", rep("Number", ncol(reactiveprogramdata$ROIdata_subset)))
         )
       )
-      
+      print(reactiveROItestingdata$ROIpar)
       observe({
         if(is.null(input$ROIdata_edit)|(reactiveprogramdata$stop==1)) {
           reactiveprogramdata$change=0
+          print(input$ROIdata_edit)
+          print(reactiveprogramdata$stop)
           print('step1')
           return(NULL)
         }
@@ -263,7 +355,8 @@ server = function(input, output,session) {
               return(NULL)
             }
           } else if (col %in% c(3)) {
-            if(is.na(suppressWarnings(val))) {
+            # if(is.na(suppressWarnings(val))) {
+            if(!val %in% c('Clean Sum','Baseline Sum','Clean Fitting','Baseline Fitting')) {
               oldval <- reactiveROItestingdata$ROIpar[row, col]
               
               rejectEdit(session, tbl = "ROIdata", row = row, col = col, id = id, value = oldval)
@@ -300,7 +393,7 @@ server = function(input, output,session) {
     })
   })
   
-  output$directedition_edit <- renderD3tf({
+  output$directedition <- renderD3tf({
     tableProps <- list(
       btn_reset = TRUE,
       sort = TRUE,
@@ -310,12 +403,12 @@ server = function(input, output,session) {
     )
     
     observe({
-      if(is.null(input$mtcars2_edit)|(reactiveprogramdata$stop2==1)) {
+      if(is.null(input$directedition_edit)|(reactiveprogramdata$stop2==1)) {
         reactiveprogramdata$change2=0
         return(NULL)
       }       
       
-      edit <- input$mtcars2_edit
+      edit <- input$directedition_edit
       isolate({
         # need isolate, otherwise this observer would run twice
         # for each edit
@@ -381,12 +474,7 @@ server = function(input, output,session) {
       output$autorun_plot <- renderPlotly({
         # print(reactiveprogramdata$autorun_plot)
         if (reactiveprogramdata$beginning==F) return()
-        # if (is.null(reactiveprogramdata$autorun_plot)) {
-        # plot_ly(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)%>% layout(xaxis = list(autorange = "reversed",title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$bucketing$intensity))))
-        # # } else {
-        reactiveprogramdata$autorun_plot %>% add_trace(data=reactiveprogramdata$bucketing,x=~Xdata,y=~intensity,color=~pvalue,scatter='lines',name='Original spectrum',fill=NULL)
-        
-        # }
+        reactiveprogramdata$autorun_plot
       })
       
   observeEvent(input$action, {
@@ -396,9 +484,11 @@ server = function(input, output,session) {
       print('Select one valid spectrum')
       return(NULL)
     }
+    
     reactivequantdata$method1 <- interface_quant(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput, reactiveprogramdata$ind,reactiveROItestingdata$ROIpar,is_autorun,reactiveprogramdata$useful_data) 
+    if (length(reactivequantdata$method1)==3) return()
     reactivequantdata$stop3=1
-    reactiveprogramdata$useful_data=reactivequantdata$method1$useful_data    
+    # reactiveprogramdata$useful_data=reactivequantdata$method1$useful_data    
     reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method1$results_to_save$Area,reactivequantdata$method1$results_to_save$correlation,reactivequantdata$method1$results_to_save$signal_area_ratio)
     colnames(reactiveROItestingdata$qualitypar)=c('Quantification','Correlation','Signal/total area ratio')
     
@@ -414,7 +504,6 @@ server = function(input, output,session) {
   
   observeEvent(input$fit_selection_cell_clicked, {
     reactiveprogramdata$info=input$fit_selection_cell_clicked
-    print(reactiveprogramdata$info)
     reactiveprogramdata$ind=reactiveprogramdata$info$row
     reactivequantdata$method2=NULL
     reactiveprogramdata$change=1
@@ -423,7 +512,7 @@ server = function(input, output,session) {
     reactiveprogramdata$stop2=0
     if (length(reactiveprogramdata$info$row)>0) reactivequantdata$stop3=1
     resetInput(session, "ROIdata_edit")
-    resetInput(session, "mtcars2_edit")
+    resetInput(session, "directedition_edit")
     updateSelectInput(session, "select",selected = NULL)
     
 
@@ -440,9 +529,7 @@ server = function(input, output,session) {
     # }
     Ydata=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$Ydata
     plot_data=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$plot_data
-    # program_parameters=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$program_parameters
     ROI_profile=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$ROI_profile
-    # program_parameters$signals_to_quantify=ROI_profile[,5]
     plotdata2 = data.frame(Xdata=Xdata,
       Ydata=Ydata,
       plot_data[3, ] ,
@@ -457,7 +544,7 @@ server = function(input, output,session) {
     )
     plotdata4 = data.frame(Xdata, (t(plot_data[-c(1, 2, 3), , drop = F])))
 
-    colnames(plotdata4)=c('Xdata',plot_data[-c(1, 2, 3),1])
+    colnames(plotdata4)=c('Xdata',rownames(plot_data)[-c(1, 2, 3)])
     plotdata5 = melt(plotdata4, id = "Xdata")
     r=which(paste(ROI_profile[,4],ROI_profile[,5],sep='_')==reactiveprogramdata$autorun_data$signals_names[reactiveprogramdata$info$col])
     plotdata = data.frame(Xdata, signals = plot_data[3 + r, ] )
@@ -466,29 +553,34 @@ server = function(input, output,session) {
     # }
     reactiveROItestingdata$ROIpar=ROI_profile
     if (!is.null(reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$signals_parameters)) reactiveROItestingdata$signpar=t(reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$signals_parameters)
-
+    print('3')
+    
     colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
-
+    
     ind=which(reactiveprogramdata$ROI_separator[,2]-reactiveprogramdata$info$col>=0)[1]
     ind=(reactiveprogramdata$ROI_separator[ind, 1]:reactiveprogramdata$ROI_separator[ind, 2])
-
-    reactiveROItestingdata$qualitypar=cbind(reactiveprogramdata$finaloutput$Area[reactiveprogramdata$info$row,ind],reactiveprogramdata$finaloutput$correlation[reactiveprogramdata$info$row,ind],reactiveprogramdata$finaloutput$signal_area_ratio[reactiveprogramdata$info$row,ind])
-    print(reactiveprogramdata$info$row)
-    print(ind)
+# print(ind)
+# print(reactiveprogramdata$ROI_separator)
+    reactiveROItestingdata$qualitypar=cbind(t(reactiveprogramdata$finaloutput$Area[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$correlation[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$signal_area_ratio[reactiveprogramdata$info$row,ind,drop=F]))
     
+    # print(reactiveROItestingdata$qualitypar)
     colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total spectrum ratio')
-
+print('2')
     updateTabsetPanel(session, "mynavlist",selected = "Individual Quantification")
     
     
   })
  
   observeEvent(input$autorun_signal, {
-    
     is_autorun='Y'
     reactivequantdata$chor <- interface_quant(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput, reactiveprogramdata$ind,reactiveROItestingdata$ROIpar,is_autorun,reactiveprogramdata$useful_data) 
-    reactiveprogramdata$finaloutput=reactivequantdata$chor$finaloutput
-    reactiveprogramdata$useful_data=reactivequantdata$chor$useful_data
+    # if (!is.null(dim(reactivequantdata$chor$finaloutput))) {
+      print(fivenum(reactiveprogramdata$finaloutput$correlation-reactivequantdata$chor$finaloutput$correlation))
+        
+      reactiveprogramdata$finaloutput=reactivequantdata$chor$finaloutput
+      reactiveprogramdata$useful_data=reactivequantdata$chor$useful_data
+    # }
+    
     
   })
  
@@ -514,7 +606,6 @@ observeEvent(input$autorun, {
   dummy = autorun(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput,reactiveprogramdata$useful_data)
   reactiveprogramdata$finaloutput=dummy$finaloutput
   reactiveprogramdata$useful_data=dummy$useful_data
-  
   is_autorun='Y'
   reactiveprogramdata$dataset=rbind(reactiveprogramdata$autorun_data$dataset,colMeans(reactiveprogramdata$autorun_data$dataset),apply(reactiveprogramdata$autorun_data$dataset,2,median))
   rownames(reactiveprogramdata$dataset)[(dim(reactiveprogramdata$autorun_data$dataset)[1]+1):dim(reactiveprogramdata$dataset)[1]]=c('Mean spectrum', 'Median spectrum')
@@ -526,19 +617,10 @@ observeEvent(input$autorun, {
   output$x1 = DT::renderDataTable(
     spectra , selection = list(mode = 'multiple', selected = 1),server = T)
   
-  output$roi_profiles = DT::renderDataTable(
-    reactiveprogramdata$ROI_data , server = T)
-  proxy = dataTableProxy('roi_profiles')
-  observe({
-    replaceData(proxy, reactiveprogramdata$ROI_data)
-  })
+  
   
   reactiveprogramdata$beginning =T
   
-  # session$sendCustomMessage('activeNavs', 'Individual Quantification')
-  # session$sendCustomMessage('activeNavs', 'Quantification Validation')
-  # session$sendCustomMessage('activeNavs', 'Uni and multivariate analysis')
-  # session$sendCustomMessage('activeNavs', 'Dendrogram heatmaps')
 })
   
   
@@ -557,17 +639,15 @@ observeEvent(input$autorun, {
       print('Incorrect action')
         return(NULL)
     }
-   
+      if (reactivequantdata$method1$error1<reactiveprogramdata$useful_data[[reactivequantdata$method1$spectrum_index]][[reactivequantdata$method1$signals_codes[1]]]$error1) {
+        print('Change')
     dummy=save_roi_testing(reactivequantdata$method1,reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput,reactiveprogramdata$useful_data) 
     reactiveprogramdata$finaloutput=dummy$finaloutput
     reactiveprogramdata$useful_data=dummy$useful_data
-    # b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
-    # 
-    # print("Saving Quantification")
-    # savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
-    # save(savedreactivedata, file = b, envir = environment())
-    # print("Done!")
-
+    
+      } else {
+        print('Not change')
+      }
     
   })
   
@@ -578,16 +658,8 @@ observeEvent(input$autorun, {
       ind=as.numeric(input$select)
     }
     reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[ind, 1]:reactiveprogramdata$ROI_separator[ind, 2],]=reactiveROItestingdata$ROIpar
-    tryCatch({write.csv(reactiveprogramdata$ROI_data,reactiveprogramdata$autorun_data$profile_folder_path,row.names=F)}, error = function(err) {
-      print('Not possible to overwrite the original csv file')
-    })
-    # print("Saving Profile")
-    # savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
-    # b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
-    # 
-    # save(savedreactivedata, file = b, envir = environment())
-    # print("Done!")
-    
+    ROI_names=paste(reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[, 1],1],reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[, 1],2])
+    names(reactiveprogramdata$select_options)=ROI_names
     
   })
   
@@ -654,11 +726,11 @@ observeEvent(input$autorun, {
   output$plot <- renderPlotly({
     if (reactiveprogramdata$beginning==F | is.null(input$x1_rows_selected)) return()
     if (reactivequantdata$stop3==0&length(reactiveprogramdata$info)==0|reactivequantdata$stop3==0&length(input$x1_rows_selected)>1) {
-      ROI_limits=c(which.min(abs(reactiveprogramdata$autorun_data$ppm-reactiveprogramdata$ROIdata[1,1])),which.min(abs(reactiveprogramdata$autorun_data$ppm-reactiveprogramdata$ROIdata[1,2])))
+      ROI_limits=c(which.min(abs(reactiveprogramdata$autorun_data$ppm-reactiveprogramdata$ROIdata_subset[1,1])),which.min(abs(reactiveprogramdata$autorun_data$ppm-reactiveprogramdata$ROIdata_subset[1,2])))
       
       plotdata = data.frame(Xdata=reactiveprogramdata$autorun_data$ppm, t(rbind(reactiveprogramdata$autorun_data$dataset,colMeans(reactiveprogramdata$autorun_data$dataset),apply(reactiveprogramdata$autorun_data$dataset,2,median))[input$x1_rows_selected,,drop=F]))
       plotdata2 <- melt(plotdata, id = "Xdata")
-  plot_ly(data=plotdata2,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines') %>% layout(xaxis = list(range = c(round(reactiveprogramdata$ROIdata[1,1],6), round(reactiveprogramdata$ROIdata[1,2],6)),title='ppm'),yaxis = list(range = c(0, max(plotdata[ROI_limits[1]:ROI_limits[2],2])),title='Intensity') )
+  plot_ly(data=plotdata2,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines') %>% layout(xaxis = list(range = c(round(reactiveprogramdata$ROIdata_subset[1,1],6), round(reactiveprogramdata$ROIdata_subset[1,2],6)),title='ppm'),yaxis = list(range = c(0, max(plotdata[ROI_limits[1]:ROI_limits[2],2])),title='Intensity') )
     } else {
 
      print(reactivequantdata$method1$p)
@@ -669,7 +741,7 @@ observeEvent(input$autorun, {
 
   observeEvent(input$select_validation, {
     if (reactiveprogramdata$beginning==F) return()
-    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$program_parameters,input$select_validation,reactiveprogramdata$ROIdata,reactiveprogramdata$autorun_data$Metadata)
+    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$program_parameters,input$select_validation,reactiveprogramdata$ROIdata_subset,reactiveprogramdata$autorun_data$Metadata)
   output$fit_selection = DT::renderDataTable({ datatable(round(validation_data$alarmmatrix,4),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(validation_data$alarmmatrix), backgroundColor = styleInterval(validation_data$brks, validation_data$clrs))
   }
     # ,options = list(
@@ -691,10 +763,19 @@ observeEvent(input$autorun, {
     actionButton('peak_analysis', 'Peak analysis')
   })
   output$plot_p_value_2 <- renderPlotly({
+    
+    
     ss=which(reactiveprogramdata$ROI_data[,5]>0)
-    p_value_final=p_values(reactiveprogramdata$finaloutput$Area[,ss],reactiveprogramdata$autorun_data$Metadata)
+    quantifications=reactiveprogramdata$finaloutput$Area[,ss]
+      parameters=fitting_variables()
+    if (parameters$automatic_removal=='Y') {
+      quantifications[reactiveprogramdata$finaloutput$correlation[,ss]>parameters$fitting_error_analysis_limit]=NA
+      quantifications[reactiveprogramdata$finaloutput$signal_area_ratio[,ss]<parameters$signal_area_ratio_analysis_limit]=NA
+      quantifications=quantifications[,!apply(quantifications,2,function(x)length(which(is.na(x)))>0.85*length(x))]
+    }
+    p_value_final=p_values(quantifications,reactiveprogramdata$autorun_data$Metadata)
       
-    boxplotdata=as.data.frame(reactiveprogramdata$finaloutput$Area[,ss])
+    boxplotdata=as.data.frame(quantifications)
     colnames(boxplotdata)=paste(colnames(boxplotdata),'(p= ',p_value_final,')',sep='')
     boxplotdata=cbind(boxplotdata,factor(reactiveprogramdata$autorun_data$Metadata[,2]))
     boxplotdata=melt(boxplotdata)
@@ -704,18 +785,47 @@ observeEvent(input$autorun, {
       layout(boxmode='group',margin=m)
   })
   output$dendheatmapareadata <- renderPlotly({
-    dummy=as.data.frame(scale(reactiveprogramdata$finaloutput$Area))[!apply(as.data.frame(scale(reactiveprogramdata$finaloutput$Area)),2,function(x)all(is.na(x)))]
+    ss=which(reactiveprogramdata$ROI_data[,5]>0)
+    
+    quantifications=reactiveprogramdata$finaloutput$Area[,ss]
+        parameters=fitting_variables()
+    if (parameters$automatic_removal=='Y') {
+      quantifications[reactiveprogramdata$finaloutput$correlation[,ss]>parameters$fitting_error_analysis_limit]=NA
+      quantifications[reactiveprogramdata$finaloutput$signal_area_ratio[,ss]<parameters$signal_area_ratio_analysis_limit]=NA
+      quantifications=quantifications[,!apply(quantifications,2,function(x)length(which(is.na(x)))>0.5*length(x))]
+      
+    }
+    dummy=as.data.frame(scale(quantifications))
+    
     heatmaply(dummy) %>% layout(margin = list(l = 130, b = 130))
   })
  
   output$dendheatmapshiftdata <- renderPlotly({
-    dummy=as.data.frame(reactiveprogramdata$finaloutput$shift)[!apply(as.data.frame(reactiveprogramdata$finaloutput$shift),2,function(x)all(is.na(x)))]
+    ss=which(reactiveprogramdata$ROI_data[,5]>0)
+    
+    shifts=reactiveprogramdata$finaloutput$shift[,ss]
+        parameters=fitting_variables()
+    if (parameters$automatic_removal=='Y') {
+      shifts[reactiveprogramdata$finaloutput$correlation[,ss]>parameters$fitting_error_analysis_limit]=NA
+      shifts[reactiveprogramdata$finaloutput$signal_area_ratio[,ss]<parameters$signal_area_ratio_analysis_limit]=NA
+      shifts=shifts[,!apply(shifts,2,function(x)length(which(is.na(x)))>0.5*length(x))]
+      
+      }
+    
+    dummy=as.data.frame(shifts)
     heatmaply(scale(dummy,scale=F)) %>% layout(margin = list(l = 130, b = 130))
   })
   output$pcascores <- renderPlotly({
-    ind=which(apply(reactiveprogramdata$finaloutput$width,2, function(x) all(is.na(x)))==F)
-    
-    a=cbind(scale(reactiveprogramdata$finaloutput$Area[,ind]),reactiveprogramdata$autorun_data$Metadata)
+    ss=which(reactiveprogramdata$ROI_data[,5]>0)
+    quantifications=reactiveprogramdata$finaloutput$Area[,ss]
+    parameters=fitting_variables()
+    if (parameters$automatic_removal=='Y') {
+      quantifications[reactiveprogramdata$finaloutput$correlation[,ss]>parameters$fitting_error_analysis_limit]=NA
+      quantifications[reactiveprogramdata$finaloutput$signal_area_ratio[,ss]<parameters$signal_area_ratio_analysis_limit]=NA
+      quantifications=quantifications[,!apply(quantifications,2,function(x)length(which(is.na(x)))>0.5*length(x))]
+      
+    }
+    a=cbind(scale(quantifications),reactiveprogramdata$autorun_data$Metadata)
     a=missForest(a)$ximp
     b=prcomp(a[,-c(ncol(a)-1,ncol(a))])
     carsDf2 <- data.frame(b$rotation)
@@ -733,7 +843,7 @@ observeEvent(input$autorun, {
   
   observeEvent(input$x1_rows_selected, {
     if (reactiveprogramdata$beginning ==T) {
-      reactiveprogramdata$ROIdata=reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[as.numeric(input$select), 1]:reactiveprogramdata$ROI_separator[as.numeric(input$select), 2],]
+      reactiveprogramdata$ROIdata_subset=reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[as.numeric(input$select), 1]:reactiveprogramdata$ROI_separator[as.numeric(input$select), 2],]
     }
 
     reactiveprogramdata$change=1
@@ -746,9 +856,9 @@ observeEvent(input$autorun, {
     
     
     resetInput(session, "ROIdata_edit")
-    resetInput(session, "mtcars2_edit")
+    resetInput(session, "directedition_edit")
     
-    reactiveROItestingdata$ROIpar <- reactiveprogramdata$ROIdata
+    reactiveROItestingdata$ROIpar <- reactiveprogramdata$ROIdata_subset
     reactiveROItestingdata$signpar <- rbind(rep(NA,7),rep(NA,7))
     colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     reactiveROItestingdata$qualitypar <- rbind(rep(NA,3),rep(NA,3))
@@ -772,11 +882,10 @@ observeEvent(input$autorun, {
     reactiveprogramdata$finaloutput = list()
     dummy = matrix(NaN,
       dim(imported_data$dataset)[1],
-      length(imported_data$signals_names))
+      length(imported_data$signals_names),dimnames=list(imported_data$Experiments,imported_data$signals_names))
    
-    reactiveprogramdata$ROI_data = imported_data$ROI_data
-    rownames(dummy) = imported_data$Experiments
-    colnames(dummy) = imported_data$signals_names
+    reactiveprogramdata$ROI_data=reactiveprogramdata$ROI_data_check = imported_data$ROI_data
+    
     reactiveprogramdata$finaloutput$Area = reactiveprogramdata$finaloutput$signal_area_ratio = reactiveprogramdata$finaloutput$correlation =
       reactiveprogramdata$finaloutput$shift = reactiveprogramdata$finaloutput$intensity = reactiveprogramdata$finaloutput$width = dummy
     updateSelectInput(session, "select_validation",selected = 1)
@@ -803,7 +912,7 @@ observeEvent(input$autorun, {
     for (i in seq_along(reactiveprogramdata$useful_data)) { 
       for (j in seq_along(reactiveprogramdata$useful_data[[i]])) { 
         
-      reactiveprogramdata$useful_data[[i]][[j]]=list(Ydata=NULL,Xdata=NULL,ROI_profile=NULL,program_parameters=NULL,fitted_signals=NULL,plot_data=NULL,FeaturesMatrix=NULL,signals_parameters=NULL,results_to_save=NULL,plot=NULL)
+      reactiveprogramdata$useful_data[[i]][[j]]=list(Ydata=NULL,Xdata=NULL,ROI_profile=NULL,program_parameters=NULL,plot_data=NULL,FeaturesMatrix=NULL,signals_parameters=NULL,results_to_save=NULL,error1=NULL)
     }}
     reactiveprogramdata$repository=imported_data$repository
     reactiveprogramdata$jres_path=imported_data$jres_path
@@ -830,8 +939,7 @@ observeEvent(input$autorun, {
     reactiveprogramdata$originaldataset=imported_data$dataset
     rm(imported_data)
     reactiveprogramdata$autorun_plot=autorun_model_spectrum(reactiveprogramdata$autorun_data)
-    
-    reactiveprogramdata$inFile2 <- list(datapath=paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/'))
+   
     reactiveprogramdata$beginning =T
     
     mm=matrix(NA,2,dim(reactiveprogramdata$autorun_data$Metadata)[2])
@@ -851,21 +959,7 @@ observeEvent(input$autorun, {
     reactiveprogramdata$select_options=1:length(ROI_names)
     names(reactiveprogramdata$select_options)=ROI_names
     updateSelectInput(session, "select",choices = reactiveprogramdata$select_options,selected = 1)
-
-    p_value_bucketing=as.vector(p_values(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$Metadata))
-    p_value_bucketing[is.na(p_value_bucketing)]=1
-    p_value_bucketing[p_value_bucketing<0.05]=NA
-    
-    plotdata = data.frame(Xdata=reactiveprogramdata$autorun_data$ppm, p_value_bucketing)
-    
-    
-    quartile_spectrum = as.numeric(apply(reactiveprogramdata$autorun_data$dataset, 2, function(x)
-      quantile(x, 0.75,na.rm=T)))
-    ref_spectrum = reactiveprogramdata$autorun_data$dataset[which.min(apply(reactiveprogramdata$autorun_data$dataset, 1, function(x) sqrt(mean((x - quartile_spectrum) ^ 2 ,na.rm=T)))),]
-    reactiveprogramdata$bucketing <- cbind(melt(plotdata, id = "Xdata"),ref_spectrum)
-    reactiveprogramdata$bucketing=reactiveprogramdata$bucketing[complete.cases(reactiveprogramdata$bucketing),]
-    colnames(reactiveprogramdata$bucketing)=c('Xdata','variable','pvalue','intensity')
-    
+  
     session$sendCustomMessage('activeNavs', 'ROI Profiles')
     session$sendCustomMessage('activeNavs', 'Individual Quantification')
     session$sendCustomMessage('activeNavs', 'Quantification Validation')
@@ -891,15 +985,12 @@ observeEvent(input$autorun, {
     reactiveprogramdata$useful_data=savedreactivedata$useful_data
     reactiveprogramdata$originaldataset=savedreactivedata$originaldataset
     reactiveprogramdata$p_value_final=savedreactivedata$p_value_final
-    reactiveprogramdata$ROI_data=savedreactivedata$ROI_data
+    reactiveprogramdata$ROI_data=reactiveprogramdata$ROI_data_check=savedreactivedata$ROI_data
     reactiveprogramdata$ROI_separator=savedreactivedata$ROI_separator
-    reactiveprogramdata$bucketing=savedreactivedata$bucketing
     reactiveprogramdata$autorun_plot=savedreactivedata$autorun_plot
     
     reactiveprogramdata$beginning =T
-    # reactiveprogramdata$inFile2=savedreactivedata$inFile2
-    # reactiveprogramdata$inFile2$datapath=savedreactivedata$inFile2$datapath
-    
+
     rm(savedreactivedata)
     is_autorun='Y'
     ROI_names=paste(reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[, 1],1],reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[, 1],2])
@@ -931,15 +1022,46 @@ observeEvent(input$autorun, {
   })
   
   updateSelectInput(session, "select_validation",selected = 1)
+
+  observe({
+    volumes <- c("UserFolder"="C:/")
+    shinyFileSave(input, "save", roots=volumes, session=session)
+    fileinfo <- parseSavePath(volumes, input$save)
+    savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))  
+    if (nrow(fileinfo) > 0) {
+      save(savedreactivedata, file=as.character(fileinfo$datapath))
+      export_path=paste(substr(as.character(fileinfo$datapath),1,(nchar(as.character(fileinfo$datapath))-6)),'_associated_data',sep='')
+      write_info(export_path, reactiveprogramdata$finaloutput, reactiveprogramdata$ROI_data)  
+      }
+  })
   
-  observeEvent(input$save_objs, {
-  print("Saving session!")
-    b <- paste(reactiveprogramdata$autorun_data$export_path,"savedenvironment.RData",sep='/')
-  savedreactivedata=isolate(reactiveValuesToList(reactiveprogramdata))
-  save(savedreactivedata, file = b, envir = environment())
-  print("Done!")
-})
+  observeEvent(input$file3, {
+    reactiveprogramdata$inFile2 <- input$file2
+    if (is.null(reactiveprogramdata$inFile2))
+      return(NULL)
+    load(reactiveprogramdata$inFile2$datapath)
+    plo=names(sapply(savedreactivedata, names))
+    for (i in 1:length(plo)) {
+      added_data[[plo[i]]]=savedreactivedata[plo[i]]
+    }
+
   
+  
+  ind=which(reactiveprogramdata$autorun_data$Experiments %in% added_data$autorun_data$Experiments==T)
+  
+  ind2=which(reactiveprogramdata$autorun_data$signals_names %in% added_data$autorun_data$signals_names==T)
+  ind3=which(added_data$autorun_data$Experiments %in% reactiveprogramdata$autorun_data$Experiments==T)
+  ind4=which(added_data$autorun_data$signals_names %in% reactiveprogramdata$autorun_data$signals_names==T)
+  
+  for (i in 1:length(reactiveprogramdata$finaloutput)) {
+    reactiveprogramdata$finaloutput[[i]][ind,ind2]=added_data$finaloutput[[i]][ind3,ind4]
+  }
+  for (i in 1:length(reactiveprogramdata$useful_data)) {
+    for (j in 1:length(reactiveprogramdata$finaloutput[[j]])) {
+      
+      reactiveprogramdata$useful_data[[ind[i]]][[ind2[j]]]=added_data$useful_data[[ind3[i]]][[ind4[j]]]
+    }}
+  })
   
   
 }
