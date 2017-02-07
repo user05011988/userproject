@@ -67,19 +67,19 @@ for (i in 1:dim(dataset)[1]) {
     peak_intensity[i,j]=max(dataset[i,peak_info[j,10]:peak_info[j,11]])
   }}
 
-width=matrix(NA,nrow(dataset),nrow(peak_info))
+half_band_width=matrix(NA,nrow(dataset),nrow(peak_info))
 for (i in 1:nrow(peak_info)) {
   for (j in 1:nrow(dataset)){
     
     fa=dataset[j,peak_info[i,10]:peak_info[i,11]]-rep(min(dataset[j,peak_info[i,10]:peak_info[i,11]]),peak_info[i,11]-peak_info[i,10]+1)
     nn=approx(ppm[peak_info[i,10]:peak_info[i,11]],fa/max(max(fa,1e-10)),seq(ppm[peak_info[i,10]],ppm[peak_info[i,11]],length.out = 10000))
     ss=diff(nn$x[which(diff(sign(nn$y-0.5))!=0)])*-freq
-    if (length(ss)==1) width[j,i]=ss/2
+    if (length(ss)==1) half_band_width[j,i]=ss/2
   }}
 
-aa=apply(width,1,function(x)median(x,na.rm=T))/median(apply(width,1,function(x)median(x,na.rm=T)))
-bb=apply(width,2,function(x)median(x,na.rm=T))
-expected_width=matrix(NA,nrow(width),ncol(width))
+aa=apply(half_band_width,1,function(x)median(x,na.rm=T))/median(apply(half_band_width,1,function(x)median(x,na.rm=T)))
+bb=apply(half_band_width,2,function(x)median(x,na.rm=T))
+expected_width=matrix(NA,nrow(half_band_width),ncol(half_band_width))
 for (i in 1:nrow(expected_width)) {
   for (j in 1:ncol(expected_width)) {
     expected_width[i,j]=bb[j]*aa[i]

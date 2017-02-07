@@ -6,7 +6,7 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   #preallocation of results_to_save
   results_to_save = list(
     signal_area_ratio = NA,
-    correlation = NA,
+    fitting_error = NA,
     Area = NA,
     shift = NA,
     intensity = NA
@@ -34,8 +34,8 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   results_to_save$signal_area_ratio = tryCatch((sum(integrated_signal[p1:p2]) / sum(Ydata[p1:p2])) *
       100,error = function(e) NaN, silent=T)
   print(results_to_save$signal_area_ratio)
-  results_to_save$correlation = NaN
-  results_to_save$width = NaN
+  results_to_save$fitting_error = NaN
+  results_to_save$half_band_width = NaN
 
   peaks = peakdet(integrated_signal, 0.2*max(1e-10,max(integrated_signal)))
   results_to_save$shift = mean(Xdata[peaks$maxtab$pos])

@@ -1,5 +1,5 @@
 interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,useful_data) {
-  blah=list(sig=0,finaloutput=finaloutput,useful_data=useful_data)
+  provisional_data=list(sig=0,finaloutput=finaloutput,useful_data=useful_data)
 
   # ROI_data=autorun_data$ROI_data
   # 
@@ -60,15 +60,15 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
       p=dummy$p
       plot_data=dummy$plot_data
       
-      blah$integration_parameters=integration_parameters
+      provisional_data$integration_parameters=integration_parameters
       #Generation of output variables specific of every quantification
       if (is_autorun=='Y') {
-        blah$useful_data[[spectrum_index]][[signals_codes]]$ROI_profile=ROI_profile
-        blah$useful_data[[spectrum_index]][[signals_codes]]$integration_parameters=integration_parameters
-        blah$useful_data[[spectrum_index]][[signals_codes]]$plot_data=dummy$plot_data
-        blah$useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
-        blah$useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
-        blah$useful_data[[spectrum_index]][[signals_codes]]$results_to_save=results_to_save
+        provisional_data$useful_data[[spectrum_index]][[signals_codes]]$ROI_profile=ROI_profile
+        provisional_data$useful_data[[spectrum_index]][[signals_codes]]$integration_parameters=integration_parameters
+        provisional_data$useful_data[[spectrum_index]][[signals_codes]]$plot_data=dummy$plot_data
+        provisional_data$useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
+        provisional_data$useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
+        provisional_data$useful_data[[spectrum_index]][[signals_codes]]$results_to_save=results_to_save
         
         finaloutput = save_output(
           spectrum_index,
@@ -100,7 +100,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
                                        program_parameters)
       signals_parameters=dummy$signals_parameters
       error1=dummy$error1
-      # if (error1>useful_data[[spectrum_index]][[signals_codes[1]]]$error1) return(blah)
+      # if (error1>useful_data[[spectrum_index]][[signals_codes[1]]]$error1) return(provisional_data)
       # multiplicities=FeaturesMatrix[,11]
       # roof_effect=FeaturesMatrix[,12]
       multiplicities=c(FeaturesMatrix[,11],rep(1,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
@@ -114,7 +114,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
       rownames(signals_parameters) = c(
         'intensity',
         'shift',
-        'width',
+        'half_band_width',
         'gaussian',
         'J_coupling'
       ) 
@@ -159,7 +159,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
       rownames(signals_parameters_2) = c(
         'intensity',
         'shift',
-        'width',
+        'half_band_width',
         'gaussian',
         'J_coupling'
       ) 
@@ -177,7 +177,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
       output_data=dummy$output_data
       error1=dummy$error1
       output_data$intensity=signals_parameters[1, signals_to_quantify]
-      output_data$width=signals_parameters[3, signals_to_quantify]
+      output_data$half_band_width=signals_parameters[3, signals_to_quantify]
 
 
       #Generation of the dataframe with the final output variables
@@ -185,9 +185,9 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
         shift = output_data$shift,
         Area = output_data$Area,
         signal_area_ratio = output_data$signal_area_ratio,
-        correlation = output_data$correlation,
+        fitting_error = output_data$fitting_error,
         intensity = output_data$intensity,
-        width = output_data$width
+        half_band_width = output_data$half_band_width
       )
       
       plot_data = rbind(
@@ -227,41 +227,41 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
       
     signals_parameters=rbind(signals_parameters,multiplicities,roof_effect)
     signals_parameters_2=rbind(signals_parameters_2,multiplicities_2,roof_effect_2)
-    if (blah$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
-    blah$program_parameters=program_parameters
-    blah$results_to_save=results_to_save
-    blah$ROI_profile=ROI_profile
-    blah$Ydata=Ydata
-    # blah$fitted_signals=fitted_signals[,ROI_buckets]
-    blah$plot_data=plot_data[,ROI_buckets]
-    blah$FeaturesMatrix=FeaturesMatrix
-    blah$error1=error1
+    if (provisional_data$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
+    provisional_data$program_parameters=program_parameters
+    provisional_data$results_to_save=results_to_save
+    provisional_data$ROI_profile=ROI_profile
+    provisional_data$Ydata=Ydata
+    # provisional_data$fitted_signals=fitted_signals[,ROI_buckets]
+    provisional_data$plot_data=plot_data[,ROI_buckets]
+    provisional_data$FeaturesMatrix=FeaturesMatrix
+    provisional_data$error1=error1
     
-    blah$signals_parameters=blah$sig=signals_parameters
-    blah$signals_parameters_2=signals_parameters_2
-    blah$Xdata=Xdata
+    provisional_data$signals_parameters=provisional_data$sig=signals_parameters
+    provisional_data$signals_parameters_2=signals_parameters_2
+    provisional_data$Xdata=Xdata
     
     if (is_autorun=='Y') {
-      if (blah$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
+      if (provisional_data$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
 
       for (i in seq_along(signals_codes)) {
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$ROI_profile=ROI_profile
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$program_parameters=program_parameters
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$plot_data=plot_data[,ROI_buckets]
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$FeaturesMatrix=FeaturesMatrix
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$signals_parameters=signals_parameters
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$error1=error1
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$Xdata=Xdata
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$Ydata=Ydata
-        blah$useful_data[[spectrum_index]][[signals_codes[i]]]$results_to_save=results_to_save
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$ROI_profile=ROI_profile
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$program_parameters=program_parameters
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$plot_data=plot_data[,ROI_buckets]
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$FeaturesMatrix=FeaturesMatrix
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$signals_parameters=signals_parameters
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$error1=error1
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$Xdata=Xdata
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$Ydata=Ydata
+        provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$results_to_save=results_to_save
         print('Change')
       }
-        blah$finaloutput = save_output(
+        provisional_data$finaloutput = save_output(
           spectrum_index,
           signals_codes,
           results_to_save,
           autorun_data$buck_step,
-          blah$finaloutput)
+          provisional_data$finaloutput)
       }
 
       }
@@ -277,18 +277,18 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
     
     
     
-    blah$p=p
-    # blah$p2=p2
-    blah$results_to_save=results_to_save
-    blah$spectrum_index=spectrum_index
-    blah$signals_codes=signals_codes
-    blah$fitting_type=fitting_type
+    provisional_data$p=p
+    # provisional_data$p2=p2
+    provisional_data$results_to_save=results_to_save
+    provisional_data$spectrum_index=spectrum_index
+    provisional_data$signals_codes=signals_codes
+    provisional_data$fitting_type=fitting_type
     
     
    
-    # blah$finaloutput=finaloutput
+    # provisional_data$finaloutput=finaloutput
     
   }
-    # blah$autorun_data=autorun_data
-  return(blah)
+    # provisional_data$autorun_data=autorun_data
+  return(provisional_data)
 }

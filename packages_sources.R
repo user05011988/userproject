@@ -20,9 +20,10 @@ packages_sources = function() {
   if (!suppressPackageStartupMessages(require("shiny"))) install.packages("shiny")
   if (!suppressPackageStartupMessages(require("fields"))) install.packages("fields")
   if (!suppressPackageStartupMessages(require("apcluster"))) install.packages("apcluster")
-  if (!suppressPackageStartupMessages(require("heatmaply"))) install.packages("heatmaply")
   if (!suppressPackageStartupMessages(require("missForest"))) install.packages("missForest")
   if (!suppressPackageStartupMessages(require("mclust"))) install.packages("mclust")
+  if (!suppressPackageStartupMessages(require("heatmaply"))) install.packages("heatmaply")
+  
   if (!suppressPackageStartupMessages(require("shinyFiles"))) install.packages("shinyFiles")
   
   if (!suppressPackageStartupMessages(require("stringr"))) install.packages("stringr")
@@ -54,7 +55,7 @@ packages_sources = function() {
   
   
   source('fhs.R')
-  source('clustspectraplot.R')
+  # source('clustspectraplot.R')
   source('alignment.R')
   source('peak_analysis.R')
   
@@ -81,9 +82,9 @@ packages_sources = function() {
   source("import_data.R")
   source("save_output.R")
   source("fitting_variables.R")
-  source("automatic_roi_edition.R")
+  # source("automatic_roi_edition.R")
   source("validation.R")
-  source("plele.R")
+  # source("plele.R")
   source("interface_integration.R")
   source("p_values.R")
   source("write_info.R")
@@ -103,7 +104,7 @@ packages_sources = function() {
   write_info=cmpfun(write_info)
   
   fhs=cmpfun(fhs)
-  clustspectraplot=cmpfun(clustspectraplot)
+  # clustspectraplot=cmpfun(clustspectraplot)
   alignment=cmpfun(alignment)
   peak_analysis=cmpfun(peak_analysis)
   
@@ -130,12 +131,14 @@ packages_sources = function() {
   import_data=cmpfun(import_data)
   save_output=cmpfun(save_output)
   fitting_variables=cmpfun(fitting_variables)
-  automatic_roi_edition=cmpfun(automatic_roi_edition)
+  # automatic_roi_edition=cmpfun(automatic_roi_edition)
   validation=cmpfun(validation)
-  plele=cmpfun(plele)
+  # plele=cmpfun(plele)
   interface_integration=cmpfun(interface_integration)
   p_values=cmpfun(p_values)
   topspin_read_spectrum2=cmpfun(topspin_read_spectrum2)
   parseAcqus=cmpfun(parseAcqus)
   parseProcs=cmpfun(parseProcs)
+  heatmaply=cmpfun(heatmaply)
+  
 }

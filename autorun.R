@@ -121,7 +121,7 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         rownames(signals_parameters) = c(
           'intensity',
           'shift',
-          'width',
+          'half_band_width',
           'gaussian',
           'J_coupling'
         )
@@ -139,16 +139,16 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         error1=dummy$error1
        
         output_data$intensity=signals_parameters[1, signals_to_quantify]
-        output_data$width=signals_parameters[3, signals_to_quantify]
+        output_data$half_band_width=signals_parameters[3, signals_to_quantify]
         
         #Generation of the dataframe with the final output variables
         results_to_save = data.frame(
           shift = output_data$shift,
           Area = output_data$Area,
           signal_area_ratio = output_data$signal_area_ratio,
-          correlation = output_data$correlation,
+          fitting_error = output_data$fitting_error,
           intensity = output_data$intensity,
-          width = output_data$width
+          half_band_width = output_data$half_band_width
         )
         
         #Adaptation of the quantification to de-scaled Ydata
@@ -212,7 +212,7 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         autorun_data$buck_step,
         finaloutput
       )
-      print(dim(finaloutput$correlation))
+      print(dim(finaloutput$fitting_error))
       # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
       #   print('Not possible to overwrite a csv file open with Microsoft Excel')
       # })

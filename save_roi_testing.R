@@ -1,39 +1,39 @@
-save_roi_testing=function(blah,autorun_data,finaloutput,useful_data) {
+save_roi_testing=function(provisional_data,autorun_data,finaloutput,useful_data) {
   
-if (blah$fitting_type == "Clean Sum" ||
-    blah$fitting_type == "Baseline Sum") {
+if (provisional_data$fitting_type == "Clean Sum" ||
+    provisional_data$fitting_type == "Baseline Sum") {
   
   
-  useful_data[[blah$spectrum_index]][[blah$signals_codes]]$integration_parameters=blah$integration_parameters
-  useful_data[[blah$spectrum_index]][[blah$signals_codes]]$plot=blah$p2
+  useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes]]$integration_parameters=provisional_data$integration_parameters
+  useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes]]$plot=provisional_data$p2
 
 
 
-} else if (blah$fitting_type == "Clean Fitting" || blah$fitting_type ==
+} else if (provisional_data$fitting_type == "Clean Fitting" || provisional_data$fitting_type ==
     "Baseline Fitting") {
  
   
   
-  blah$program_parameters$signals_to_quantify=NULL
+  provisional_data$program_parameters$signals_to_quantify=NULL
 
-  for (i in seq_along(blah$signals_codes)) {
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$ROI_profile=blah$ROI_profile
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$program_parameters=blah$program_parameters
-    # useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$fitted_signals=blah$fitted_signals
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$plot_data=blah$plot_data
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Xdata=blah$Xdata
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$Ydata=blah$Ydata
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$results_to_save=blah$results_to_save
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$signals_parameters=blah$signals_parameters
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$FeaturesMatrix=blah$FeaturesMatrix
-    useful_data[[blah$spectrum_index]][[blah$signals_codes[i]]]$error1=blah$error1
+  for (i in seq_along(provisional_data$signals_codes)) {
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$ROI_profile=provisional_data$ROI_profile
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$program_parameters=provisional_data$program_parameters
+    # useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$fitted_signals=provisional_data$fitted_signals
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$plot_data=provisional_data$plot_data
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$Xdata=provisional_data$Xdata
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$Ydata=provisional_data$Ydata
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$results_to_save=provisional_data$results_to_save
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$signals_parameters=provisional_data$signals_parameters
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$FeaturesMatrix=provisional_data$FeaturesMatrix
+    useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes[i]]]$error1=provisional_data$error1
     
     
   }
   finaloutput = save_output(
-    blah$spectrum_index,
-    blah$signals_codes,
-    blah$results_to_save,
+    provisional_data$spectrum_index,
+    provisional_data$signals_codes,
+    provisional_data$results_to_save,
     autorun_data$buck_step,
     finaloutput)
 

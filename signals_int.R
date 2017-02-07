@@ -46,7 +46,7 @@ fitting_type=ROI_profile[1,3]
       rownames(signals_parameters) = c(
         'intensity',
         'shift',
-        'width',
+        'half_band_width',
         'gaussian',
         'J_coupling'
          )     
@@ -66,16 +66,16 @@ fitting_type=ROI_profile[1,3]
       error1=dummy$error1
     # print(output_data)
       output_data$intensity=signals_parameters[1, signals_to_quantify]
-      output_data$width=signals_parameters[3, signals_to_quantify]
+      output_data$half_band_width=signals_parameters[3, signals_to_quantify]
 
       #Generation of the dataframe with the final output variables
       results_to_save = data.frame(
         shift = output_data$shift,
         Area = output_data$Area,
         signal_area_ratio = output_data$signal_area_ratio,
-        correlation = output_data$correlation,
+        fitting_error = output_data$fitting_error,
         intensity = output_data$intensity,
-        width = output_data$width
+        half_band_width = output_data$half_band_width
       )
       
       #Adaptation of the quantification to de-scaled Ydata
@@ -169,25 +169,25 @@ fitting_type=ROI_profile[1,3]
       autorun_data$buck_step,
       finaloutput)
     
-    blah=list()
-    blah$signals_parameters=signals_parameters
-    blah$program_parameters=program_parameters
-    blah$p=p
-    blah$p2=p2
-    blah$Xdata=Xdata
-    blah$Ydata=Ydata
-    blah$finaloutput=finaloutput
-    blah$results_to_save=results_to_save
-    blah$FeaturesMatrix=FeaturesMatrix
-    # blah$fitted_signals=fitted_signals[,ROI_buckets]
+    provisional_data=list()
+    provisional_data$signals_parameters=signals_parameters
+    provisional_data$program_parameters=program_parameters
+    provisional_data$p=p
+    provisional_data$p2=p2
+    provisional_data$Xdata=Xdata
+    provisional_data$Ydata=Ydata
+    provisional_data$finaloutput=finaloutput
+    provisional_data$results_to_save=results_to_save
+    provisional_data$FeaturesMatrix=FeaturesMatrix
+    # provisional_data$fitted_signals=fitted_signals[,ROI_buckets]
     
-    blah$spectrum_index=spectrum_index
-    blah$signals_codes=signals_codes
-    blah$fitting_type=fitting_type
-    blah$ROI_profile=ROI_profile
-    blah$finaloutput=finaloutput
-    blah$plot_data=plot_data[,ROI_buckets]
+    provisional_data$spectrum_index=spectrum_index
+    provisional_data$signals_codes=signals_codes
+    provisional_data$fitting_type=fitting_type
+    provisional_data$ROI_profile=ROI_profile
+    provisional_data$finaloutput=finaloutput
+    provisional_data$plot_data=plot_data[,ROI_buckets]
     
 
-  return(blah)
+  return(provisional_data)
 }

@@ -118,7 +118,7 @@ autorun_model_spectrum = function(autorun_data) {
       rownames(signals_parameters) = c(
         'intensity',
         'shift',
-        'width',
+        'half_band_width',
         'gaussian',
         'J_coupling'
       ) 

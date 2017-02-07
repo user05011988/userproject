@@ -200,11 +200,11 @@ fittingloop = function(FeaturesMatrix,
     print(iter)
     signals_parameters = paramprov
     
-    #Correction of width and j-coupling
+    #Correction of half_band_width and j-coupling
     iter = 0
     error2=error1
     errorprov = error1=3000
-    #Only width and j-coupling will have different lower und upper bounds. 
+    #Only half_band_width and j-coupling will have different lower und upper bounds. 
     change_indexes=which(seq_along(lb)%%5!=3 & seq_along(lb)%%5!=0)
     lb[change_indexes]=ub[change_indexes]=paramprov[change_indexes]
     #With ony one iteration is enough
@@ -243,7 +243,7 @@ fittingloop = function(FeaturesMatrix,
       }
     }
 
-    #If width and j-coup change improves fitting
+    #If half_band_width and j-coup change improves fitting
     if (error1 < error2) {
       error2 = error1
       signals_parameters = paramprov

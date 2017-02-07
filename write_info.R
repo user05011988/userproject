@@ -7,25 +7,25 @@ write.csv(finaloutput$Area,
 write.csv(finaloutput$shift,
   file.path(export_path,
     "shift.csv"))
-write.csv(finaloutput$width,
+write.csv(finaloutput$half_band_width,
   file.path(export_path,
-    "width.csv"))
+    "half_band_width.csv"))
 write.csv(
   finaloutput$signal_area_ratio,
   file.path(export_path,
     "signal_area_ratio.csv")
 )
 write.csv(
-  finaloutput$correlation,
+  finaloutput$fitting_error,
   file.path(export_path,
-    "correlation.csv")
+    "fitting_error.csv")
 )
 write.csv(
   finaloutput$intensity,
   file.path(export_path,
     "intensity.csv")
 )
-tryCatch(write.csv(ROI_data,file.path(export_path,"ROI_profiles_used.csv")), error = function(err) 
+tryCatch(write.csv(ROI_data,file.path(export_path,"ROI_profiles_used.csv"),row.names=F), error = function(err) 
   print('Not possible to overwrite the original csv file')
 )
 }

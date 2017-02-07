@@ -96,8 +96,8 @@ ui <- fluidPage(
         )
     ),
     tabPanel("Quantification Validation",
-      fluidRow(column(width = 12, h4("Here you have the correlation for every quantification. Press one cell to analyze the quantification. Don't click where there are no values"))),
-      selectInput("select_validation",label=NULL,choices=c('Correlation'=1,'Signal/total spectrum ratio'=2,'Shift'=3,'Halfwidth'=4,'Outliers'=5,'Relative Intensity'=6),selected=NULL),
+      fluidRow(column(width = 12, h4("Here you have the fitting_error for every quantification. Press one cell to analyze the quantification. Don't click where there are no values"))),
+      selectInput("select_validation",label=NULL,choices=c('Fitting Error'=1,'Signal/total spectrum ratio'=2,'Shift'=3,'Halfwidth'=4,'Outliers'=5,'Relative Intensity'=6),selected=NULL),
      
           div(dataTableOutput("fit_selection"), style = "font-size:80%")
       
@@ -169,22 +169,22 @@ server = function(input, output,session) {
     for (i in 1:nrow(reactiveprogramdata$ROI_data_check)) {
       ind=which(reactiveprogramdata$ROI_data[,4]==reactiveprogramdata$ROI_data_check[i,4]&reactiveprogramdata$ROI_data[,5]==reactiveprogramdata$ROI_data_check[i,5])
       if (length(ind)>0) {
-      new_correlation[,i]=reactiveprogramdata$finaloutput$correlation[,ind]
+      new_correlation[,i]=reactiveprogramdata$finaloutput$fitting_error[,ind]
       new_intensity[,i]=reactiveprogramdata$finaloutput$intensity[,ind]
       new_signal_area_ratio[,i]=reactiveprogramdata$finaloutput$signal_area_ratio[,ind]
       new_shift[,i]=reactiveprogramdata$finaloutput$shift[,ind]
-      new_width[,i]=reactiveprogramdata$finaloutput$width[,ind]
+      new_width[,i]=reactiveprogramdata$finaloutput$half_band_width[,ind]
       new_Area[,i]=reactiveprogramdata$finaloutput$Area[,ind]
       new_signals_codes[i]=reactiveprogramdata$autorun_data$signals_codes[ind]
       new_signals_names[i]=reactiveprogramdata$autorun_data$signals_names[ind]
       for (j in 1:length(new_useful_data)) new_useful_data[[j]][[i]]=reactiveprogramdata$useful_data[[j]][[ind]]
       }
     }
-    reactiveprogramdata$finaloutput$correlation=new_correlation
+    reactiveprogramdata$finaloutput$fitting_error=new_correlation
     reactiveprogramdata$finaloutput$intensity=new_intensity
     reactiveprogramdata$finaloutput$signal_area_ratio=new_signal_area_ratio
     reactiveprogramdata$finaloutput$shift=new_shift
-    reactiveprogramdata$finaloutput$width=new_width
+    reactiveprogramdata$finaloutput$half_band_width=new_width
     reactiveprogramdata$finaloutput$Area=new_Area
     reactiveprogramdata$autorun_data$signals_codes=new_signals_codes
     reactiveprogramdata$autorun_data$signals_names=new_signals_names
@@ -302,10 +302,10 @@ server = function(input, output,session) {
     resetInput(session, "directedition_edit")
     reactiveROItestingdata$ROIpar <- reactiveprogramdata$ROIdata_subset
     reactiveROItestingdata$signpar <- rbind(rep(NA,7),rep(NA,7))
-    colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
+    colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"half_band_width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     reactiveROItestingdata$qualitypar <- rbind(rep(NA,3),rep(NA,3))
 
-    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total spectrum ratio')
+    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting_error','signal/total spectrum ratio')
     
     output$ROIdata <- renderD3tf({
       
@@ -461,8 +461,8 @@ server = function(input, output,session) {
       
             reactivequantdata$method2=signals_int(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput,reactiveprogramdata$ind,reactiveROItestingdata$signpar,reactiveROItestingdata$ROIpar) 
 
-          reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method2$results_to_save$Area,reactivequantdata$method2$results_to_save$correlation,reactivequantdata$method2$results_to_save$signal_area_ratio)
-          colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total spectrum ratio')
+          reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method2$results_to_save$Area,reactivequantdata$method2$results_to_save$fitting_error,reactivequantdata$method2$results_to_save$signal_area_ratio)
+          colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting_error','signal/total spectrum ratio')
           
         
           reactivequantdata$method1=reactivequantdata$method2
@@ -489,8 +489,8 @@ server = function(input, output,session) {
     if (length(reactivequantdata$method1)==3) return()
     reactivequantdata$stop3=1
     # reactiveprogramdata$useful_data=reactivequantdata$method1$useful_data    
-    reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method1$results_to_save$Area,reactivequantdata$method1$results_to_save$correlation,reactivequantdata$method1$results_to_save$signal_area_ratio)
-    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','Correlation','Signal/total area ratio')
+    reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method1$results_to_save$Area,reactivequantdata$method1$results_to_save$fitting_error,reactivequantdata$method1$results_to_save$signal_area_ratio)
+    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','Fitting Error','Signal/total area ratio')
     
     if (!is.null(reactivequantdata$method1$signals_parameters)) {
       reactiveprogramdata$bgColScales = c(rep("", dim(reactivequantdata$method1$signals_parameters)[1]), rep("info", dim(reactivequantdata$method1$signals_parameters_2)[1]-dim(reactivequantdata$method1$signals_parameters)[1]))
@@ -555,16 +555,16 @@ server = function(input, output,session) {
     if (!is.null(reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$signals_parameters)) reactiveROItestingdata$signpar=t(reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$signals_parameters)
     print('3')
     
-    colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
+    colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"half_band_width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     
     ind=which(reactiveprogramdata$ROI_separator[,2]-reactiveprogramdata$info$col>=0)[1]
     ind=(reactiveprogramdata$ROI_separator[ind, 1]:reactiveprogramdata$ROI_separator[ind, 2])
 # print(ind)
 # print(reactiveprogramdata$ROI_separator)
-    reactiveROItestingdata$qualitypar=cbind(t(reactiveprogramdata$finaloutput$Area[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$correlation[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$signal_area_ratio[reactiveprogramdata$info$row,ind,drop=F]))
+    reactiveROItestingdata$qualitypar=cbind(t(reactiveprogramdata$finaloutput$Area[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$fitting_error[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$signal_area_ratio[reactiveprogramdata$info$row,ind,drop=F]))
     
     # print(reactiveROItestingdata$qualitypar)
-    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total spectrum ratio')
+    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting_error','signal/total spectrum ratio')
 print('2')
     updateTabsetPanel(session, "mynavlist",selected = "Individual Quantification")
     
@@ -575,7 +575,7 @@ print('2')
     is_autorun='Y'
     reactivequantdata$chor <- interface_quant(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput, reactiveprogramdata$ind,reactiveROItestingdata$ROIpar,is_autorun,reactiveprogramdata$useful_data) 
     # if (!is.null(dim(reactivequantdata$chor$finaloutput))) {
-      print(fivenum(reactiveprogramdata$finaloutput$correlation-reactivequantdata$chor$finaloutput$correlation))
+      print(fivenum(reactiveprogramdata$finaloutput$fitting_error-reactivequantdata$chor$finaloutput$fitting_error))
         
       reactiveprogramdata$finaloutput=reactivequantdata$chor$finaloutput
       reactiveprogramdata$useful_data=reactivequantdata$chor$useful_data
@@ -746,7 +746,7 @@ observeEvent(input$autorun, {
   }
     # ,options = list(
     #   autoWidth = T,
-    #   columnDefs = list(list(width = '50px', targets = c(1, 3,4))))
+    #   columnDefs = list(list(half_band_width = '50px', targets = c(1, 3,4))))
     
     )
   })
@@ -769,7 +769,7 @@ observeEvent(input$autorun, {
     quantifications=reactiveprogramdata$finaloutput$Area[,ss]
       parameters=fitting_variables()
     if (parameters$automatic_removal=='Y') {
-      quantifications[reactiveprogramdata$finaloutput$correlation[,ss]>parameters$fitting_error_analysis_limit]=NA
+      quantifications[reactiveprogramdata$finaloutput$fitting_error[,ss]>parameters$fitting_error_analysis_limit]=NA
       quantifications[reactiveprogramdata$finaloutput$signal_area_ratio[,ss]<parameters$signal_area_ratio_analysis_limit]=NA
       quantifications=quantifications[,!apply(quantifications,2,function(x)length(which(is.na(x)))>0.85*length(x))]
     }
@@ -790,7 +790,7 @@ observeEvent(input$autorun, {
     quantifications=reactiveprogramdata$finaloutput$Area[,ss]
         parameters=fitting_variables()
     if (parameters$automatic_removal=='Y') {
-      quantifications[reactiveprogramdata$finaloutput$correlation[,ss]>parameters$fitting_error_analysis_limit]=NA
+      quantifications[reactiveprogramdata$finaloutput$fitting_error[,ss]>parameters$fitting_error_analysis_limit]=NA
       quantifications[reactiveprogramdata$finaloutput$signal_area_ratio[,ss]<parameters$signal_area_ratio_analysis_limit]=NA
       quantifications=quantifications[,!apply(quantifications,2,function(x)length(which(is.na(x)))>0.5*length(x))]
       
@@ -806,7 +806,7 @@ observeEvent(input$autorun, {
     shifts=reactiveprogramdata$finaloutput$shift[,ss]
         parameters=fitting_variables()
     if (parameters$automatic_removal=='Y') {
-      shifts[reactiveprogramdata$finaloutput$correlation[,ss]>parameters$fitting_error_analysis_limit]=NA
+      shifts[reactiveprogramdata$finaloutput$fitting_error[,ss]>parameters$fitting_error_analysis_limit]=NA
       shifts[reactiveprogramdata$finaloutput$signal_area_ratio[,ss]<parameters$signal_area_ratio_analysis_limit]=NA
       shifts=shifts[,!apply(shifts,2,function(x)length(which(is.na(x)))>0.5*length(x))]
       
@@ -820,7 +820,7 @@ observeEvent(input$autorun, {
     quantifications=reactiveprogramdata$finaloutput$Area[,ss]
     parameters=fitting_variables()
     if (parameters$automatic_removal=='Y') {
-      quantifications[reactiveprogramdata$finaloutput$correlation[,ss]>parameters$fitting_error_analysis_limit]=NA
+      quantifications[reactiveprogramdata$finaloutput$fitting_error[,ss]>parameters$fitting_error_analysis_limit]=NA
       quantifications[reactiveprogramdata$finaloutput$signal_area_ratio[,ss]<parameters$signal_area_ratio_analysis_limit]=NA
       quantifications=quantifications[,!apply(quantifications,2,function(x)length(which(is.na(x)))>0.5*length(x))]
       
@@ -860,9 +860,9 @@ observeEvent(input$autorun, {
     
     reactiveROItestingdata$ROIpar <- reactiveprogramdata$ROIdata_subset
     reactiveROItestingdata$signpar <- rbind(rep(NA,7),rep(NA,7))
-    colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
+    colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"half_band_width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     reactiveROItestingdata$qualitypar <- rbind(rep(NA,3),rep(NA,3))
-    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','correlation','signal/total spectrum ratio')
+    colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting_error','signal/total spectrum ratio')
     
     
   })
@@ -886,8 +886,8 @@ observeEvent(input$autorun, {
    
     reactiveprogramdata$ROI_data=reactiveprogramdata$ROI_data_check = imported_data$ROI_data
     
-    reactiveprogramdata$finaloutput$Area = reactiveprogramdata$finaloutput$signal_area_ratio = reactiveprogramdata$finaloutput$correlation =
-      reactiveprogramdata$finaloutput$shift = reactiveprogramdata$finaloutput$intensity = reactiveprogramdata$finaloutput$width = dummy
+    reactiveprogramdata$finaloutput$Area = reactiveprogramdata$finaloutput$signal_area_ratio = reactiveprogramdata$finaloutput$fitting_error =
+      reactiveprogramdata$finaloutput$shift = reactiveprogramdata$finaloutput$intensity = reactiveprogramdata$finaloutput$half_band_width = dummy
     updateSelectInput(session, "select_validation",selected = 1)
     dir.create(imported_data$export_path, showWarnings = FALSE)
         write.csv(

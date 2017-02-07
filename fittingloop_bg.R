@@ -44,7 +44,7 @@ fittingloop_bg = function(FeaturesMatrix, Xdata, Ydata, program_parameters) {
       rownames(signals_parameters) = c(
         'intensity',
         'shift',
-        'width',
+        'half_band_width',
         'gaussian',
         'J_coupling'
       )
