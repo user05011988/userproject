@@ -9,6 +9,10 @@ packages_sources = function() {
   # suppressPackageStartupMessages(requireNamespace("robust", quietly = TRUE)
   # suppressPackageStartupMessages(requireNamespace("apcluster", quietly = TRUE)
   # suppressPackageStartupMessages(requireNamespace("rio", quietly = TRUE)
+  
+  # Setting variables to NULL to minimize messages shown on the console created during the automatic compilation of functions
+  variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = savedreactivedata = env =self = private = .values = ymax= ymin = label.row = x= y=c=t=value=variable=signals=private=self =.=integration_parameters = x= width=height=NULL 
+  
    if (!suppressPackageStartupMessages(require("minpack.lm"))) install.packages("minpack.lm")
    if (!suppressPackageStartupMessages(require("reshape"))) install.packages("reshape")
    if (!suppressPackageStartupMessages(require("compiler"))) install.packages("compiler")

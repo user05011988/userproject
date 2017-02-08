@@ -1,4 +1,4 @@
-Metadata2Buckets <- function(Experiments, params) {
+Metadata2Buckets <- function(Experiments, params, spectrum_borders) {
   #Created by Daniel Cañueto 30/08/2016
   #Reading of Bruker files
   
@@ -10,10 +10,10 @@ Metadata2Buckets <- function(Experiments, params) {
   
   left_spectral_border = ifelse(exists("left_spectral_border", where = params),
                                 params$left_spectral_border,
-                                12)
+    spectrum_borders[1])
   right_spectral_border = ifelse(exists("right_spectral_border", where = params),
                                  params$right_spectral_border,
-                                 -1)
+    spectrum_borders[2])
   
   RAW$norm_PEAK_left_ppm = ifelse(params$norm_PEAK == "Y", params$norm_left_ppm,
     0)

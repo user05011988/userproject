@@ -47,7 +47,7 @@ validation = function(finaloutput,
   	#Analysis of which quantifications deviate too much from expected half_band_width, according to prediction with linear model of spectra with similar behavior
   
   } else if (validation_type==4) { 
-    ind=which(apply(finaloutput$half_band_width,2, function(x) asimilar_signals(is.na(x)))==F)#find signals with quantified half_band_width
+    ind=which(apply(finaloutput$half_band_width,2, function(x) all(is.na(x)))==F)#find signals with quantified half_band_width
   medianwidth=apply(finaloutput$half_band_width,2,function(x)median(x,na.rm=T))
   for (i in 1:dim(finaloutput$half_band_width)[1]) {
      #Create linear model with most similar half_band_width and predict them

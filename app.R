@@ -1,13 +1,14 @@
-variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = savedreactivedata = env =self = private = .values = ymax= ymin = label.row = x= y=c=t=value=variable=signals=private=self =.=integration_parameters = x= width=height=NULL # Setting the variables to NULL 
-if (!suppressPackageStartupMessages(require("lazyeval"))) install.packages("lazyeval")
-
+# Setting variables to NULL to minimize messages shown on the console created during the automatic compilation of functions
+variable = value = signals = . = DT = D3TableFilter = shiny =  bd =label.col = label.col = R = key.row = key.col = savedreactivedata = env =self = private = .values = ymax= ymin = label.row = x= y=c=t=value=variable=signals=private=self =.=integration_parameters = x= width=height=NULL 
+#quick-and-dirty solution to solve bug of plotly or f_eval package
+if (!suppressPackageStartupMessages(require("lazyeval"))) install.packages("lazyeval") 
 f_eval(~ 1 + 2 + 3)
-
 
 source('packages_sources.R')
 packages_sources()
-compiler::enableJIT(3)
+# compiler::enableJIT(3)
 
+#UI code
 ui <- fluidPage(  
   
   tags$head(tags$script("
@@ -17,9 +18,7 @@ ui <- fluidPage(
     $('#mynavlist a:contains(\"Uni and multivariate analysis\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"ROI Profiles\")').parent().addClass('disabled')
     $('#mynavlist a:contains(\"Dendrogram heatmaps\")').parent().addClass('disabled')
-
 }
-    
     Shiny.addCustomMessageHandler('activeNavs', function(nav_label) {
     $('#mynavlist a:contains(\"' + nav_label + '\")').parent().removeClass('disabled')
     })
@@ -96,29 +95,16 @@ ui <- fluidPage(
         )
     ),
     tabPanel("Quantification Validation",
-      fluidRow(column(width = 12, h4("Here you have the fitting_error for every quantification. Press one cell to analyze the quantification. Don't click where there are no values"))),
+      fluidRow(column(width = 12, h4("Here you have the fitting error for every quantification. Press one cell to analyze the quantification. Don't click where there are no values"))),
       selectInput("select_validation",label=NULL,choices=c('Fitting Error'=1,'Signal/total spectrum ratio'=2,'Shift'=3,'Halfwidth'=4,'Outliers'=5,'Relative Intensity'=6),selected=NULL),
      
           div(dataTableOutput("fit_selection"), style = "font-size:80%")
       
     ),
     tabPanel("ROI Profiles", 
-      # fluidRow(column(width = 12, h4("Here you can add ROI profiles"))),
-      # 
-      #     div(d3tfOutput('new_roi_profile',width = "100%", height = "auto"), style = "font-size:80%"),
-      # fluidRow(
-      #   column(width = 12,
-      #     selectInput("roirows",label=NULL,choices=1:10,selected=1)
-      #   )),
-      # fluidRow(
-      #   column(width = 12,
-          actionButton("add_signal", label = "Add signal"),actionButton("remove_signal", label = "Remove signals"),actionButton("save_changes", label = "Save changes")
-        # ))
-  ,
-        
+      actionButton("add_signal", label = "Add signal"),actionButton("remove_signal", label = "Remove signals"),actionButton("save_changes", label = "Save changes"),
       fluidRow(column(width = 12, h4("Here you have the ROI profiles")),
       div(d3tfOutput('roi_profiles',width = "100%", height = "auto"), style = "font-size:80%")
-      
     )),
     
     tabPanel("Uni and multivariate analysis", 
@@ -132,7 +118,6 @@ ui <- fluidPage(
       plotlyOutput(outputId = "dendheatmapareadata"),
       fluidRow(column(width = 12, h4("Here you have the dendrogram heatmap of chemical shift, so you can analyze relationships between spectra and between signals"))),
       plotlyOutput(outputId = "dendheatmapshiftdata"))
-    
  ))
   
 
@@ -140,29 +125,23 @@ ui <- fluidPage(
 server = function(input, output,session) {
   options(shiny.maxRequestSize=1000*1024^2)
   reactiveROItestingdata <- reactiveValues()
-
-
   m <- list(l = 150, r = 0, b = 150, t = 0,pad = 4)
-  
   reactivequantdata <- reactiveValues(method2=NULL, method1 = NULL,stop3=0)
-  
   reactiveprogramdata <- reactiveValues(ROIdata_subset=NULL,ind=NULL,beginning=F,dataset=NULL,finaloutput=NULL,useful_data=list(),autorun_data=NULL,p_value_final=NULL,ROI_data=NULL,ROI_data_check=NULL,info=c(),ROI_separator=NULL,select_options=NULL,new_roi_profile=NULL,p=NULL,bgColScales=NULL,autorun_plot=NULL,ROI_names=NULL)
   
  
   observeEvent(input$add_signal, {
-    # reactiveprogramdata$ROI_data_check=rbind(reactiveprogramdata$ROI_data_check,apply(reactiveprogramdata$ROI_data_check,2,median))
-    reactiveprogramdata$ROI_data_check=rbind(reactiveprogramdata$ROI_data_check,rep(NA,ncol(reactiveprogramdata$ROI_data_check)))
-    
+   reactiveprogramdata$ROI_data_check=rbind(reactiveprogramdata$ROI_data_check,rep(NA,ncol(reactiveprogramdata$ROI_data_check)))
   })
+  
   observeEvent(input$remove_signal, {
     reactiveprogramdata$ROI_data_check=reactiveprogramdata$ROI_data_check[-input$roi_profiles_select,]
     resetInput(session, "roi_profiles_edit")
-    
   })
+  
   observeEvent(input$save_changes, {
     reactiveprogramdata$ROI_data_check=reactiveprogramdata$ROI_data_check[sort(reactiveprogramdata$ROI_data_check[,1],index.return=T)$ix,]
     new_correlation=new_intensity=new_signal_area_ratio=new_shift=new_width=new_Area=matrix(NA,nrow(reactiveprogramdata$finaloutput$signal_area_ratio),nrow(reactiveprogramdata$ROI_data_check),dimnames=list(reactiveprogramdata$autorun_data$Experiments,reactiveprogramdata$autorun_data$signals_names))
-    
     new_signals_codes=new_signals_names=rep(NA,nrow(reactiveprogramdata$ROI_data_check))
     new_useful_data=reactiveprogramdata$useful_data
     for (i in 1:length(new_useful_data)) new_useful_data[[i]]=vector("list", nrow(reactiveprogramdata$ROI_data_check))
@@ -198,17 +177,14 @@ server = function(input, output,session) {
     ROI_names=paste(reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[, 1],1],reactiveprogramdata$ROI_data[reactiveprogramdata$ROI_separator[, 1],2])
     reactiveprogramdata$select_options=1:length(ROI_names)
     names(reactiveprogramdata$select_options)=ROI_names
-    
       })
+  
   output$roi_profiles <- renderD3tf({
     tableProps <- list(
       btn_reset = F
-      
     )
     
     observe({
-    
-
       edit <- input$roi_profiles_edit
       if (!is.null(edit)) {
       isolate({
@@ -218,9 +194,7 @@ server = function(input, output,session) {
         val <- edit$val
         
         if(col == 0) {
-          # rownames
           oldval <- rownames(reactiveprogramdata$ROI_data_check)[row]
-          # rownames can not start with a digit
           if(grepl('^\\d', val)) {
             rejectEdit(session, tbl = "roi_profiles", row = row, col = col,  id = id, value = oldval)
             reactiveprogramdata$roi=0
@@ -247,13 +221,13 @@ server = function(input, output,session) {
           reactiveprogramdata$change=0
           reactiveprogramdata$stop=1          
           disableEdit(session, "roi_profiles", c(1:11))
-          print('step2')
+          # print('step2')
         } else{ 
           if(col == 0) {
           } else if (col %in% c(1:2,5:11)) {
             reactiveprogramdata$ROI_data_check[row, col] <- as.numeric(val)
             reactiveprogramdata$roi=1
-            print('step')
+            # print('step')
           } else if (col %in% c(3,4)) {
             reactiveprogramdata$ROI_data_check[row, col] <- val
           }
@@ -316,13 +290,11 @@ server = function(input, output,session) {
           sort_types = c("String", rep("Number", ncol(reactiveprogramdata$ROIdata_subset)))
         )
       )
-      print(reactiveROItestingdata$ROIpar)
       observe({
         if(is.null(input$ROIdata_edit)|(reactiveprogramdata$stop==1)) {
           reactiveprogramdata$change=0
-          print(input$ROIdata_edit)
-          print(reactiveprogramdata$stop)
-          print('step1')
+          
+          # print('step1')
           return(NULL)
         }
        
@@ -368,13 +340,13 @@ server = function(input, output,session) {
             reactiveprogramdata$change=0
             reactiveprogramdata$stop=1          
             disableEdit(session, "ROIdata", c(1:11))
-            print('step2')
+            # print('step2')
           } else{ 
             if(col == 0) {
             } else if (col %in% c(1:2,5:11)) {
               reactiveROItestingdata$ROIpar[row, col] <- as.numeric(val)
               reactiveprogramdata$roi=1
-              print('step')
+              # print('step')
             } else if (col %in% c(3)) {
               reactiveROItestingdata$ROIpar[row, col] <- val
             }
@@ -472,7 +444,6 @@ server = function(input, output,session) {
 
       
       output$autorun_plot <- renderPlotly({
-        # print(reactiveprogramdata$autorun_plot)
         if (reactiveprogramdata$beginning==F) return()
         reactiveprogramdata$autorun_plot
       })
@@ -523,10 +494,10 @@ server = function(input, output,session) {
    
     
     Xdata=try(reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$Xdata,silent=T)
-    # if (class(Xdata)=="try-error") {
-    #      print('Choose valid quantification')
-    #      return(NULL)
-    # }
+    if (class(Xdata)=="try-error") {
+         print('Choose valid quantification')
+         return(NULL)
+    }
     Ydata=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$Ydata
     plot_data=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$plot_data
     ROI_profile=reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$ROI_profile
@@ -553,19 +524,15 @@ server = function(input, output,session) {
     # }
     reactiveROItestingdata$ROIpar=ROI_profile
     if (!is.null(reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$signals_parameters)) reactiveROItestingdata$signpar=t(reactiveprogramdata$useful_data[[reactiveprogramdata$info$row]][[reactiveprogramdata$info$col]]$signals_parameters)
-    print('3')
-    
+
     colnames(reactiveROItestingdata$signpar)=c("intensity",	"shift",	"half_band_width",	"gaussian",	"J_coupling",	"multiplicities",	"roof_effect")
     
     ind=which(reactiveprogramdata$ROI_separator[,2]-reactiveprogramdata$info$col>=0)[1]
     ind=(reactiveprogramdata$ROI_separator[ind, 1]:reactiveprogramdata$ROI_separator[ind, 2])
-# print(ind)
-# print(reactiveprogramdata$ROI_separator)
+
     reactiveROItestingdata$qualitypar=cbind(t(reactiveprogramdata$finaloutput$Area[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$fitting_error[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$signal_area_ratio[reactiveprogramdata$info$row,ind,drop=F]))
     
-    # print(reactiveROItestingdata$qualitypar)
     colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting_error','signal/total spectrum ratio')
-print('2')
     updateTabsetPanel(session, "mynavlist",selected = "Individual Quantification")
     
     
@@ -574,14 +541,8 @@ print('2')
   observeEvent(input$autorun_signal, {
     is_autorun='Y'
     reactivequantdata$chor <- interface_quant(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput, reactiveprogramdata$ind,reactiveROItestingdata$ROIpar,is_autorun,reactiveprogramdata$useful_data) 
-    # if (!is.null(dim(reactivequantdata$chor$finaloutput))) {
-      print(fivenum(reactiveprogramdata$finaloutput$fitting_error-reactivequantdata$chor$finaloutput$fitting_error))
-        
-      reactiveprogramdata$finaloutput=reactivequantdata$chor$finaloutput
+          reactiveprogramdata$finaloutput=reactivequantdata$chor$finaloutput
       reactiveprogramdata$useful_data=reactivequantdata$chor$useful_data
-    # }
-    
-    
   })
  
  
@@ -593,7 +554,7 @@ print('2')
   })
     observeEvent(input$peak_analysis, {
       if (is.null(reactiveprogramdata$alignment_check)) {
-        print('Before analysing peaks, I have to align them. Then Ill analyze them')
+        print('Before analysing peaks, I have to align them. Then I\'ll analyze them')
         dummy=alignment(reactiveprogramdata$autorun_data$dataset,reactiveprogramdata$autorun_data$ppm)
         peak_analysis(dummy,reactiveprogramdata$autorun_data$ppm,reactiveprogramdata$autorun_data$freq,reactiveprogramdata$autorun_data$export_path,reactiveprogramdata$autorun_data$Metadata,reactiveprogramdata$repository,reactiveprogramdata$originaldataset)
       } else {
@@ -640,13 +601,13 @@ observeEvent(input$autorun, {
         return(NULL)
     }
       if (reactivequantdata$method1$error1<reactiveprogramdata$useful_data[[reactivequantdata$method1$spectrum_index]][[reactivequantdata$method1$signals_codes[1]]]$error1) {
-        print('Change')
+        print('Quantification improved')
     dummy=save_roi_testing(reactivequantdata$method1,reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput,reactiveprogramdata$useful_data) 
     reactiveprogramdata$finaloutput=dummy$finaloutput
     reactiveprogramdata$useful_data=dummy$useful_data
     
       } else {
-        print('Not change')
+        print('Quantification not improved')
       }
     
   })
@@ -744,10 +705,7 @@ observeEvent(input$autorun, {
     validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$program_parameters,input$select_validation,reactiveprogramdata$ROIdata_subset,reactiveprogramdata$autorun_data$Metadata)
   output$fit_selection = DT::renderDataTable({ datatable(round(validation_data$alarmmatrix,4),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(validation_data$alarmmatrix), backgroundColor = styleInterval(validation_data$brks, validation_data$clrs))
   }
-    # ,options = list(
-    #   autoWidth = T,
-    #   columnDefs = list(list(half_band_width = '50px', targets = c(1, 3,4))))
-    
+   
     )
   })
   output$varselect <- renderUI({
@@ -950,7 +908,7 @@ observeEvent(input$autorun, {
       spectra , selection = list(mode = 'multiple', selected = 1),server = T)
     
     program_parameters = fitting_variables()
-    # reactiveprogramdata$ROI_data = read.csv(reactiveprogramdata$autorun_data$profile_folder_path, stringsAsFactors = F)
+   
     dummy = which(is.na(reactiveprogramdata$ROI_data[, 1]))
     if (length(dummy)==0) dummy=dim(reactiveprogramdata$ROI_data)[1]+1
     lal=which(duplicated(reactiveprogramdata$ROI_data[-dummy,1:2])==F)
@@ -1048,7 +1006,6 @@ observeEvent(input$autorun, {
   
   
   ind=which(reactiveprogramdata$autorun_data$Experiments %in% added_data$autorun_data$Experiments==T)
-  
   ind2=which(reactiveprogramdata$autorun_data$signals_names %in% added_data$autorun_data$signals_names==T)
   ind3=which(added_data$autorun_data$Experiments %in% reactiveprogramdata$autorun_data$Experiments==T)
   ind4=which(added_data$autorun_data$signals_names %in% reactiveprogramdata$autorun_data$signals_names==T)
@@ -1062,8 +1019,6 @@ observeEvent(input$autorun, {
       reactiveprogramdata$useful_data[[ind[i]]][[ind2[j]]]=added_data$useful_data[[ind3[i]]][[ind4[j]]]
     }}
   })
-  
-  
 }
 
 shinyApp(ui, server)
