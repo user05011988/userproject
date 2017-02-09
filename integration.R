@@ -1,4 +1,4 @@
-integration = function(integration_parameters, Xdata, Ydata) {
+integration = function(integration_parameters, Xdata, Ydata,Ydatamedian) {
   #Created by Daniel Ca?ueto 30/08/2016
   #Integration of ROI
 
@@ -40,35 +40,12 @@ integration = function(integration_parameters, Xdata, Ydata) {
   results_to_save$signal_area_ratio = tryCatch((sum(integrated_signal[p1:p2]) / sum(Ydata[p1:p2])) *
     100,error = function(e) NaN, silent=T)
   print(results_to_save$signal_area_ratio)
-  results_to_save$fitting_error = NaN
+  results_to_save$fitting_error = 1-cor(Ydata,Ydatamedian,method='spearman')
   results_to_save$half_band_width = NaN
 
   peaks = peakdet(integrated_signal, 0.2*max(0.000001,max(integrated_signal)))
   results_to_save$shift = mean(Xdata[peaks$maxtab$pos])
 
-  #plot
-  # plotdata = data.frame(Xdata, signal = integrated_signal)
-  # plotdata2 = data.frame(Xdata, Ydata)
-  # plotdata3 <- melt(plotdata2, id = "Xdata")
-  # plotdata3$variable = rep('Original Spectrum', length(Ydata))
-  #   plotdata4 = data.frame(Xdata, integrated_signal)
-  # plotdata5 = melt(plotdata4, id = "Xdata")
-  # plots=ggplot() +
-  #   geom_line(data = plotdata3,
-  #             aes(
-  #               x = Xdata,
-  #               y = value,
-  #               colour = variable,
-  #               group = variable
-  #             )) +
-  #   geom_area(data = plotdata,
-  #             aes(
-  #               x = Xdata,
-  #               y = signal,
-  #               position = 'fill',
-  #               fill = 'Quantified Signal'
-  #             )) +
-  #   scale_x_reverse()
   plot_data=rbind(integrated_signal,baseline,integrated_signal+baseline,integrated_signal)
   
   dummy=list(results_to_save=results_to_save,plot_data=plot_data)

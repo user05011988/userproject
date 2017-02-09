@@ -113,49 +113,6 @@ fitting_type=ROI_profile[1,3]
           ))
       plotdata5 = melt(plotdata4, id = "Xdata")
 
-      # p2=ggplot() +
-      #   geom_line(data = plotdata3,
-      #     aes(
-      #       x = Xdata,
-      #       y = value,
-      #       colour = variable,
-      #       group = variable
-      #     )) +
-      #   geom_line(data = plotdata5,
-      #     aes(
-      #       x = Xdata,
-      #       y = value,
-      #       colour = 'Surrounding signals',
-      #       group = variable
-      #     )) +
-      #   scale_x_reverse() + labs(x='ppm',y='Intensity')
-      # for (r in 1:length(program_parameters$signals_to_quantify)) {
-      #   plotdata = data.frame(Xdata, signals = plot_data[3 + program_parameters$signals_to_quantify[r],ROI_buckets ] )
-      #   p2=p2 +
-      #     geom_area(
-      #       data = plotdata,
-      #       aes(
-      #         x = Xdata,
-      #         y = signals,
-      #         position = 'fill',
-      #         fill = 'Quantified Signal'
-      #       )
-      #     )
-      # }
-      # plotdata2 = data.frame(Xdata=Xdata_2,
-      #   Ydata=Ydata_2,
-      #   plot_data[3, ],
-      #   plot_data[2, ] )
-      # plotdata3 <- melt(plotdata2, id = "Xdata")
-      # plotdata3$variable = c(
-      #   rep('Original Spectrum', length(Ydata_2)),
-      #   rep('Generated Spectrum', length(Ydata_2)),
-      #   rep('Generated Background', length(Ydata_2))
-      # )
-      # plotdata4 = data.frame(Xdata=Xdata_2, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
-      # plotdata5 = melt(plotdata4, id = "Xdata")
-      # 
-      
       
       plotdata = data.frame(Xdata=Xdata_2, signals = plot_data[1, ] )
       p=plot_ly(plotdata,x = ~Xdata, y = ~signals, type = 'scatter', color= 'Signals',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>%
@@ -173,12 +130,13 @@ fitting_type=ROI_profile[1,3]
     provisional_data$signals_parameters=signals_parameters
     provisional_data$program_parameters=program_parameters
     provisional_data$p=p
-    provisional_data$p2=p2
+    # provisional_data$p2=p2
     provisional_data$Xdata=Xdata
     provisional_data$Ydata=Ydata
     provisional_data$finaloutput=finaloutput
     provisional_data$results_to_save=results_to_save
-    provisional_data$FeaturesMatrix=FeaturesMatrix
+    provisional_data$error1=error1
+    # provisional_data$FeaturesMatrix=FeaturesMatrix
     # provisional_data$fitted_signals=fitted_signals[,ROI_buckets]
     
     provisional_data$spectrum_index=spectrum_index

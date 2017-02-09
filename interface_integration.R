@@ -1,4 +1,4 @@
-interface_integration = function(integration_parameters, Xdata, Ydata) {
+interface_integration = function(integration_parameters, Xdata, Ydata,Ydatamedian) {
   #Created by Daniel Ca?ueto 30/08/2016
   #Integration of ROI
 
@@ -27,14 +27,12 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   results_to_save$intensity = max(integrated_signal)
 
   cumulative_area = cumsum(integrated_signal) / sum(integrated_signal)
-  # p1 = which.min(abs(cumulative_area - 0.05))
-  # p2 = which.min(abs(cumulative_area - 0.95))
   p1 = which(cumulative_area< 0.05)[length(which(cumulative_area< 0.05))]
   p2 = which(cumulative_area > 0.95)[1]
   results_to_save$signal_area_ratio = tryCatch((sum(integrated_signal[p1:p2]) / sum(Ydata[p1:p2])) *
       100,error = function(e) NaN, silent=T)
   print(results_to_save$signal_area_ratio)
-  results_to_save$fitting_error = NaN
+  results_to_save$fitting_error = 1-cor(Ydata,Ydatamedian,method='spearman')
   results_to_save$half_band_width = NaN
 
   peaks = peakdet(integrated_signal, 0.2*max(1e-10,max(integrated_signal)))
@@ -47,23 +45,7 @@ interface_integration = function(integration_parameters, Xdata, Ydata) {
   plotdata3$variable = rep('Original Spectrum', length(Ydata))
   plotdata4 = data.frame(Xdata, integrated_signal)
   plotdata5 = melt(plotdata4, id = "Xdata")
-  # p2=ggplot() +
-  #   geom_line(data = plotdata3,
-  #     aes(
-  #       x = Xdata,
-  #       y = value,
-  #       colour = variable,
-  #       group = variable
-  #     )) +
-  # 
-  #   geom_area(data = plotdata,
-  #     aes(
-  #       x = Xdata,
-  #       y = signal,
-  #       position = 'fill',
-  #       fill = 'Quantified Signal'
-  #     )) +
-  #   scale_x_reverse()
+  
   p=plot_ly(plotdata,x = ~Xdata, y = ~signal, type = 'scatter', color= 'Signal',mode = 'lines', fill = 'tozeroy') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL) %>%
     layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'),
       yaxis = list(range=c(0,max(Ydata)),title = 'Intensity'))

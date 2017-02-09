@@ -49,7 +49,7 @@ autorun = function(autorun_data, finaloutput,useful_data) {
       signals_names[j] = as.character(autorun_data$signals_names[k])
       j = j + 1
     }
-    
+    Ydatamedian=as.numeric(apply(autorun_data$dataset[, ROI_buckets],2,median))
     #Quantification for every experiment
     
     for (spectrum_index in 1:dim(autorun_data$dataset)[1]) {
@@ -70,9 +70,7 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         clean_fit = ifelse(fitting_type == "Clean Sum", "Y", "N")
         integration_parameters = data.frame(is_roi_testing,
           clean_fit)
-        dummy = integration(integration_parameters, Xdata,
-          
-          Ydata)
+        dummy = integration(integration_parameters, Xdata,Ydata,Ydatamedian)
         results_to_save=dummy$results_to_save
         #Generation of output variables specific of every quantification
         useful_data[[spectrum_index]][[signals_codes]]$ROI_profile=ROI_profile
@@ -81,6 +79,8 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
         useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
         useful_data[[spectrum_index]][[signals_codes]]$results_to_save=results_to_save
+        useful_data[[spectrum_index]][[signals_codes]]$error1=results_to_save$fitting_error
+        
         #If the quantification is through fitting with or without baseline
       } else if (fitting_type == "Clean Fitting" || fitting_type ==
           "Baseline Fitting") {
@@ -103,7 +103,7 @@ autorun = function(autorun_data, finaloutput,useful_data) {
           program_parameters)
 
         signals_parameters=dummy$signals_parameters
-        error1=dummy$error1
+        # error1=dummy$error1
         #Fitting of the signals
         multiplicities=c(FeaturesMatrix[,11],rep(1,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
         roof_effect=c(FeaturesMatrix[,12],rep(0,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))

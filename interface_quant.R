@@ -12,37 +12,36 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
     #Preparation of necessary variables and folders to store figures and information of the fitting
   # if (is_autorun=='N') {indexes=input$x1_select
   if (is_autorun=='N') {
-    # if (is.null(input$fit_selection_cell_clicked$row)) {
-    #   indexes=input$x1_rows_selected
-    # } else {
+ 
       indexes=ind
   } else {
     indexes=1:dim(autorun_data$dataset)[1]
   }
+  
+  ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
+  Ydatamedian=as.numeric(apply(autorun_data$dataset[, ROI_buckets],2,median))
+  Xdata= as.numeric(autorun_data$ppm[ROI_buckets])
+  program_parameters=autorun_data$program_parameters
+  program_parameters$freq = autorun_data$freq
+  program_parameters$ROI_buckets = ROI_buckets
+  program_parameters$buck_step = autorun_data$buck_step
+  
+  fitting_type = as.character(ROI_profile[1, 3])
+  signals_to_quantify = which(ROI_profile[, 5] >0)
+  signals_codes = signals_names = rep(NA,length(signals_to_quantify))
+  j = 1
+  for (i in signals_to_quantify) {
+    k = which(autorun_data$signals_names == paste(ROI_profile[i,
+      4],ROI_profile[i,5],sep='_'))
+    
+    signals_codes[j] = autorun_data$signals_codes[k]
+    signals_names[j] = as.character(autorun_data$signals_names[k])
+    j = j + 1
+  }
   for (spectrum_index in indexes) {
     print(paste("Spectrum ",spectrum_index))
-    ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
-  
-  Xdata= as.numeric(autorun_data$ppm[ROI_buckets])
-    Ydata = as.numeric(autorun_data$dataset[spectrum_index, ROI_buckets])
-    program_parameters=autorun_data$program_parameters
-    program_parameters$freq = autorun_data$freq
-    program_parameters$ROI_buckets = ROI_buckets
-    program_parameters$buck_step = autorun_data$buck_step
     
-    fitting_type = as.character(ROI_profile[1, 3])
-    signals_to_quantify = which(ROI_profile[, 5] >0)
-    signals_codes = signals_names = rep(NA,length(signals_to_quantify))
-    j = 1
-    for (i in signals_to_quantify) {
-      k = which(autorun_data$signals_names == paste(ROI_profile[i,
-        4],ROI_profile[i,5],sep='_'))
-      
-      signals_codes[j] = autorun_data$signals_codes[k]
-      signals_names[j] = as.character(autorun_data$signals_names[k])
-      j = j + 1
-    }
-
+    Ydata = as.numeric(autorun_data$dataset[spectrum_index, ROI_buckets])
     experiment_name = autorun_data$Experiments[[spectrum_index]]
    
     # If the quantification is through integration with or without baseline
@@ -52,9 +51,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
       clean_fit = ifelse(fitting_type == "Clean Sum", "Y", "N")
       integration_parameters = data.frame(is_roi_testing,
                                           clean_fit)
-      dummy = interface_integration(integration_parameters, Xdata,
-
-                                    Ydata)
+      dummy = interface_integration(integration_parameters, Xdata,Ydata,Ydatamedian)
       
       results_to_save=dummy$results_to_save
       p=dummy$p
@@ -69,6 +66,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
         provisional_data$useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
         provisional_data$useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
         provisional_data$useful_data[[spectrum_index]][[signals_codes]]$results_to_save=results_to_save
+        provisional_data$useful_data[[spectrum_index]][[signals_codes]]$error1=results_to_save$fitting_error
         
         finaloutput = save_output(
           spectrum_index,
@@ -99,7 +97,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
                                        Ydata,
                                        program_parameters)
       signals_parameters=dummy$signals_parameters
-      error1=dummy$error1
+      # error1=dummy$error1
       # if (error1>useful_data[[spectrum_index]][[signals_codes[1]]]$error1) return(provisional_data)
       # multiplicities=FeaturesMatrix[,11]
       # roof_effect=FeaturesMatrix[,12]
@@ -118,31 +116,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
         'gaussian',
         'J_coupling'
       ) 
-      # dummy2= list()
-      # for (i in 1:dim(ROI_profile)[1]) {
-      #   dummy = ROI_data[which(ROI_data[, 5] != ROI_profile[i, 5]),]
-      #   dummy=dummy[which(duplicated(rbind(ROI_profile,dummy))[(dim(ROI_profile)[1]+1):(dim(ROI_profile)[1]+dim(dummy)[1])]==F),]
-      #   if (length(which(dummy[,4] == ROI_profile[i,4]))>0) {
-      #     print("a")
-      #     dummy2[[length(dummy2)+1]]=which(dummy[,4] == ROI_profile[i,4])
-      #     for (j in 1:length(dummy2[[i]])) {
-      #      
-      #       print("b")
-      #       
-      #       cc= signals_parameters_2[(5*i-4):(5*i)]
-      # 
-      #       cc[5]=dummy[dummy2[[i]][j],][9]
-      #       cc[1]=dummy[dummy2[[i]][j],][12]*cc[1]
-      #       cc[2]=as.numeric(dummy[dummy2[[i]][j],][5])+(as.numeric(cc[2])-as.numeric(ROI_profile[i,6]))
-      #       signals_parameters_2=c(signals_parameters_2,cc)
-      #       print("c")
-      #       
-      #       multiplicities_2=c(multiplicities_2,dummy[dummy2[[i]][j],][8])
-      #       roof_effect_2=c(roof_effect_2,dummy[dummy2[[i]][j],][10])
-      #     }   
-      #   }
-      # }
-      # 
+      
       Xdata_2=autorun_data$ppm
       # signals_parameters_2=unlist(signals_parameters_2)
       # multiplicities_2=unlist(multiplicities_2)
