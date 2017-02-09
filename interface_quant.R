@@ -257,6 +257,7 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
     provisional_data$spectrum_index=spectrum_index
     provisional_data$signals_codes=signals_codes
     provisional_data$fitting_type=fitting_type
+    provisional_data$signals_names=signals_names
     
     
    

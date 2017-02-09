@@ -141,6 +141,8 @@ fitting_type=ROI_profile[1,3]
     
     provisional_data$spectrum_index=spectrum_index
     provisional_data$signals_codes=signals_codes
+    provisional_data$signals_names=signals_names
+    
     provisional_data$fitting_type=fitting_type
     provisional_data$ROI_profile=ROI_profile
     provisional_data$finaloutput=finaloutput

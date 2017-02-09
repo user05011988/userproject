@@ -541,7 +541,7 @@ server = function(input, output,session) {
     reactiveROItestingdata$qualitypar=cbind(t(reactiveprogramdata$finaloutput$Area[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$fitting_error[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$signal_area_ratio[reactiveprogramdata$info$row,ind,drop=F]))
     
     colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting_error','signal/total spectrum ratio')
-    rownames(reactiveROItestingdata$qualitypar)=rownames(reactivequantdata$method2$results_to_save$Area)
+    rownames(reactiveROItestingdata$qualitypar)=rownames(plot_data)[-c(1, 2, 3)]
     
     updateTabsetPanel(session, "mynavlist",selected = "Individual Quantification")
     
