@@ -137,6 +137,54 @@ autorun = function(autorun_data, finaloutput,useful_data) {
         )
         output_data=dummy$output_data
         error1=dummy$error1
+        
+        if (error1>0.05) {
+          print('hah')
+        dummy = fittingloop(FeaturesMatrix,
+          Xdata,
+          Ydata,
+          program_parameters)
+        
+        signals_parameters=dummy$signals_parameters
+        # error1=dummy$error1
+        #Fitting of the signals
+        multiplicities=c(FeaturesMatrix[,11],rep(1,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
+        roof_effect=c(FeaturesMatrix[,12],rep(0,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
+        # signals_parameters[which(seq_along(signals_parameters)%%5==3)]=signals_parameters[which(seq_along(signals_parameters)%%5==3)]/1.5
+        # signals_parameters[which(seq_along(signals_parameters)%%5==5)]=signals_parameters[which(seq_along(signals_parameters)%%5==5)]/2
+        
+        fitted_signals = fitting_optimization(signals_parameters,
+          Xdata,multiplicities,roof_effect,Ydata,program_parameters$freq)
+        
+        # signals_parameters[which(seq_along(signals_parameters)%%5==3)]=signals_parameters[which(seq_along(signals_parameters)%%5==3)]*1.5
+        # signals_parameters[which(seq_along(signals_parameters)%%5==5)]=signals_parameters[which(seq_along(signals_parameters)%%5==5)]*2
+        
+        # signals_parameters=as.matrix(signals_parameters)
+        dim(signals_parameters) = c(5, length(signals_parameters)/5)
+        rownames(signals_parameters) = c(
+          'intensity',
+          'shift',
+          'half_band_width',
+          'gaussian',
+          'J_coupling'
+        )
+        signals_parameters=rbind(signals_parameters,multiplicities,roof_effect)
+        
+        #Generation of output data about the fitting and of the necessary variables for the generation ofa figure
+        dummy = output_generator(
+          signals_to_quantify,
+          fitted_signals,
+          Ydata,
+          Xdata,
+          signals_parameters,multiplicities
+        )
+        }
+        if (dummy$error1<error1) {
+          print('hah2')
+          output_data=dummy$output_data
+          error1=dummy$error1
+        }
+        
        
         output_data$intensity=signals_parameters[1, signals_to_quantify]
         output_data$half_band_width=signals_parameters[3, signals_to_quantify]

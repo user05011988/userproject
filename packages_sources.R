@@ -144,5 +144,7 @@ packages_sources = function() {
   parseAcqus=cmpfun(parseAcqus)
   parseProcs=cmpfun(parseProcs)
   heatmaply=cmpfun(heatmaply)
+  heatmaply=cmpfun(plot_ly)
+  nls.lm=cmpfun(nls.lm)
   
 }

@@ -439,7 +439,7 @@ server = function(input, output,session) {
     
     reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method2$results_to_save$Area,reactivequantdata$method2$results_to_save$fitting_error,reactivequantdata$method2$results_to_save$signal_area_ratio)
     colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting_error','signal/total spectrum ratio')
-    rownames(reactiveROItestingdata$qualitypar)=rownames(reactivequantdata$method2$results_to_save$Area)
+    rownames(reactiveROItestingdata$qualitypar)=rownames(reactivequantdata$method2$plot_data)[-c(1, 2, 3)]
     
     reactivequantdata$method1=reactivequantdata$method2
     
@@ -466,7 +466,7 @@ server = function(input, output,session) {
     # reactiveprogramdata$useful_data=reactivequantdata$method1$useful_data    
     reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method1$results_to_save$Area,reactivequantdata$method1$results_to_save$fitting_error,reactivequantdata$method1$results_to_save$signal_area_ratio)
     colnames(reactiveROItestingdata$qualitypar)=c('Quantification','Fitting Error','Signal/total area ratio')
-    rownames(reactiveROItestingdata$qualitypar)=rownames(reactivequantdata$method2$results_to_save$Area)
+    rownames(reactiveROItestingdata$qualitypar)=rownames(reactivequantdata$method1$plot_data)[-c(1, 2, 3)]
     
     if (!is.null(reactivequantdata$method1$signals_parameters)) {
       reactiveprogramdata$bgColScales = c(rep("", dim(reactivequantdata$method1$signals_parameters)[1]), rep("info", dim(reactivequantdata$method1$signals_parameters_2)[1]-dim(reactivequantdata$method1$signals_parameters)[1]))
@@ -541,7 +541,7 @@ server = function(input, output,session) {
     reactiveROItestingdata$qualitypar=cbind(t(reactiveprogramdata$finaloutput$Area[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$fitting_error[reactiveprogramdata$info$row,ind,drop=F]),t(reactiveprogramdata$finaloutput$signal_area_ratio[reactiveprogramdata$info$row,ind,drop=F]))
     
     colnames(reactiveROItestingdata$qualitypar)=c('Quantification','fitting_error','signal/total spectrum ratio')
-    rownames(reactiveROItestingdata$qualitypar)=rownames(plot_data)[-c(1, 2, 3)]
+    # rownames(reactiveROItestingdata$qualitypar)=rownames(plot_data)[-c(1, 2, 3)]
     
     updateTabsetPanel(session, "mynavlist",selected = "Individual Quantification")
     
@@ -696,9 +696,7 @@ server = function(input, output,session) {
   
   
   output$plot <- renderPlotly({
-    print(reactivequantdata$stop3)
-    print(reactiveprogramdata$info)
-    print(input$x1_rows_selected)
+   
     if (reactiveprogramdata$beginning==F | is.null(input$x1_rows_selected)) return()
     if (reactivequantdata$stop3==0&length(reactiveprogramdata$info)==0|reactivequantdata$stop3==0&length(input$x1_rows_selected)>1) {
       ROI_limits=c(which.min(abs(reactiveprogramdata$autorun_data$ppm-reactiveprogramdata$ROIdata_subset[1,1])),which.min(abs(reactiveprogramdata$autorun_data$ppm-reactiveprogramdata$ROIdata_subset[1,2])))
