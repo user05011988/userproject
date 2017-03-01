@@ -156,10 +156,7 @@ import_data = function(parameters_path) {
       colnames(imported_data$dataset) = dummy[1,]
       imported_data$ppm = round(as.numeric(dummy[1,]),4)
       rownames(imported_data$dataset) = Experiments
-      if (params$disol_suppression == 'Y') {
-        for (i in dim(params$disol_suppression_ppm)[1]) imported_data$dataset[,which.min(abs(imported_data$ppm-params$disol_suppression_ppm[i,1])):which.min(abs(imported_data$ppm-params$disol_suppression_ppm[i,2]))] = 0
-          
-      }
+      
       if (alignment == 1) {
         #Glucose
         limi=c(5.5,5.1)
@@ -213,20 +210,40 @@ import_data = function(parameters_path) {
   }
   
   imported_data$dataset[is.na(imported_data$dataset)]=min(abs(imported_data$dataset)[abs(imported_data$dataset)>0])
-  if (pqn=='Y') {
+
+
+    snr=apply(imported_data$dataset,1,function(x)stats::mad(x,na.rm=T))
     
-    treated=t(imported_data$dataset[,which(apply(imported_data$dataset,2,median)>median(apply(imported_data$dataset,2,median)))])
+    if (params$disol_suppression == 'Y') {
+      ind=c()
+      for (i in seq(nrow(params$disol_suppression_ppm))) ind=c(ind,which.min(abs(imported_data$ppm-params$disol_suppression_ppm[i,1])):which.min(abs(imported_data$ppm-params$disol_suppression_ppm[i,2])))
+      imported_data$dataset=imported_data$dataset[,-ind,drop=F]
+      imported_data$ppm=imported_data$ppm[-ind]
+    }
+    
+    
+    
+  dfg=matrix(0,nrow(imported_data$dataset),ncol(imported_data$dataset))
+  for (i in 1:nrow(imported_data$dataset)) {
+    dfg[i,which(imported_data$dataset[i,]>snr[i])]=1
+  }
+
+  dfi=which(apply(dfg,2,sum)>0.5*nrow(imported_data$dataset))
+  dfj=c()
+  for (i in 1:length(dfi)) dfj=unique(c(dfj,round((dfi[i]-0.02/params$buck_step):(dfi[i]+0.02/params$buck_step))))
+  imported_data$dataset=imported_data$dataset[,dfj,drop=F]
+  imported_data$ppm=imported_data$ppm[dfj]
+  if (pqn=='Y'&&nrow(imported_data$dataset)>1) {
+    treated=t(imported_data$dataset[,which(apply(imported_data$dataset,2,median)>median(apply(imported_data$dataset,2,median))),drop=F])
     reference <- apply(treated,1,function(x)median(x,na.rm=T))
     quotient <- treated/reference
     quotient.median <- apply(quotient,2,function(x)median(x,na.rm=T))
     imported_data$dataset <- imported_data$dataset/quotient.median
-    
-    
-    
   }
+  
   imported_data$dataset=imported_data$dataset/quantile(imported_data$dataset,0.9,na.rm=T)
   
-  imported_data$dataset=  imported_data$dataset[,which(apply(imported_data$dataset,2,function(x) all(is.na(x)))==F)]
+  imported_data$dataset=  imported_data$dataset[,which(apply(imported_data$dataset,2,function(x) all(is.na(x)))==F),drop=F]
   
   imported_data$ppm=imported_data$ppm[which(!is.na(imported_data$ppm))]
   if (imported_data$ppm[1]<imported_data$ppm[2]) {
@@ -235,7 +252,7 @@ import_data = function(parameters_path) {
   }
   imported_data$dataset[is.na(imported_data$dataset)]=0
   #Storage of parameters needed to perform the fit in a single variable to return.
-  
+
   imported_data$buck_step = params$buck_step
   imported_data$profile_folder_path = profile_folder_path
   imported_data$metadata_path = metadata_path

@@ -28,21 +28,21 @@ Metadata2Buckets <- function(Experiments, params, spectrum_borders) {
   ref_peak_pos = ifelse(params$peak_alignment == "Y", params$ref_peak_pos,
                         0)
   
-  RAW$water_suppression_left_ppm = ifelse(params$water_suppression ==
-                                            "Y",
-                                          params$water_suppression_left_ppm,
-                                          0)
-  RAW$water_suppression_right_ppm = ifelse(params$water_suppression ==
-                                             "Y",
-                                           params$water_suppression_right_ppm,
-                                           0)
-  disol_suppression = params$disol_suppression
-  #DO not transform to ifelse, transforms matrix into 0
-  if (params$disol_suppression == "Y") {
-    RAW$disol_suppression_ppm=params$disol_suppression_ppm
-  } else {
-    RAW$disol_suppression_ppm=matrix(0, 1, 2)
-  }
+  # RAW$water_suppression_left_ppm = ifelse(params$water_suppression ==
+  #                                           "Y",
+  #                                         params$water_suppression_left_ppm,
+  #                                         0)
+  # RAW$water_suppression_right_ppm = ifelse(params$water_suppression ==
+  #                                            "Y",
+  #                                          params$water_suppression_right_ppm,
+  #                                          0)
+  # disol_suppression = params$disol_suppression
+  # #DO not transform to ifelse, transforms matrix into 0
+  # if (params$disol_suppression == "Y") {
+  #   RAW$disol_suppression_ppm=params$disol_suppression_ppm
+  # } else {
+  #   RAW$disol_suppression_ppm=matrix(0, 1, 2)
+  # }
   
   
   k2 = 1
@@ -94,21 +94,21 @@ Metadata2Buckets <- function(Experiments, params, spectrum_borders) {
       RAW$ppm_bucks = seq(left_spectral_border,
                           right_spectral_border,-RAW$buck_step)
       RAW$len_bucks = length(RAW$ppm_bucks)
-      RAW$water_suppression_left_buck = 1 + round(-(RAW$water_suppression_left_ppm -
-                                                      RAW$ppm_bucks[1]) /
-                                                    RAW$buck_step)
-      RAW$water_suppression_right_buck = 1 + round(-(RAW$water_suppression_right_ppm -
-                                                       RAW$ppm_bucks[1]) /
-                                                     RAW$buck_step)
-      DIM = dim(RAW$disol_suppression_ppm)
-      RAW$disol_suppression_bucks = RAW$disol_suppression_ppm
-      for (nr in 1:DIM[1]) {
-        for (nc in 1:DIM[2]) {
-          RAW$disol_suppression_bucks[nr, nc] = 1 + round(-(RAW$disol_suppression_ppm[nr,
-                                                                                      nc] - RAW$ppm_bucks[1]) /
-                                                            RAW$buck_step)
-        }
-      }
+      # RAW$water_suppression_left_buck = 1 + round(-(RAW$water_suppression_left_ppm -
+      #                                                 RAW$ppm_bucks[1]) /
+      #                                               RAW$buck_step)
+      # RAW$water_suppression_right_buck = 1 + round(-(RAW$water_suppression_right_ppm -
+      #                                                  RAW$ppm_bucks[1]) /
+      #                                                RAW$buck_step)
+      # DIM = dim(RAW$disol_suppression_ppm)
+      # RAW$disol_suppression_bucks = RAW$disol_suppression_ppm
+      # for (nr in 1:DIM[1]) {
+      #   for (nc in 1:DIM[2]) {
+      #     RAW$disol_suppression_bucks[nr, nc] = 1 + round(-(RAW$disol_suppression_ppm[nr,
+      #                                                                                 nc] - RAW$ppm_bucks[1]) /
+      #                                                       RAW$buck_step)
+      #   }
+      # }
       
       RAW$norm_PEAK_max = norm_PEAK_max
       RAW$total_AREA_mean = total_AREA_mean
@@ -127,7 +127,7 @@ Metadata2Buckets <- function(Experiments, params, spectrum_borders) {
       norm_PEAK_max2 = max(tmp[CURRENT$norm_PEAK_left:CURRENT$norm_PEAK_right])
       norm_AREA2 = sum(tmp[CURRENT$norm_AREA_left:CURRENT$norm_AREA_right])
       # referenciem
-      LeftEreticBefore = ifelse(left_spectral_border > 11.8, min(CURRENT$ppm[which(CURRENT$ppm > 11.7)]), NaN)
+      LeftEreticBefore = ifelse(CURRENT$ppm[1] > 11.8, min(CURRENT$ppm[which(CURRENT$ppm > 11.7)]), NaN)
       
       if (params$glucose_alignment == "Y")
         JTP = JTPcalibrateToGlucose(tmp, CURRENT$ppm)
@@ -193,12 +193,12 @@ Metadata2Buckets <- function(Experiments, params, spectrum_borders) {
       # per àrea total això caldria fer-ho abans, o no considerar aquestes
       # zones a l'hora de calcular l'àrea si cal eliminem l'aigua if
       
-      if (toupper(disol_suppression) == "Y") {
-        for (nunrows in 1:dim(RAW$disol_suppression_bucks)[1]) {
-          tmp_buck[RAW$disol_suppression_bucks[nunrows, 1]:RAW$disol_suppression_bucks[nunrows,
-                                                                                       2]] = 0
-        }
-      }
+      # if (toupper(disol_suppression) == "Y") {
+      #   for (nunrows in 1:dim(RAW$disol_suppression_bucks)[1]) {
+      #     tmp_buck[RAW$disol_suppression_bucks[nunrows, 1]:RAW$disol_suppression_bucks[nunrows,
+      #                                                                                  2]] = 0
+      #   }
+      # }
       
       # calculem el valor d'àrea total després de suprimir l'aigua
       total_AREA_mean2 = mean(tmp_buck[1:length(tmp_buck)])

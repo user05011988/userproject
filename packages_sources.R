@@ -27,6 +27,8 @@ packages_sources = function() {
   if (!suppressPackageStartupMessages(require("missForest"))) install.packages("missForest")
   if (!suppressPackageStartupMessages(require("mclust"))) install.packages("mclust")
   if (!suppressPackageStartupMessages(require("heatmaply"))) install.packages("heatmaply")
+  if (!suppressPackageStartupMessages(require("ggplot2"))) install.packages("ggplot2")
+  if (!suppressPackageStartupMessages(require("gridExtra"))) install.packages("gridExtra")
   
   if (!suppressPackageStartupMessages(require("shinyFiles"))) install.packages("shinyFiles")
   
@@ -93,6 +95,9 @@ packages_sources = function() {
   source("p_values.R")
   source("write_info.R")
   
+  source("medianplot.R")
+  source("clustspectraplot.R")
+  
   
   # recurAlign=cmpfun(recurAlign)
   # alignSp=cmpfun(alignSp)
@@ -144,7 +149,10 @@ packages_sources = function() {
   parseAcqus=cmpfun(parseAcqus)
   parseProcs=cmpfun(parseProcs)
   heatmaply=cmpfun(heatmaply)
-  heatmaply=cmpfun(plot_ly)
+  plot_ly=cmpfun(plot_ly)
+  clustspectraplot=cmpfun(clustspectraplot)
+  medianplot=cmpfun(medianplot)
+  
   nls.lm=cmpfun(nls.lm)
   
 }

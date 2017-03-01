@@ -1,36 +1,44 @@
-fittingloop = function(FeaturesMatrix,
-  Xdata,
-  Ydata,
-  program_parameters) {
+#########################################################################
+#     Dolphin - R package for reliable automatic quantification of 1H 1D NMR spectra
+#     Copyright (C) 2017 Daniel Cañueto
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+############################################################################
+
+#Calculation through least squares algorithm of parameters that achieve the best fitting.
+
+# There are several optimization iterations ("iter") and the one with less error is chosen.
+# The maximum number of iterations depends on the complexity of the ROI.
+# Then the half bandwidth and j coupling are optimized separately as they have diferent behavior with the least squares algorithm 
+
+# After the first fitting there can be further ones, depending on the need to add additional signals
+# to adapt the signals and ROI information provided by the user to the concrete
+# characteristics of the spectrum
 
 
-  #Created by Daniel Ca?ueto 30/08/2016
-  #Calculation through least squares algorithm of parameters that achieve the best fitting.
+fittingloop = function(FeaturesMatrix,Xdata,Ydata,program_parameters) {
 
-  # There are several optimization iterations and the one with less error is chosen.
-  # The number of iter depends on the complexity of the ROI.
-
-  # After the first fitting there can be further ones, depending on the need to add additional signals
-  # to adapt the signals and ROI information provided by the user to the concrete
-  # characteristics of the spectrum
-
-  #TO DO: ideally, multiplicity and roof effect should not be incorporated into the optimization. Maybe this is ithe cause of the improper input parameters message. However, it would be necessary to load it from a txt file in every iteration, or with a global variable. I guess this procedures would make it much more slower. But it can be checked.
-  #TO DO: another revision of algorithm alternatives
-
-
+#Preallocation of output and setting of necessary variables for loop
   signals_parameters=rep(0,length(as.vector(t(FeaturesMatrix[, seq(1, 9, 2), drop = F]))))
-  #Necessary information to incorporate additional singals if necessary
-  signals_to_quantify = which(FeaturesMatrix[, 11] != 0)
-  range_ind = round(
-    program_parameters$additional_signal_ppm_distance / program_parameters$buck_step
-  )
-  signals_to_add = program_parameters$signals_to_add
-
-  #Variables to initialize the loop
-  # try_error=000
-  error2 = 3000
   iterrep = 0
   fitting_maxiterrep = program_parameters$fitting_maxiterrep
+  signals_to_quantify = which(FeaturesMatrix[, 11] != 0)
+  
+  
+  #Necessary information to incorporate additional signals if necessary
+  range_ind = round(program_parameters$additional_signal_ppm_distance / program_parameters$buck_step)
+
 
   #Function where to find a minimum
   residFun <-
@@ -43,78 +51,60 @@ fittingloop = function(FeaturesMatrix,
   # iterrep becomes equal to fitting_maxiterrep and the loop is stooped
   while (iterrep < fitting_maxiterrep) {
     
+    iter = 0
+    errorprov = error1 = 3000
+    worsterror = 0
+    dummy = error2 = 3000
+    multiplicities=FeaturesMatrix[,11]
+    roof_effect=FeaturesMatrix[,12]
+    
     #Depending on the complexity of the ROI, more or less iterations are performed
     if (is.numeric(program_parameters$fitting_maxiter)) {
       fitting_maxiter = program_parameters$fitting_maxiter
     } else {
-      if (dim(FeaturesMatrix)[1] > 8 |
+      if (nrow(FeaturesMatrix)> 8 |
           any(FeaturesMatrix[, 4] - FeaturesMatrix[, 3] > 0.01)) {
         fitting_maxiter = 20
-      } else if ((dim(FeaturesMatrix)[1] > 5 &&
-          dim(FeaturesMatrix)[1] < 9)) {
+      } else if ((nrow(FeaturesMatrix)> 5 &&
+          nrow(FeaturesMatrix)< 9)) {
         fitting_maxiter = 14
       } else {
         fitting_maxiter = 8
       }
     }
-    # print(iterrep)
-    iter = 0
-    errorprov = 3000
-    error1 = 3000
-    worsterror = 0
-    dummy = error2
-  
+    
+   
 
-    multiplicities=FeaturesMatrix[,11]
-    roof_effect=FeaturesMatrix[,12]
-
-
-     while (error1 > program_parameters$errorprov &
-    #while (error1 > 3 &
-        error1 > (1 / 3 * worsterror) & iter < fitting_maxiter) {
-      #Algorithm options that can be changed
-      #Preparation of lower and upper bounds
-      # bounds=list(ub=matrix(0,dim(FeaturesMatrix)[1],dim(FeaturesMatrix)[2]/2),lb=matrix(0,dim(FeaturesMatrix)[1],dim(FeaturesMatrix)[2]/2))
-
+    #Conditions to keep the loop:
+    # -The error is bigger than the specified in program_parameters
+    # -There is no fitting with more than 66.7% improvement from the worst solution
+    # -The loop has not arrived the specified maximum of iterations
+     while (error1 > program_parameters$errorprov &error1 > (1 / 3 * worsterror) & iter < fitting_maxiter) {
       #Initialization of parameters to optimize. In every iteration the initialization will be different
       lb = as.vector(t(FeaturesMatrix[, seq(1, 9, 2), drop = F]))
       ub = as.vector(t(FeaturesMatrix[, seq(2, 10, 2), drop = F]))
       s0 = lb + (ub - lb) * runif(length(ub))
-      # if (iterrep %in% seq(1,16,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=0,max=1/3)
-      # if (iterrep %in% seq(2,17,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=1/3,max=2/3)
-      # if (iterrep %in% seq(3,18,3)) s0[2]=lb[2] + (ub[2] - lb[2]) * runif(1,min=2/3,max=1)
-      # # s0[which(seq_along(s0)%%5==3)]=s0[which(seq_along(s0)%%5==3)]/1.5
-      # s0[which(seq_along(s0)%%5==5)]=s0[which(seq_along(s0)%%5==5)]/2
+      
+      # aaa=iter%%3/3
+      # bbb=ifelse((iter+1)%%3/3==0,1,(iter+1)%%3/3)
+      # s0[which(seq_along(s0)%%5==2)]=lb[which(seq_along(s0)%%5==2)] + (ub[which(seq_along(s0)%%5==2)] - lb[which(seq_along(s0)%%5==2)]) * runif(1,min=aaa,max=bbb)
 
-      aaa=iter%%3/3
-      bbb=ifelse((iter+1)%%3/3==0,1,(iter+1)%%3/3)
-
-      s0[which(seq_along(s0)%%5==2)]=lb[which(seq_along(s0)%%5==2)] + (ub[which(seq_along(s0)%%5==2)] - lb[which(seq_along(s0)%%5==2)]) * runif(1,min=aaa,max=bbb)
-
+      #During the first two iterations, find the peaks on the region of the spectrum. If the number of peaks is the same that the expected on the ROI and the location is similar, the signals are located where there are the peaks with minimum shift tolerance.
       if (iter<2) {
-      # lol = peakdet(Ydata, program_parameters$peakdet_minimum*0.1*max(1e-10,max(Ydata)),Xdata)
-        lol = peakdet(c(Ydata[1],diff(Ydata)), program_parameters$peakdet_minimum*0.1*max(1e-10,max(Ydata)),Xdata)
-        
-      peaks=lol$maxtab$pos[sort(lol$maxtab$val,decreasing=T,index.return=T)$ix[1:sum(multiplicities[signals_to_quantify])]]
-      peaks_compare=rowMeans(FeaturesMatrix[signals_to_quantify,3:4,drop=F])
-
+        peaks_xdata = peakdet(c(Ydata[1],diff(Ydata)), program_parameters$peakdet_minimum*0.1*max(1e-10,max(Ydata)),Xdata)
+        peaks_bindata = peakdet(c(Ydata[1],diff(Ydata)), program_parameters$peakdet_minimum*0.1*max(1e-10,max(Ydata)))
+      peaks=peaks_xdata$maxtab$pos[sort(peaks_xdata$maxtab$val,decreasing=T,index.return=T)$ix[1:sum(multiplicities[signals_to_quantify])]]
+      peaks_compare=rowMeans(FeaturesMatrix[signals_to_quantify ,3:4,drop=F])
       for (i in 1:length(peaks_compare)) {
-        # if (multiplicities[i]==1) {
-          # aa=which.min(abs(peaks-peaks_compare[i]))
-          # if (peaks[aa]>FeaturesMatrix[i,3]&peaks[aa]<FeaturesMatrix[i,4]) {
-          #   s0[which(seq_along(s0)%%5==2)[i]]=peaks[aa]
-          #   lb[which(seq_along(s0)%%5==2)[i]]=peaks[aa]-0.001
-          #   ub[which(seq_along(s0)%%5==2)[i]]=peaks[aa]+0.001
-          #
-          # } else if (multiplicities[i]==2) {
-            aa=sort(abs(peaks-peaks_compare[i]),index.return=T)$ix[1:multiplicities[i]]
-            if (!is.na(mean(peaks[aa]))&&mean(peaks[aa])>FeaturesMatrix[i,3]&&mean(peaks[aa])<FeaturesMatrix[i,4]) {
-              s0[which(seq_along(s0)%%5==2)[i]]=mean(peaks[aa])
-              lb[which(seq_along(s0)%%5==2)[i]]=mean(peaks[aa])-0.001
-              ub[which(seq_along(s0)%%5==2)[i]]=mean(peaks[aa])+0.001
-
+            ind=sort(abs(peaks-peaks_compare[i]),index.return=T)$ix[1:multiplicities[i]]
+            if (!is.na(mean(peaks[ind]))&&mean(peaks[ind])>FeaturesMatrix[i,3]&&mean(peaks[ind])<FeaturesMatrix[i,4]) {
+              s0[which(seq_along(s0)%%5==2)[i]]=mean(peaks[ind])
+              lb[which(seq_along(s0)%%5==2)[i]]=mean(peaks[ind])-0.001
+              ub[which(seq_along(s0)%%5==2)[i]]=mean(peaks[ind])+0.001
           }
-        }
+      }
+      
+      #Main optimization
       nls.out <-
         nls.lm(
           par = s0,
@@ -132,35 +122,23 @@ fittingloop = function(FeaturesMatrix,
             ftol = program_parameters$ftol,
             ptol = program_parameters$ptol
           )
-          
         )
       
       # #Procedure to calculate the fititng error in all the ROI
       #An adapted MSE error is calculated, and the parameters of the optimization with less MSE are stored
-      
         paramprov=coef(nls.out)
-        
         iter = iter + 1
-        
-        errorprov = (sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -
-            min(Ydata))
-        # print(errorprov)
+        errorprov = (sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -min(Ydata))
         if (is.nan(errorprov) || is.na(errorprov))
           errorprov = error1
-        
         if (errorprov < error1) {
           error1 = errorprov
           paramprov=coef(nls.out)
-          
         } else if (errorprov > worsterror) {
           worsterror = errorprov
         }
       } else {
-
-
-
-
-
+#If in the first two iterations the procedure of finding peaks is not effective enough, the irignal chemical shift and chemical shift tolerance of every signal is maintained
       nls.out <-
         nls.lm(
           par = s0,
@@ -184,20 +162,15 @@ fittingloop = function(FeaturesMatrix,
       iter = iter + 1
       # #Procedure to calculate the fititng error in all the ROI
       #An adapted MSE error is calculated, and the parameters of the optimization with less MSE are stored
-      errorprov = (sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -
-          min(Ydata))
-      if (is.nan(errorprov) || is.na(errorprov))
-        errorprov = error1
-
+      errorprov = (sqrt(nls.out$deviance / length(Ydata))) * 100 / (max(Ydata) -min(Ydata))
+      if (is.nan(errorprov) || is.na(errorprov))errorprov = error1
       if (errorprov < error1) {
         error1 = errorprov
         paramprov=coef(nls.out)
-
       } else if (errorprov > worsterror) {
         worsterror = errorprov
       }
     }}
-    print(iter)
     signals_parameters = paramprov
     
     #Correction of half_band_width and j-coupling
@@ -210,6 +183,7 @@ fittingloop = function(FeaturesMatrix,
     #With ony one iteration is enough
     while (iter < 1) {
       s0 = lb + (ub - lb) * runif(length(ub))
+      
       nls.out <-
         nls.lm(
           par = s0,
@@ -248,90 +222,58 @@ fittingloop = function(FeaturesMatrix,
       error2 = error1
       signals_parameters = paramprov
     }
-    print('--')
-    
-    print(error2)
+
     iterrep = iterrep + 1
     
     #If the fitting seems to be still clearly improvable through the addition of signals
     if (iterrep < fitting_maxiterrep& error2 < (program_parameters$additional_signal_improvement * dummy) &
-        (error2 > program_parameters$additional_signal_percentage_limit)&length(lol$maxtab$pos)>sum(multiplicities[signals_to_quantify])) {
-      print('Trying to improve initial fit adding peaks')
+        (error2 > program_parameters$additional_signal_percentage_limit)&length(peaks_xdata$maxtab$pos)>sum(multiplicities[signals_to_quantify])) {
+      # print('Trying to improve initial fit adding peaks')
       
       #I find peaks on the residuals
-      # lol = peakdet(nls.out$fvec, program_parameters$peakdet_minimum*max(1e-10,max(Ydata)))
-      lol = peakdet(c(nls.out$fvec[1],diff(nls.out$fvec)), program_parameters$peakdet_minimum*max(1e-10,max(Ydata)))
+      residual_peaks = peakdet(c(nls.out$fvec[1],diff(nls.out$fvec)), program_parameters$peakdet_minimum*max(1e-10,max(Ydata)))
       
-      if (is.null(lol$maxtab) == F) {
+      if (is.null(residual_peaks$maxtab) == F) {
         #Preparation of information of where signals of interest are located
         dummy=multiplicities[signals_to_quantify]%%2
         dummy[dummy==0]=2
-        lolll = matrix(
-          paramprov,
-          nrow = length(FeaturesMatrix[, 11]),
-          ncol = 5,
-          byrow = TRUE
-        )
-        points_to_avoid = rbind(abs(
-          matrix(
-            Xdata,
-            nrow = length(signals_to_quantify),
-            ncol = length(Xdata),
-            byrow = TRUE
-          ) - matrix(
-            lolll[signals_to_quantify, 2] - (lolll[signals_to_quantify, 5]/dummy  )/program_parameters$freq,
-            nrow = length(signals_to_quantify),
-            ncol = length(Xdata)
-          )
-        ), abs(
-          matrix(
-            Xdata,
-            nrow = length(signals_to_quantify),
-            ncol = length(Xdata),
-            byrow = TRUE
-          ) - matrix(
-            lolll[signals_to_quantify, 2] + (lolll[signals_to_quantify, 5]/dummy)/program_parameters$freq,
-            nrow = length(signals_to_quantify),
-            ncol = length(Xdata)
-          )
-        ))
+        additional_signal_matrix = matrix(paramprov,nrow(FeaturesMatrix),5,byrow = TRUE)
+        points_to_avoid = abs(rbind(matrix(Xdata,length(signals_to_quantify),length(Xdata),byrow = TRUE) - matrix(
+            additional_signal_matrix[signals_to_quantify, 2] - (additional_signal_matrix[signals_to_quantify, 5]/dummy)/program_parameters$freq,length(signals_to_quantify),length(Xdata)), 
+          matrix(Xdata,length(signals_to_quantify),length(Xdata),byrow = TRUE) - matrix(additional_signal_matrix[signals_to_quantify, 2] + (additional_signal_matrix[signals_to_quantify, 5]/dummy)/program_parameters$freq,length(signals_to_quantify),length(Xdata))))
         points_to_avoid = apply(points_to_avoid, 1, which.min)
         seq_range = c()
-        for (i in (-range_ind):range_ind)
-          seq_range = append(seq_range, points_to_avoid - i)
+        for (i in (-range_ind):range_ind) seq_range = append(seq_range, points_to_avoid - i)
 
         #Finding of posible additional signals to incorporate if there are not in zones where the signals o interest are located
-        lol2 = cbind(lol$maxtab$pos, lol$maxtab$val)
-        lol3 = matrix(NA, 0, 2)
-        for (i in 1:dim(lol2)[1]) {
-          if (any(abs(points_to_avoid - lol2[i, 1]) < range_ind) == F)
-            lol3 = rbind(lol3, lol2[i, ])
+        residual_peaks=cbind(residual_peaks$maxtab$pos, residual_peaks$maxtab$val)[residual_peaks$maxtab$pos %in% peaks_bindata$maxtab$pos,,drop=F]
+        valid_residual_peaks = matrix(NA, 0, 2)
+        if (nrow(residual_peaks)>0) {
+        for (i in seq(nrow(residual_peaks))) {
+          if (any(abs(points_to_avoid - residual_peaks[i, 1]) < range_ind) == F) valid_residual_peaks = rbind(valid_residual_peaks, residual_peaks[i, ])
         }
-
-        if (dim(lol3)[1] > signals_to_add) {
           #Selection of more intense additional signals
-          ad = sort(lol3[, 2],
-            decreasing = T,
-            index.return = T)$ix
-          lol3 = lol3[ad[1:min(signals_to_add, length(ad))], , drop = F]
+        if (nrow(valid_residual_peaks) > program_parameters$signals_to_add) {
+          ad = sort(valid_residual_peaks[, 2],decreasing = T,index.return = T)$ix
+          valid_residual_peaks = valid_residual_peaks[ad[1:min(program_parameters$signals_to_add, length(ad))], , drop = F]
         }
         #Creation of rows to incorporate to FeaturesMatrix
-        dummy = matrix(
-          FeaturesMatrix[1, ],
-          nrow = dim(lol3)[1],
-          ncol = length(FeaturesMatrix[1, ]),
-          byrow = TRUE
-        )
-        # dummy[, 2] = lol3[, 2]
-        dummy[, 3] = Xdata[lol3[, 1]] - 0.001
-        dummy[, 4] = Xdata[lol3[, 1]] + 0.001
-        dummy[, 9] = rep(0, dim(lol3)[1])
-        dummy[, 10] = rep(0, dim(lol3)[1])
-
+         if (nrow(valid_residual_peaks)>0) {
+           dummy = t(replicate(nrow(valid_residual_peaks),FeaturesMatrix[1,]))
+          dummy[, 1] = Ydata[valid_residual_peaks[, 1]]
+        dummy[, 3] = Xdata[valid_residual_peaks[, 1]] - 0.001
+        dummy[, 4] = Xdata[valid_residual_peaks[, 1]] + 0.001
+        dummy[, 5]=min(FeaturesMatrix[,5])
+        dummy[, 6]=min(FeaturesMatrix[,6])
+        dummy[, c(9,10,12)] = rep(0, nrow(valid_residual_peaks))
+        dummy[, 11] = rep(1, nrow(valid_residual_peaks))
         FeaturesMatrix = rbind(FeaturesMatrix, dummy)
-        multiplicities=c(FeaturesMatrix[,11],rep(1,dim(lol3)[1]))
-        roof_effect=c(FeaturesMatrix[,12],rep(0,dim(lol3)[1]))
-      }
+         } else { 
+           iterrep = fitting_maxiterrep
+           }
+        } else  {
+          iterrep = fitting_maxiterrep
+      }}
     } else {
       iterrep = fitting_maxiterrep
     }

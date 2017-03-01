@@ -3,10 +3,14 @@ save_roi_testing=function(provisional_data,autorun_data,finaloutput,useful_data)
 if (provisional_data$fitting_type == "Clean Sum" ||
     provisional_data$fitting_type == "Baseline Sum") {
   
+  provisional_data$useful_data[[spectrum_index]][[signals_codes]]$ROI_profile=ROI_profile
+  # provisional_data$useful_data[[spectrum_index]][[signals_codes]]$integration_parameters=integration_parameters
+  provisional_data$useful_data[[spectrum_index]][[signals_codes]]$plot_data=dummy$plot_data
+  provisional_data$useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
+  provisional_data$useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
+  provisional_data$useful_data[[spectrum_index]][[signals_codes]]$results_to_save=results_to_save
+  provisional_data$useful_data[[spectrum_index]][[signals_codes]]$error1=results_to_save$fitting_error
   
-  useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes]]$integration_parameters=provisional_data$integration_parameters
-  useful_data[[provisional_data$spectrum_index]][[provisional_data$signals_codes]]$plot=provisional_data$p2
-
 
 
 } else if (provisional_data$fitting_type == "Clean Fitting" || provisional_data$fitting_type ==

@@ -24,7 +24,7 @@ program_parameters$factor=0.01
 #Parameters related to the addition of other signals post fitting
 program_parameters$additional_signal_ppm_distance=0.002 #Allowed distance for added peaks
 program_parameters$signals_to_add = 2 #Allowed distance for added peaks to the ROI
-program_parameters$fitting_maxiterrep = 1 #Allowed tries to add peaks
+program_parameters$fitting_maxiterrep = 2 #Allowed tries to add peaks
 program_parameters$additional_signal_improvement=0.75 #Improvement of ROI by adding peaks. If previous addition did not achieve less than 75% of fitting error, process of addition of peaks is stopped
 program_parameters$additional_signal_percentage_limit=3 #If fititng erorr is less tha nthis percentage, addition of peaks is not performed
 program_parameters$peakdet_minimum=0.01 #Limit to find a peak as relevant enough to add it.

@@ -20,11 +20,12 @@ autorun_model_spectrum = function(autorun_data) {
   plotdata3 = data.frame(Xdata=as.numeric(autorun_data$ppm),Ydata=rep(0,length(autorun_data$ppm)))
     
   for (ROI_index in seq_along(ROI_separator[, 1])) {
-    
-    #Loading of every ROI parameters
+     #Loading of every ROI parameters
     ROI_profile = ROI_data[ROI_separator[ROI_index, 1]:ROI_separator[ROI_index, 2],]
 
     ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
+    print(paste(ROI_profile[1,1], ROI_profile[1,2], sep = '-'))
+    print(paste('ROI',ROI_index,'of',nrow(ROI_separator)))
     
 
     #Preparation of necessary parameters
@@ -37,6 +38,7 @@ autorun_model_spectrum = function(autorun_data) {
     fitting_type = as.character(ROI_profile[1, 3])
     signals_to_quantify = which(ROI_profile[, 5] >= 1)
     ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
+    if (length(ROI_buckets)<5) next
     if (ROI_buckets[1]>ROI_buckets[2]) ROI_buckets=rev(ROI_buckets)
 
     

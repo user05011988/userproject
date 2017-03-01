@@ -48,8 +48,8 @@ fitting_prep = function(Xdata,
     initial_fit_parameters$shift_tolerance
   FeaturesMatrix[1:signals_to_fit, 4] = initial_fit_parameters$positions +
     initial_fit_parameters$shift_tolerance
-  FeaturesMatrix[1:signals_to_fit, 5] = initial_fit_parameters$widths/2- initial_fit_parameters$widths/2 * program_parameters$widthtolerance
-  FeaturesMatrix[1:signals_to_fit, 6] = initial_fit_parameters$widths/2 + initial_fit_parameters$widths/2 * program_parameters$widthtolerance
+  FeaturesMatrix[1:signals_to_fit, 5] = initial_fit_parameters$widths- initial_fit_parameters$widths * program_parameters$widthtolerance
+  FeaturesMatrix[1:signals_to_fit, 6] = initial_fit_parameters$widths + initial_fit_parameters$widths * program_parameters$widthtolerance
   FeaturesMatrix[1:signals_to_fit, 7] = 0
   FeaturesMatrix[1:signals_to_fit, 8] = program_parameters$gaussian
   FeaturesMatrix[1:signals_to_fit, 9] = initial_fit_parameters$Jcoupling -

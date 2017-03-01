@@ -2,7 +2,7 @@
 peakpvoigt  = function(x,p) {
 #PEAKPVOIGT1 Pseudo-Voigt 1 (Gaussian with Lorentzian)
 #
-                
+  
    z   = p - x[2];
    zz  = z*z;
    # x32 = x[3]*x[3];

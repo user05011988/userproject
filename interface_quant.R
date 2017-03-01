@@ -1,25 +1,36 @@
-interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,useful_data) {
-  provisional_data=list(sig=0,finaloutput=finaloutput,useful_data=useful_data)
+#########################################################################
+#     Dolphin - R package for reliable automatic quantification of 1H 1D NMR spectra
+#     Copyright (C) 2017 Daniel Cañueto
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+############################################################################
 
-  # ROI_data=autorun_data$ROI_data
-  # 
-  # dummy = ROI_data[which(is.na(ROI_data[, 1])),]
-  # dummy2= list()
-  # for (i in 1:dim(ROI_profile)[1]) {
-  #   dummy2[[length(dummy2)+1]]=which(dummy[,4] == ROI_profile[i,4])
-  # }
+#Quantification of ROIs in the interface
+
+
+interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,useful_data) {
   
-    #Preparation of necessary variables and folders to store figures and information of the fitting
-  # if (is_autorun=='N') {indexes=input$x1_select
+  provisional_data=list(finaloutput=finaloutput,useful_data=useful_data)
+
   if (is_autorun=='N') {
  
-      indexes=ind
+      indexes=ind-2
   } else {
     indexes=1:dim(autorun_data$dataset)[1]
   }
   
   ROI_buckets = which.min(abs(as.numeric(ROI_profile[1, 1])-autorun_data$ppm)):which.min(abs(as.numeric(ROI_profile[1, 2])-autorun_data$ppm))
-  Ydatamedian=as.numeric(apply(autorun_data$dataset[, ROI_buckets],2,median))
   Xdata= as.numeric(autorun_data$ppm[ROI_buckets])
   program_parameters=autorun_data$program_parameters
   program_parameters$freq = autorun_data$freq
@@ -47,21 +58,20 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
     # If the quantification is through integration with or without baseline
     if (fitting_type == "Clean Sum" ||
         fitting_type == "Baseline Sum") {
-      is_roi_testing = "N"
       clean_fit = ifelse(fitting_type == "Clean Sum", "Y", "N")
-      integration_parameters = data.frame(is_roi_testing,
-                                          clean_fit)
-      dummy = interface_integration(integration_parameters, Xdata,Ydata,Ydatamedian)
+      Ydatamedian=as.numeric(apply(autorun_data$dataset[, ROI_buckets,drop=F],2,median))
+      
+     dummy = integration(clean_fit, Xdata,Ydata,Ydatamedian,interface='T')
       
       results_to_save=dummy$results_to_save
       p=dummy$p
       plot_data=dummy$plot_data
       
-      provisional_data$integration_parameters=integration_parameters
+      # provisional_data$integration_parameters=integration_parameters
       #Generation of output variables specific of every quantification
       if (is_autorun=='Y') {
         provisional_data$useful_data[[spectrum_index]][[signals_codes]]$ROI_profile=ROI_profile
-        provisional_data$useful_data[[spectrum_index]][[signals_codes]]$integration_parameters=integration_parameters
+        # provisional_data$useful_data[[spectrum_index]][[signals_codes]]$integration_parameters=integration_parameters
         provisional_data$useful_data[[spectrum_index]][[signals_codes]]$plot_data=dummy$plot_data
         provisional_data$useful_data[[spectrum_index]][[signals_codes]]$Xdata=Xdata
         provisional_data$useful_data[[spectrum_index]][[signals_codes]]$Ydata=Ydata
@@ -75,9 +85,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
           autorun_data$buck_step,
           finaloutput
         )
-        # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
-        #   print('Not possible to overwrite a csv file open with Microsoft Excel')
-        # })
+        
       }
 
       #If the quantification is through fitting with or without baseline
@@ -97,10 +105,6 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
                                        Ydata,
                                        program_parameters)
       signals_parameters=dummy$signals_parameters
-      # error1=dummy$error1
-      # if (error1>useful_data[[spectrum_index]][[signals_codes[1]]]$error1) return(provisional_data)
-      # multiplicities=FeaturesMatrix[,11]
-      # roof_effect=FeaturesMatrix[,12]
       multiplicities=c(FeaturesMatrix[,11],rep(1,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
       roof_effect=c(FeaturesMatrix[,12],rep(0,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
 
@@ -121,7 +125,7 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
       # signals_parameters_2=unlist(signals_parameters_2)
       # multiplicities_2=unlist(multiplicities_2)
       # roof_effect_2=unlist(roof_effect_2)
-      signals_parameters_2=unlist(signals_parameters)
+      # signals_parameters_2=unlist(signals_parameters)
       multiplicities_2=unlist(multiplicities)
       roof_effect_2=unlist(roof_effect)
 
@@ -129,14 +133,14 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
                                          Xdata_2,multiplicities_2,roof_effect_2,Ydata,program_parameters$freq)
       # signals_parameters=as.matrix(signals_parameters)
       
-      dim(signals_parameters_2) = c(5, length(signals_parameters_2)/5)
-      rownames(signals_parameters_2) = c(
-        'intensity',
-        'shift',
-        'half_band_width',
-        'gaussian',
-        'J_coupling'
-      ) 
+      # dim(signals_parameters_2) = c(5, length(signals_parameters_2)/5)
+      # rownames(signals_parameters_2) = c(
+      #   'intensity',
+      #   'shift',
+      #   'half_band_width',
+      #   'gaussian',
+      #   'J_coupling'
+      # ) 
       program_parameters$signals_to_quantify=signals_to_quantify
       Ydata_2 = as.numeric(autorun_data$dataset[spectrum_index, ])
 
@@ -150,9 +154,66 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
       )
       output_data=dummy$output_data
       error1=dummy$error1
-      output_data$intensity=signals_parameters[1, signals_to_quantify]
-      output_data$half_band_width=signals_parameters[3, signals_to_quantify]
-
+      
+      if (any(output_data$fitting_error>0.05)==T) {
+        dummy = fittingloop(FeaturesMatrix,
+          Xdata,
+          Ydata,
+          program_parameters)
+        signals_parameters=dummy$signals_parameters
+        multiplicities=c(FeaturesMatrix[,11],rep(1,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
+        roof_effect=c(FeaturesMatrix[,12],rep(0,(length(signals_parameters)/5)-dim(FeaturesMatrix)[1]))
+        
+        signals_parameters_2=signals_parameters
+        multiplicities_2=multiplicities
+        roof_effect_2=roof_effect
+        #Fitting of the signals
+        dim(signals_parameters) = c(5, length(signals_parameters)/5)
+        rownames(signals_parameters) = c(
+          'intensity',
+          'shift',
+          'half_band_width',
+          'gaussian',
+          'J_coupling'
+        ) 
+        
+        Xdata_2=autorun_data$ppm
+        # signals_parameters_2=unlist(signals_parameters_2)
+        # multiplicities_2=unlist(multiplicities_2)
+        # roof_effect_2=unlist(roof_effect_2)
+        # signals_parameters_2=unlist(signals_parameters)
+        multiplicities_2=unlist(multiplicities)
+        roof_effect_2=unlist(roof_effect)
+        
+        fitted_signals = fitting_optimization(signals_parameters_2,
+          Xdata_2,multiplicities_2,roof_effect_2,Ydata,program_parameters$freq)
+        # signals_parameters=as.matrix(signals_parameters)
+        
+        # dim(signals_parameters_2) = c(5, length(signals_parameters_2)/5)
+        # rownames(signals_parameters_2) = c(
+        #   'intensity',
+        #   'shift',
+        #   'half_band_width',
+        #   'gaussian',
+        #   'J_coupling'
+        # ) 
+        program_parameters$signals_to_quantify=signals_to_quantify
+        Ydata_2 = as.numeric(autorun_data$dataset[spectrum_index, ])
+        
+        #Generation of output data about the fitting and of the necessary variables for the generation ofa figure
+        dummy = output_generator(
+          signals_to_quantify,
+          fitted_signals,
+          Ydata_2,
+          Xdata_2,
+          signals_parameters,multiplicities,ROI_buckets
+        )
+        
+        #If new deconvolution has improved previous one
+        if (dummy$error1<error1) {
+          output_data=dummy$output_data
+          error1=dummy$error1
+        }}
 
       #Generation of the dataframe with the final output variables
       results_to_save = data.frame(
@@ -185,11 +246,8 @@ interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,
         rep('Generated Spectrum', length(Ydata_2)),
         rep('Generated Background', length(Ydata_2))
       )
-      # plotdata4 = data.frame(Xdata=Xdata_2, (t(plot_data[-c(1, 2, 3), , drop = F]) ))
-      # plotdata5 = melt(plotdata4, id = "Xdata")
-
+      
 colors=c('red','blue','black','brown','cyan','green','yellow')
-      # plotdata = data.frame(Xdata=Xdata_2, signals = plot_data[1, ] )
       p=plot_ly(plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL) %>% layout(xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'), yaxis = list(range=c(0,max(Ydata)),title = 'Intensity'))
         for (i in 4:nrow(plot_data)) {
           plotdata5 =  data.frame(Xdata=Xdata_2, variable=rownames(plot_data)[i] ,value=plot_data[i,])
@@ -197,27 +255,21 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
         p=p %>%add_trace(data=plotdata5,x=~Xdata,y=~value,name=~variable,type='scatter',mode='lines',fill='tozeroy',fillcolor=colors[i-3])   
 }
       
-    
-      
+
     signals_parameters=rbind(signals_parameters,multiplicities,roof_effect)
-    signals_parameters_2=rbind(signals_parameters_2,multiplicities_2,roof_effect_2)
-    if (provisional_data$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
+    # if (provisional_data$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
     provisional_data$program_parameters=program_parameters
     provisional_data$results_to_save=results_to_save
     provisional_data$ROI_profile=ROI_profile
     provisional_data$Ydata=Ydata
-    # provisional_data$fitted_signals=fitted_signals[,ROI_buckets]
     provisional_data$plot_data=plot_data[,ROI_buckets]
     provisional_data$FeaturesMatrix=FeaturesMatrix
     provisional_data$error1=error1
-    
-    provisional_data$signals_parameters=provisional_data$sig=signals_parameters
-    provisional_data$signals_parameters_2=signals_parameters_2
+    provisional_data$signals_parameters=signals_parameters
     provisional_data$Xdata=Xdata
     
     if (is_autorun=='Y') {
       if (provisional_data$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
-
       for (i in seq_along(signals_codes)) {
         provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$ROI_profile=ROI_profile
         provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$program_parameters=program_parameters
@@ -237,33 +289,17 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
           autorun_data$buck_step,
           provisional_data$finaloutput)
       }
-
       }
-      
-      
-      # tryCatch({write_info(autorun_data$export_path, finaloutput)}, error = function(err) {
-      #   print('Not possible to overwrite a csv file open with Microsoft Excel')
-      # })
-      
-    }
-    
-    }
-    
-    
+     }
+    # }
     
     provisional_data$p=p
-    # provisional_data$p2=p2
     provisional_data$results_to_save=results_to_save
     provisional_data$spectrum_index=spectrum_index
     provisional_data$signals_codes=signals_codes
     provisional_data$fitting_type=fitting_type
     provisional_data$signals_names=signals_names
-    
-    
-   
-    # provisional_data$finaloutput=finaloutput
-    
+ 
   }
-    # provisional_data$autorun_data=autorun_data
   return(provisional_data)
 }
