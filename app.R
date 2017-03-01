@@ -462,7 +462,11 @@ server = function(input, output,session) {
     }
     
     reactivequantdata$method1 <- interface_quant(reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput, reactiveprogramdata$ind,reactiveROItestingdata$ROIpar,is_autorun,reactiveprogramdata$useful_data) 
-    if (length(reactivequantdata$method1)==3) return()
+    if ( is.null(reactivequantdata$method1$Ydata)) {
+      print('Quantification probably worse than current one. Quantification not changed')
+    return()
+    }
+    reactiveprogramdata$plot=reactivequantdata$method1$p
     reactivequantdata$stop3=1
     # reactiveprogramdata$useful_data=reactivequantdata$method1$useful_data    
     reactiveROItestingdata$qualitypar=cbind(reactivequantdata$method1$results_to_save$Area,reactivequantdata$method1$results_to_save$fitting_error,reactivequantdata$method1$results_to_save$signal_area_ratio)
@@ -530,7 +534,7 @@ server = function(input, output,session) {
     
     ind=which(reactiveprogramdata$ROI_separator[,2]-reactiveprogramdata$info$col>=0)[1]
     
-    reactivequantdata$method1$p=plot_ly(plotdata5,x = ~Xdata, y = ~value, name=~'Surrounding signals',type='scatter',mode='lines',fill='tozeroy',fillcolor='rgb(127, 166, 238)') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>% add_trace(data=plotdata,x = ~Xdata, y = ~signals, type = 'scatter', color= reactiveprogramdata$autorun_data$signals_names[reactiveprogramdata$info$col],mode = 'lines', fill = 'tozeroy',fillcolor='rgb(60, 60, 60)')  %>%layout(title = paste(reactiveprogramdata$autorun_data$Experiments[reactiveprogramdata$info$row],"- ROI ",ROI_profile[1,1],"-",ROI_profile[1,2],"ppm"),xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'), yaxis = list(title = 'Intensity'))
+    reactiveprogramdata$plot=plot_ly(plotdata5,x = ~Xdata, y = ~value, name=~'Surrounding signals',type='scatter',mode='lines',fill='tozeroy',fillcolor='rgb(127, 166, 238)') %>% add_trace(data=plotdata3,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines',fill=NULL)  %>% add_trace(data=plotdata,x = ~Xdata, y = ~signals, type = 'scatter', color= reactiveprogramdata$autorun_data$signals_names[reactiveprogramdata$info$col],mode = 'lines', fill = 'tozeroy',fillcolor='rgb(60, 60, 60)')  %>%layout(title = paste(reactiveprogramdata$autorun_data$Experiments[reactiveprogramdata$info$row],"- ROI ",ROI_profile[1,1],"-",ROI_profile[1,2],"ppm"),xaxis = list(range=c(Xdata[1],Xdata[length(Xdata)]),title = 'ppm'), yaxis = list(title = 'Intensity'))
     
     # }
     reactiveROItestingdata$ROIpar=ROI_profile
@@ -605,18 +609,18 @@ server = function(input, output,session) {
   
   observeEvent(input$save_results, {
     if (is.null(reactivequantdata$method1$Ydata)) {
-      print('Incorrect action')
+      # print('Incorrect action')
       return(NULL)
     }
-    if (reactivequantdata$method1$error1<reactiveprogramdata$useful_data[[reactivequantdata$method1$spectrum_index]][[reactivequantdata$method1$signals_codes[1]]]$error1) {
-      print('Quantification improved')
+    # if (reactivequantdata$method1$error1<reactiveprogramdata$useful_data[[reactivequantdata$method1$spectrum_index]][[reactivequantdata$method1$signals_codes[1]]]$error1) {
+    #   print('Quantification improved')
       dummy=save_roi_testing(reactivequantdata$method1,reactiveprogramdata$autorun_data, reactiveprogramdata$finaloutput,reactiveprogramdata$useful_data) 
       reactiveprogramdata$finaloutput=dummy$finaloutput
       reactiveprogramdata$useful_data=dummy$useful_data
       
-    } else {
-      print('Quantification not improved')
-    }
+    # } else {
+    #   print('Quantification not improved')
+    # }
     
   })
   
@@ -713,16 +717,17 @@ server = function(input, output,session) {
       plot_ly(data=plotdata2,x=~Xdata,y=~value,color=~variable,type='scatter',mode='lines') %>% layout(xaxis = list(range = c(reactiveprogramdata$autorun_data$ppm[ROI_limits[1]], reactiveprogramdata$autorun_data$ppm[ROI_limits[2]]),title='ppm'),yaxis = list(range = c(0, max(reactiveprogramdata$autorun_data$dataset[,ROI_limits[1]:ROI_limits[2]])),title='Intensity'))
       }
     } else {
+
       
-      print(reactivequantdata$method1$p)
+      print(reactiveprogramdata$plot)
       
     }
   })
   
   
-  observeEvent(input$select_validation, {
+  observe({
     if (reactiveprogramdata$beginning==F) return()
-    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$program_parameters,input$select_validation,reactiveprogramdata$ROIdata_subset,reactiveprogramdata$autorun_data$Metadata)
+    validation_data=validation(reactiveprogramdata$finaloutput,reactiveprogramdata$program_parameters,input$select_validation,reactiveprogramdata$ROI_data,reactiveprogramdata$autorun_data$Metadata)
     output$fit_selection = DT::renderDataTable({ datatable(round(validation_data$alarmmatrix,4),selection = list(mode = 'single', target = 'cell')) %>% formatStyle(colnames(validation_data$alarmmatrix), backgroundColor = styleInterval(validation_data$brks, validation_data$clrs))
     }
       

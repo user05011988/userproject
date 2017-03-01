@@ -257,7 +257,7 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
       
 
     signals_parameters=rbind(signals_parameters,multiplicities,roof_effect)
-    # if (provisional_data$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
+    if (provisional_data$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>0.8*error1) {
     provisional_data$program_parameters=program_parameters
     provisional_data$results_to_save=results_to_save
     provisional_data$ROI_profile=ROI_profile
@@ -267,7 +267,7 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
     provisional_data$error1=error1
     provisional_data$signals_parameters=signals_parameters
     provisional_data$Xdata=Xdata
-    
+    }
     if (is_autorun=='Y') {
       if (provisional_data$useful_data[[spectrum_index]][[signals_codes[1]]]$error1>error1) {
       for (i in seq_along(signals_codes)) {
@@ -280,7 +280,7 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
         provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$Xdata=Xdata
         provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$Ydata=Ydata
         provisional_data$useful_data[[spectrum_index]][[signals_codes[i]]]$results_to_save=results_to_save
-        print('Change')
+        # print('Change')
       }
         provisional_data$finaloutput = save_output(
           spectrum_index,
@@ -290,8 +290,8 @@ colors=c('red','blue','black','brown','cyan','green','yellow')
           provisional_data$finaloutput)
       }
       }
-     }
-    # }
+     
+    }
     
     provisional_data$p=p
     provisional_data$results_to_save=results_to_save

@@ -31,7 +31,7 @@ validation = function(finaloutput,
   shift_corrmatrix=cor(finaloutput$shift,use='pairwise.complete.obs',method='spearman')
   
   for (i in ind) {
-    similar_signals=finaloutput$shift[,ind[sort(abs(shift_corrmatrix[,i]),decreasing=T,index.return=T)$ix][1:3]]
+    similar_signals=finaloutput$shift[,unique(c(i,ind[sort(abs(shift_corrmatrix[,i]),decreasing=T,index.return=T)$ix][1:3]))]
    j=is.na(rowMeans(similar_signals)) #find signals with similar behavior
    #Create linear models with two most simila signals and predict shift
      lm_similar_signals=tryCatch({lmrob(similar_signals[!j,1] ~ similar_signals[!j,2],control = lmrob.control(maxit.scale=5000))},error= function(e) {lm(similar_signals[!j,1] ~ similar_signals[!j,2])},warning= function(e) {lm(similar_signals[!j,1] ~ similar_signals[!j,2])})
@@ -40,8 +40,8 @@ validation = function(finaloutput,
     prediction_similar_signal_2=suppressWarnings(predict(lm_similar_signals, interval='prediction'))
   alarmmatrix[!j,i]=apply(rbind(finaloutput$shift[!j,i]-prediction_similar_signal_1[,1],finaloutput$shift[!j,i]-prediction_similar_signal_2[,1]),2,min)
   }
-   brks <- seq(0,max(abs(alarmmatrix),na.rm=T),length.out=19)
-  clrs <- round(seq(255, 40, length.out = length(brks) + 1), 0) %>%
+  brks <-c(-seq(max(abs(alarmmatrix),na.rm=T), 0, length.out=10),seq(0, max(abs(alarmmatrix),na.rm=T), length.out=10)[-1])
+  clrs <- round(c(seq(40, 255, length.out = (length(brks) + 1)/2),seq(255, 40, length.out = (length(brks) + 1)/2)), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
   
   	#Analysis of which quantifications deviate too much from expected half_band_width, according to prediction with linear model of spectra with similar behavior
@@ -55,7 +55,7 @@ validation = function(finaloutput,
     prediction_similar_spectrum=suppressWarnings(predict(lm_similar_spectrum, interval='prediction'))
     alarmmatrix[i,ind][!is.na(finaloutput$half_band_width[i,ind])]=finaloutput$half_band_width[i,ind][!is.na(finaloutput$half_band_width[i,ind])]-prediction_similar_spectrum[,1]
   }
-  brks <-seq(.05, .5, length.out=19)
+  brks <-c(-seq(max(abs(alarmmatrix),na.rm=T), 0, length.out=10),seq(0, max(abs(alarmmatrix),na.rm=T), length.out=10)[-1])
   clrs <- round(c(seq(40, 255, length.out = (length(brks) + 1)/2),seq(255, 40, length.out = (length(brks) + 1)/2)), 0) %>%
   {paste0("rgb(255,", ., ",", ., ")")}
   
@@ -88,34 +88,17 @@ validation = function(finaloutput,
     
     relative_intensity = ROI_data[,12]
     
-    alarmmatrix=matrix(NA,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
+    alarmmatrix=finaloutput$intensity
+    alarmmatrix[,]=NA
+    ind=unique(ROI_data[,4][duplicated(ROI_data[,4])])
+    for (i in seq_along(ind)) {
+      ab=which(ROI_data[,4]==ind[i])
+      ab2=ab[which.min(colMeans(finaloutput$fitting_error[,ab],na.rm=T))]
+      if (length(ab2)>0) alarmmatrix[,ab]=(finaloutput$intensity[,ab]/finaloutput$intensity[,ab2])*relative_intensity[ab]
+      
+  }
     
-    alarmmatrix=matrix(0,dim(finaloutput$intensity)[1],dim(finaloutput$intensity)[2])
-    colnames(alarmmatrix)=colnames(finaloutput$intensity)
-    rownames(alarmmatrix)=rownames(finaloutput$intensity)
-    ma=relative_intensity[which(relative_intensity[,7]>0),c(4,7)]
-    
-    CV <- function(x){
-      (sd(x)/mean(x))
-    }
-    
-    metadata_types=which(ma[,2]==2)
-    for (i in metadata_types) {
-      quartile_data=which(ma[,1]==ma[i,1])
-      ccv=relative_intensity[which(relative_intensity[,7]>0)[quartile_data],12]
-      ccvv=finaloutput$intensity[,quartile_data]
-      ccvvv=finaloutput$fitting_error[,quartile_data]
-      for (j in 1:nrow(ccvvv)) {
-        aa=ccvv[j,]*ccv[which.min(ccvvv[j,])]/ccvv[j,which.min(ccvvv[j,])] - ccv
-        alarmmatrix[j,quartile_data]=aa
-      }
-    }
-    nn=rep(NA,19)
-    nn[10]=0.5
-    aa=quantile(alarmmatrix, probs = seq(0, 1, length.out=1001))
-    nn[11:19]=seq(which(aa>0)[1]-1,1000,length.out = 9)/1000
-    nn[1:9]=seq(0,which(aa<0)[length(which(aa<0))]-1,length.out = 9)/1000
-    brks <- quantile(alarmmatrix, probs = nn, na.rm = TRUE)
+    brks <-c(seq(min(alarmmatrix,na.rm=T), 1, length.out=10),seq(1, max(alarmmatrix,na.rm=T), length.out=10)[-1])
     clrs <- round(c(seq(40, 255, length.out = (length(brks) + 1)/2),seq(255, 40, length.out = (length(brks) + 1)/2)), 0) %>%
     {paste0("rgb(255,", ., ",", ., ")")}
   }
