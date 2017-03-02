@@ -16,7 +16,7 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################################
 
-#Quantification of ROIs in the interface
+#Quantification of ROIs in the interface. Structure is quite similar to 'autorun'
 
 
 interface_quant = function(autorun_data, finaloutput,ind,ROI_profile,is_autorun,useful_data) {
